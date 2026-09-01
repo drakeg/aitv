@@ -10,26 +10,34 @@ def fetch_trending_movies():
     if not api_key:
         return []
 
-    timeout = float(os.getenv('TMDB_TIMEOUT_SECONDS', '5'))
-    response = requests.get(
-        TMDB_TRENDING_URL,
-        params={'api_key': api_key},
-        timeout=timeout,
-    )
-    response.raise_for_status()
+    try:
+        timeout = float(os.getenv('TMDB_TIMEOUT_SECONDS', '5'))
+        response = requests.get(
+            TMDB_TRENDING_URL,
+            params={'api_key': api_key},
+            timeout=timeout,
+        )
+        response.raise_for_status()
+        results = response.json().get('results', [])
+    except (requests.RequestException, ValueError):
+        return []
 
     movies = []
-    for movie in response.json().get('results', []):
+    for movie in results:
+        movie_id = movie.get('id')
+        if movie_id is None:
+            continue
+
         poster_path = movie.get('poster_path')
         movies.append({
-            'id': f"tmdb_{movie['id']}",
+            'id': f'tmdb_{movie_id}',
             'title': movie.get('title'),
             'genre': 'Movie',
             'thumbnail': (
                 f'https://image.tmdb.org/t/p/w500{poster_path}'
                 if poster_path else ''
             ),
-            'url': f"https://www.themoviedb.org/movie/{movie['id']}",
+            'url': f'https://www.themoviedb.org/movie/{movie_id}',
             'source_type': 'movie',
             'is_external': True,
         })
