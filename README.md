@@ -72,7 +72,7 @@ Useful Docker commands:
 
 ```bash
 # Start or rebuild
-Docker compose up --build
+docker compose up --build
 
 # Start in the background
 docker compose up -d --build
@@ -89,8 +89,6 @@ docker compose run --rm web python manage.py createsuperuser
 # Stop containers
 docker compose down
 ```
-
-> Note: commands are case-sensitive; use `docker compose`, not `Docker compose`.
 
 ## Standard local setup
 
