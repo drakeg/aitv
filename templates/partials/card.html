@@ -1,0 +1,40 @@
+<div class="card">
+
+    {% if item.thumbnail %}
+        <img src="{{ item.thumbnail }}">
+    {% elif item.source_type == "youtube" %}
+        <img src="https://img.youtube.com/vi/{{ item.url|cut:'https://www.youtube.com/watch?v=' }}/hqdefault.jpg">
+    {% else %}
+        <img src="https://via.placeholder.com/300x170?text=No+Image">
+    {% endif %}
+
+    <div class="p-2">
+        <strong>
+            {% if item.title %}
+                {{ item.title|truncatechars:20 }}
+            {% else %}
+                {{ item.name|truncatechars:20 }}
+            {% endif %}
+        </strong>
+
+        <a href="{{ item.url }}" target="_blank"
+           class="btn btn-sm btn-primary w-100 mt-1">
+            ▶
+        </a>
+
+        {% if user.is_authenticated and not item.is_external %}
+            {% if item.id in watchlist_ids %}
+                <a href="/watchlist/remove/{{ item.id }}/"
+                   class="btn btn-sm btn-danger w-100 mt-1">
+                    ❌
+                </a>
+            {% else %}
+                <a href="/watchlist/add/{{ item.id }}/"
+                   class="btn btn-sm btn-success w-100 mt-1">
+                    ⭐
+                </a>
+            {% endif %}
+        {% endif %}
+    </div>
+
+</div>
