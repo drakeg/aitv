@@ -12,6 +12,7 @@ AI TV is a Django-based personal streaming dashboard for collecting content from
 - Per-user watchlist model with duplicate prevention
 - Django admin support for managed data
 - SQLite development database
+- Docker Compose workflow for fast local testing
 
 ## Project structure
 
@@ -24,17 +25,74 @@ aitv/
 ├── watchlist/       # Per-user watchlist functionality
 ├── static/          # Site CSS and other static assets
 ├── templates/       # Shared Django templates
+├── Dockerfile
+├── docker-compose.yml
 ├── manage.py
 └── requirements.txt
 ```
 
 ## Requirements
 
+For the standard local workflow:
+
 - Python 3.10+
 - pip
-- A TMDB API key if you want live trending movies
 
-## Local setup
+For the Docker workflow:
+
+- Docker Engine or Docker Desktop
+- Docker Compose v2 (`docker compose`)
+
+A TMDB API key is optional and only required for live trending movies.
+
+## Quick local testing with Docker
+
+Docker is the fastest way to bring up the project for local testing.
+
+```bash
+git clone https://github.com/drakeg/aitv.git
+cd aitv
+cp .env.example .env
+docker compose up --build
+```
+
+The container runs database migrations automatically and starts Django on all container interfaces. By default the site is available at `http://127.0.0.1:8000/`.
+
+To use another host port, change `APP_PORT` in `.env`, for example:
+
+```dotenv
+APP_PORT=8080
+```
+
+Then browse to `http://127.0.0.1:8080/`.
+
+Because the repository is bind-mounted into the development container, Python/template/static-file changes are available immediately through Django's development reloader without rebuilding the image. Rebuild when dependencies or the Dockerfile change.
+
+Useful Docker commands:
+
+```bash
+# Start or rebuild
+Docker compose up --build
+
+# Start in the background
+docker compose up -d --build
+
+# View logs
+docker compose logs -f web
+
+# Run the test suite in the container
+docker compose run --rm web python manage.py test
+
+# Create an admin user
+docker compose run --rm web python manage.py createsuperuser
+
+# Stop containers
+docker compose down
+```
+
+> Note: commands are case-sensitive; use `docker compose`, not `Docker compose`.
+
+## Standard local setup
 
 ```bash
 git clone https://github.com/drakeg/aitv.git
@@ -51,7 +109,7 @@ On Windows PowerShell, activate the virtual environment with:
 .venv\Scripts\Activate.ps1
 ```
 
-The application reads configuration from environment variables. The `.env.example` file documents the supported values. If you use a local `.env` file, export/source it in your shell or use your preferred environment loader before starting Django.
+The application reads configuration from environment variables. The `.env.example` file documents the supported values. If you use a local `.env` file outside Docker Compose, export/source it in your shell or use your preferred environment loader before starting Django.
 
 Run the initial database setup:
 
@@ -72,9 +130,10 @@ Then browse to `http://127.0.0.1:8000/`. Django admin is available at `/admin/`.
 
 | Variable | Default | Purpose |
 | --- | --- | --- |
+| `APP_PORT` | `8000` | Host port exposed by Docker Compose. |
 | `DJANGO_SECRET_KEY` | development-only fallback | Django signing secret. Set a strong value outside local development. |
 | `DJANGO_DEBUG` | `true` | Enables/disables Django debug mode. |
-| `DJANGO_ALLOWED_HOSTS` | empty | Comma-separated hostnames accepted by Django. |
+| `DJANGO_ALLOWED_HOSTS` | empty outside Compose | Comma-separated hostnames accepted by Django. |
 | `TMDB_API_KEY` | empty | Enables TMDB trending movie discovery when configured. |
 | `TMDB_TIMEOUT_SECONDS` | `5` | Timeout for TMDB HTTP requests. |
 
@@ -82,10 +141,16 @@ When `TMDB_API_KEY` is not configured or TMDB cannot be reached, the dashboard c
 
 ## Testing
 
-Run the Django test suite with:
+Run the Django test suite locally with:
 
 ```bash
 python manage.py test
+```
+
+Or run it through Docker:
+
+```bash
+docker compose run --rm web python manage.py test
 ```
 
 Run Django's deployment/configuration checks with:
@@ -100,7 +165,7 @@ GitHub Actions runs these checks for pull requests and pushes to `main`.
 
 `core.views.home` assembles the dashboard. Local catalog entries come from `ContentItem`; authenticated users can submit the Quick Add form; watchlist IDs are loaded for the signed-in user; and TMDB discovery is isolated behind `content.services` so external API failures do not take down the page.
 
-The current implementation is intentionally lightweight and uses SQLite for development. Production deployment settings, a production database, static-file serving, authentication UX, and background refresh jobs are future concerns rather than assumptions baked into the development configuration.
+The Docker setup intentionally remains development-focused. It uses Django's development server, bind-mounts the working tree for rapid iteration, and stores the SQLite database in the repository working directory. Production deployment settings, a production database, static-file serving, authentication UX, and background refresh jobs remain future concerns.
 
 ## Development roadmap
 
@@ -111,6 +176,7 @@ The current implementation is intentionally lightweight and uses SQLite for deve
 - [x] Add baseline automated tests
 - [x] Add CI for Django checks and tests
 - [x] Document installation, configuration, architecture, and development workflow
+- [x] Add a fast Docker Compose workflow for local testing
 
 ### Sprint 2 — Content ingestion and metadata
 
@@ -128,7 +194,7 @@ The current implementation is intentionally lightweight and uses SQLite for deve
 
 ### Sprint 4 — Deployment readiness
 
-- [ ] Add Docker support and production-oriented settings
+- [ ] Add production-oriented container/settings path
 - [ ] Add a production database configuration path
 - [ ] Add static-file and security-header configuration
 - [ ] Add deployment documentation and health checks
