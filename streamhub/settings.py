@@ -56,6 +56,10 @@ DATABASES = {
     }
 }
 
+# Preserve the project's existing AutoField primary-key schema while making
+# Django's implicit primary-key choice explicit and silencing models.W042.
+DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
+
 STATIC_URL = '/static/'
 
 STATICFILES_DIRS = [
