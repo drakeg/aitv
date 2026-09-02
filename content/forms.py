@@ -1,33 +1,57 @@
+from urllib.parse import parse_qs, urlparse
+
 from django import forms
+
 from .models import ContentItem
 
-class QuickAddForm(forms.ModelForm):
+YOUTUBE_HOSTS = {'youtube.com', 'www.youtube.com', 'm.youtube.com', 'youtu.be'}
+
+
+def extract_youtube_video_id(url):
+    """Return a YouTube video ID for supported canonical URL shapes."""
+    parsed = urlparse(url)
+    host = (parsed.hostname or '').lower()
+    if host not in YOUTUBE_HOSTS:
+        return None
+
+    if host == 'youtu.be':
+        candidate = parsed.path.strip('/').split('/', 1)[0]
+    elif parsed.path == '/watch':
+        candidate = parse_qs(parsed.query).get('v', [''])[0]
+    else:
+        parts = [part for part in parsed.path.split('/') if part]
+        candidate = parts[1] if len(parts) >= 2 and parts[0] in {'shorts', 'embed'} else ''
+
+    candidate = candidate.strip()
+    return candidate if len(candidate) == 11 else None
+
+
+class ContentItemForm(forms.ModelForm):
     class Meta:
         model = ContentItem
         fields = ['title', 'url', 'genre']
         widgets = {
             'title': forms.TextInput(attrs={'placeholder': 'Title'}),
-            'url': forms.TextInput(attrs={'placeholder': 'Paste URL'}),
+            'url': forms.URLInput(attrs={'placeholder': 'Paste URL'}),
             'genre': forms.TextInput(attrs={'placeholder': 'Genre'}),
         }
 
     def save(self, commit=True):
         instance = super().save(commit=False)
-        # Detect YouTube
-        if "youtube.com" in instance.url or "youtu.be" in instance.url:
-            instance.source_type = "youtube"
-            # Extract video ID
-            if "watch?v=" in instance.url:
-                video_id = instance.url.split("watch?v=")[-1]
-            elif "youtu.be/" in instance.url:
-                video_id = instance.url.split("youtu.be/")[-1]
-            else:
-                video_id = ""
-            # Set thumbnail
-            if video_id:
-                instance.thumbnail = f"https://img.youtube.com/vi/{video_id}/hqdefault.jpg"
+        video_id = extract_youtube_video_id(instance.url)
+
+        if video_id:
+            instance.source_type = 'youtube'
+            instance.thumbnail = f'https://img.youtube.com/vi/{video_id}/hqdefault.jpg'
         else:
-            instance.source_type = "movie"
+            instance.source_type = 'movie'
+            if self.instance.pk and self.instance.source_type == 'youtube':
+                instance.thumbnail = None
+
         if commit:
             instance.save()
         return instance
+
+
+class QuickAddForm(ContentItemForm):
+    pass
