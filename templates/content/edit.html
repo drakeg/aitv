@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container py-4" style="max-width: 720px;">
+    <h2 class="mb-3">Edit {{ item.title }}</h2>
+
+    <form method="post">
+        {% csrf_token %}
+        {{ form.non_field_errors }}
+
+        <div class="mb-3">
+            {{ form.title.label_tag }}
+            {{ form.title }}
+            {{ form.title.errors }}
+        </div>
+        <div class="mb-3">
+            {{ form.url.label_tag }}
+            {{ form.url }}
+            {{ form.url.errors }}
+        </div>
+        <div class="mb-3">
+            {{ form.genre.label_tag }}
+            {{ form.genre }}
+            {{ form.genre.errors }}
+        </div>
+
+        <button type="submit" class="btn btn-primary">Save</button>
+        <a href="/" class="btn btn-outline-secondary">Cancel</a>
+    </form>
+</div>
+{% endblock %}

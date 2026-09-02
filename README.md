@@ -7,8 +7,11 @@ AI TV is a Django-based personal streaming dashboard for collecting content from
 - Django web dashboard with reusable templates and static assets
 - Local `ContentItem` catalog with title, URL, genre, duration, thumbnail, and source type
 - Quick Add form for adding content from the home page
-- Automatic YouTube detection and thumbnail generation for common YouTube URLs
+- Robust YouTube detection for watch, short-link, Shorts, embed, and mobile URLs
+- Automatic YouTube thumbnail generation
 - TMDB weekly trending movie integration
+- One-click import of TMDB discovery results into the managed library
+- Authenticated edit/delete controls for locally managed content
 - Per-user watchlist model with duplicate prevention
 - Django admin support for managed data
 - SQLite development database
@@ -19,7 +22,7 @@ AI TV is a Django-based personal streaming dashboard for collecting content from
 
 ```text
 aitv/
-├── content/         # Content catalog, forms, external services, and demo seed command
+├── content/         # Content catalog, forms, views, external services, and demo seed command
 ├── core/            # Site-level models, admin, and home/dashboard view
 ├── notifications/   # Notification application foundation
 ├── streamhub/       # Django project settings, URLs, and WSGI entry point
@@ -103,6 +106,12 @@ docker compose run --rm web python manage.py createsuperuser
 docker compose down
 ```
 
+## Content workflow
+
+Authenticated users can use Quick Add on the home page to store a URL, title, and genre. Supported YouTube URL formats are normalized for metadata detection, including `youtube.com/watch`, `youtu.be`, `youtube.com/shorts`, `youtube.com/embed`, and mobile YouTube URLs. Hostnames are checked exactly so look-alike domains are not classified as YouTube.
+
+Locally managed cards expose Edit and Delete controls. When TMDB discovery is enabled, external trending cards expose an **+ Library** action that imports the movie into the local `ContentItem` catalog. Re-importing the same TMDB URL updates the existing item rather than creating a duplicate.
+
 ## Standard local setup
 
 ```bash
@@ -175,7 +184,7 @@ GitHub Actions runs these checks for pull requests and pushes to `main`.
 
 ## Architecture notes
 
-`core.views.home` assembles the dashboard. Local catalog entries come from `ContentItem`; authenticated users can submit the Quick Add form; watchlist IDs are loaded for the signed-in user; and TMDB discovery is isolated behind `content.services` so external API failures do not take down the page.
+`core.views.home` assembles the dashboard. Local catalog entries come from `ContentItem`; authenticated users can submit the Quick Add form; watchlist IDs are loaded for the signed-in user; and TMDB discovery is isolated behind `content.services` so external API failures do not take down the page. The `content` application now owns URL parsing, local content management routes, and importing discovery results into the local catalog.
 
 The Docker setup intentionally remains development-focused. It uses Django's development server, bind-mounts the working tree for rapid iteration, stores the SQLite database in the repository working directory, and optionally seeds a small local demo catalog. Production deployment settings, a production database, static-file serving, authentication UX, and background refresh jobs remain future concerns.
 
@@ -193,10 +202,10 @@ The Docker setup intentionally remains development-focused. It uses Django's dev
 ### Sprint 2 — Content ingestion and metadata
 
 - [x] Add repeatable demo content for useful local/container testing
-- [ ] Harden URL parsing and YouTube video-ID extraction
+- [x] Harden URL parsing and YouTube video-ID extraction
 - [ ] Add richer content metadata and validation
-- [ ] Add edit/delete flows for locally managed content
-- [ ] Improve discovery-to-library ingestion so external results can become managed items
+- [x] Add edit/delete flows for locally managed content
+- [x] Improve discovery-to-library ingestion so external results can become managed items
 
 ### Sprint 3 — User experience
 
