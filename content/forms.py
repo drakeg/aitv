@@ -37,6 +37,7 @@ class ContentItemForm(forms.ModelForm):
         }
 
     def save(self, commit=True):
+        previous_source_type = self.instance.source_type if self.instance.pk else ''
         instance = super().save(commit=False)
         video_id = extract_youtube_video_id(instance.url)
 
@@ -45,7 +46,7 @@ class ContentItemForm(forms.ModelForm):
             instance.thumbnail = f'https://img.youtube.com/vi/{video_id}/hqdefault.jpg'
         else:
             instance.source_type = 'movie'
-            if self.instance.pk and self.instance.source_type == 'youtube':
+            if previous_source_type == 'youtube':
                 instance.thumbnail = None
 
         if commit:
