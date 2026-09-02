@@ -1,11 +1,9 @@
 <div class="card">
 
     {% if item.thumbnail %}
-        <img src="{{ item.thumbnail }}">
-    {% elif item.source_type == "youtube" %}
-        <img src="https://img.youtube.com/vi/{{ item.url|cut:'https://www.youtube.com/watch?v=' }}/hqdefault.jpg">
+        <img src="{{ item.thumbnail }}" alt="{{ item.title|default:item.name }}">
     {% else %}
-        <img src="https://via.placeholder.com/300x170?text=No+Image">
+        <img src="https://via.placeholder.com/300x170?text=No+Image" alt="No image available">
     {% endif %}
 
     <div class="p-2">
@@ -17,22 +15,47 @@
             {% endif %}
         </strong>
 
-        <a href="{{ item.url }}" target="_blank"
+        <a href="{{ item.url }}" target="_blank" rel="noopener noreferrer"
            class="btn btn-sm btn-primary w-100 mt-1">
             ▶
         </a>
 
-        {% if user.is_authenticated and not item.is_external %}
-            {% if item.id in watchlist_ids %}
-                <a href="/watchlist/remove/{{ item.id }}/"
-                   class="btn btn-sm btn-danger w-100 mt-1">
-                    ❌
-                </a>
+        {% if user.is_authenticated %}
+            {% if item.is_external %}
+                <form method="post" action="{% url 'content:import_external' %}">
+                    {% csrf_token %}
+                    <input type="hidden" name="title" value="{{ item.title }}">
+                    <input type="hidden" name="url" value="{{ item.url }}">
+                    <input type="hidden" name="genre" value="{{ item.genre|default:'Movie' }}">
+                    <input type="hidden" name="thumbnail" value="{{ item.thumbnail }}">
+                    <button type="submit" class="btn btn-sm btn-success w-100 mt-1">
+                        ＋ Library
+                    </button>
+                </form>
             {% else %}
-                <a href="/watchlist/add/{{ item.id }}/"
-                   class="btn btn-sm btn-success w-100 mt-1">
-                    ⭐
+                {% if item.id in watchlist_ids %}
+                    <a href="/watchlist/remove/{{ item.id }}/"
+                       class="btn btn-sm btn-danger w-100 mt-1">
+                        ❌ Watchlist
+                    </a>
+                {% else %}
+                    <a href="/watchlist/add/{{ item.id }}/"
+                       class="btn btn-sm btn-success w-100 mt-1">
+                        ⭐ Watchlist
+                    </a>
+                {% endif %}
+
+                <a href="{% url 'content:edit' item.id %}"
+                   class="btn btn-sm btn-outline-secondary w-100 mt-1">
+                    Edit
                 </a>
+                <form method="post" action="{% url 'content:delete' item.id %}"
+                      onsubmit="return confirm('Delete this content item?');">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-sm btn-outline-danger w-100 mt-1">
+                        Delete
+                    </button>
+                </form>
             {% endif %}
         {% endif %}
     </div>
