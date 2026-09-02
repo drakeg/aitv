@@ -1,0 +1,17 @@
+services:
+  web:
+    build:
+      context: .
+    command: >-
+      sh -c "python manage.py migrate --noinput &&
+             python manage.py runserver 0.0.0.0:8000"
+    ports:
+      - "${APP_PORT:-8000}:8000"
+    environment:
+      DJANGO_SECRET_KEY: "${DJANGO_SECRET_KEY:-dev-docker-key-change-me}"
+      DJANGO_DEBUG: "${DJANGO_DEBUG:-true}"
+      DJANGO_ALLOWED_HOSTS: "${DJANGO_ALLOWED_HOSTS:-127.0.0.1,localhost,0.0.0.0}"
+      TMDB_API_KEY: "${TMDB_API_KEY:-}"
+      TMDB_TIMEOUT_SECONDS: "${TMDB_TIMEOUT_SECONDS:-5}"
+    volumes:
+      - .:/app
