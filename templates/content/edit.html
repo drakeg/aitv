@@ -23,6 +23,11 @@
             {{ form.genre }}
             {{ form.genre.errors }}
         </div>
+        <div class="mb-3">
+            {{ form.content_type.label_tag }}
+            {{ form.content_type }}
+            {{ form.content_type.errors }}
+        </div>
 
         <button type="submit" class="btn btn-primary">Save</button>
         <a href="/" class="btn btn-outline-secondary">Cancel</a>
