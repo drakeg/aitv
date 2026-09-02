@@ -13,12 +13,13 @@ AI TV is a Django-based personal streaming dashboard for collecting content from
 - Django admin support for managed data
 - SQLite development database
 - Docker Compose workflow for fast local testing
+- Optional idempotent demo catalog for local/container testing
 
 ## Project structure
 
 ```text
 aitv/
-├── content/         # Content catalog, forms, and external content services
+├── content/         # Content catalog, forms, external services, and demo seed command
 ├── core/            # Site-level models, admin, and home/dashboard view
 ├── notifications/   # Notification application foundation
 ├── streamhub/       # Django project settings, URLs, and WSGI entry point
@@ -56,7 +57,7 @@ cp .env.example .env
 docker compose up --build
 ```
 
-The container runs database migrations automatically and starts Django on all container interfaces. By default the site is available at `http://127.0.0.1:8000/`.
+The container runs database migrations automatically, loads a small demo catalog, and starts Django on all container interfaces. The demo seed is idempotent, so restarting the container does not create duplicate rows. By default the site is available at `http://127.0.0.1:8000/`.
 
 To use another host port, change `APP_PORT` in `.env`, for example:
 
@@ -65,6 +66,18 @@ APP_PORT=8080
 ```
 
 Then browse to `http://127.0.0.1:8080/`.
+
+To start with an empty catalog instead, set:
+
+```dotenv
+LOAD_DEMO_CONTENT=false
+```
+
+You can also seed or refresh the demo catalog manually:
+
+```bash
+docker compose run --rm web python manage.py seed_demo_content
+```
 
 Because the repository is bind-mounted into the development container, Python/template/static-file changes are available immediately through Django's development reloader without rebuilding the image. Rebuild when dependencies or the Dockerfile change.
 
@@ -134,6 +147,7 @@ Then browse to `http://127.0.0.1:8000/`. Django admin is available at `/admin/`.
 | `DJANGO_ALLOWED_HOSTS` | empty outside Compose | Comma-separated hostnames accepted by Django. |
 | `TMDB_API_KEY` | empty | Enables TMDB trending movie discovery when configured. |
 | `TMDB_TIMEOUT_SECONDS` | `5` | Timeout for TMDB HTTP requests. |
+| `LOAD_DEMO_CONTENT` | `true` in Compose | Loads/refreshes a small demo catalog at container startup. |
 
 When `TMDB_API_KEY` is not configured or TMDB cannot be reached, the dashboard continues to load and simply omits live trending results.
 
@@ -163,7 +177,7 @@ GitHub Actions runs these checks for pull requests and pushes to `main`.
 
 `core.views.home` assembles the dashboard. Local catalog entries come from `ContentItem`; authenticated users can submit the Quick Add form; watchlist IDs are loaded for the signed-in user; and TMDB discovery is isolated behind `content.services` so external API failures do not take down the page.
 
-The Docker setup intentionally remains development-focused. It uses Django's development server, bind-mounts the working tree for rapid iteration, and stores the SQLite database in the repository working directory. Production deployment settings, a production database, static-file serving, authentication UX, and background refresh jobs remain future concerns.
+The Docker setup intentionally remains development-focused. It uses Django's development server, bind-mounts the working tree for rapid iteration, stores the SQLite database in the repository working directory, and optionally seeds a small local demo catalog. Production deployment settings, a production database, static-file serving, authentication UX, and background refresh jobs remain future concerns.
 
 ## Development roadmap
 
@@ -178,6 +192,7 @@ The Docker setup intentionally remains development-focused. It uses Django's dev
 
 ### Sprint 2 — Content ingestion and metadata
 
+- [x] Add repeatable demo content for useful local/container testing
 - [ ] Harden URL parsing and YouTube video-ID extraction
 - [ ] Add richer content metadata and validation
 - [ ] Add edit/delete flows for locally managed content
@@ -203,4 +218,4 @@ Do not commit real API keys or production secrets. `.env` is ignored by Git; use
 
 ## Status
 
-This project is under active development. The current focus is establishing a reliable, testable foundation before expanding content ingestion, personalization, and deployment capabilities.
+This project is under active development. The current focus is expanding reliable content ingestion and local testability on top of the established foundation.
