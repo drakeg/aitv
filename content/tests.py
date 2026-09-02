@@ -1,9 +1,12 @@
 import os
+from io import StringIO
 from unittest.mock import Mock, patch
 
 import requests
-from django.test import SimpleTestCase
+from django.core.management import call_command
+from django.test import SimpleTestCase, TestCase
 
+from content.models import ContentItem
 from content.services import fetch_trending_movies
 
 
@@ -60,3 +63,18 @@ class TrendingMoviesServiceTests(SimpleTestCase):
     )
     def test_invalid_timeout_returns_empty_list(self):
         self.assertEqual(fetch_trending_movies(), [])
+
+
+class DemoContentCommandTests(TestCase):
+    def test_seed_demo_content_is_idempotent(self):
+        output = StringIO()
+
+        call_command('seed_demo_content', stdout=output)
+        first_count = ContentItem.objects.count()
+        call_command('seed_demo_content', stdout=output)
+
+        self.assertEqual(first_count, 4)
+        self.assertEqual(ContentItem.objects.count(), 4)
+        self.assertEqual(ContentItem.objects.filter(source_type='youtube').count(), 4)
+        self.assertTrue(ContentItem.objects.filter(genre__icontains='comedy').exists())
+        self.assertTrue(ContentItem.objects.filter(genre__icontains='action').exists())
