@@ -1,7 +1,7 @@
 <div class="card">
 
     {% if item.thumbnail %}
-        <img src="{{ item.thumbnail }}" alt="{{ item.title|default:item.name }}">
+        <img src="{{ item.thumbnail }}" alt="{% if item.title %}{{ item.title }}{% else %}{{ item.name|default:'Content item' }}{% endif %}">
     {% else %}
         <img src="https://via.placeholder.com/300x170?text=No+Image" alt="No image available">
     {% endif %}
@@ -11,7 +11,7 @@
             {% if item.title %}
                 {{ item.title|truncatechars:20 }}
             {% else %}
-                {{ item.name|truncatechars:20 }}
+                {{ item.name|default:'Untitled'|truncatechars:20 }}
             {% endif %}
         </strong>
 
