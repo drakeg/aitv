@@ -60,6 +60,8 @@ class WatchlistFlowTests(TestCase):
                 'saved': True,
                 'content_id': self.item.id,
                 'label': '✓ Saved to Watchlist',
+                'add_url': reverse('watchlist:add', args=[self.item.id]),
+                'remove_url': reverse('watchlist:remove', args=[self.item.id]),
             },
         )
 
@@ -74,6 +76,8 @@ class WatchlistFlowTests(TestCase):
                 'saved': False,
                 'content_id': self.item.id,
                 'label': '⭐ Save to Watchlist',
+                'add_url': reverse('watchlist:add', args=[self.item.id]),
+                'remove_url': reverse('watchlist:remove', args=[self.item.id]),
             },
         )
         self.assertFalse(Watchlist.objects.filter(user=self.user, content=self.item).exists())
