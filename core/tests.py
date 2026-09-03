@@ -129,3 +129,10 @@ class CatalogBrowseTests(TestCase):
         response = self.client.get(reverse('home'), {'q': 'definitely-not-here'})
         self.assertContains(response, 'No matching titles found.')
         self.assertContains(response, 'Try a broader search')
+
+    def test_network_card_shows_provider_visual_and_title(self, _mock_tv, _mock_movies):
+        response = self.client.get(reverse('home'))
+        self.assertContains(response, 'card-placeholder-provider')
+        self.assertContains(response, '>CBS<', html=False)
+        self.assertContains(response, 'Kitchen Stories')
+        self.assertContains(response, 'content-title')
