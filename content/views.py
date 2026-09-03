@@ -2,13 +2,14 @@ from decimal import Decimal, InvalidOperation
 from urllib.parse import urlparse
 
 from django.contrib.auth.decorators import login_required
-from django.http import HttpResponseBadRequest
+from django.http import HttpResponseBadRequest, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
+from django.urls import reverse
 from django.views.decorators.http import require_POST
 
 from watchlist.models import Watchlist
 
-from .forms import ContentItemForm
+from .forms import ContentAvailabilityFormSet, ContentItemForm
 from .models import ContentItem
 
 
@@ -17,13 +18,37 @@ def edit_content(request, content_id):
     item = get_object_or_404(ContentItem, id=content_id)
     if request.method == 'POST':
         form = ContentItemForm(request.POST, instance=item)
-        if form.is_valid():
-            form.save()
+        has_availability_formset = 'availability-TOTAL_FORMS' in request.POST
+        availability_formset = ContentAvailabilityFormSet(
+            request.POST if has_availability_formset else None,
+            instance=item,
+            prefix='availability',
+        )
+        availability_valid = (
+            availability_formset.is_valid() if has_availability_formset else True
+        )
+        if form.is_valid() and availability_valid:
+            item = form.save()
+            if has_availability_formset:
+                availability_formset.instance = item
+                availability_formset.save()
             return redirect('/')
     else:
         form = ContentItemForm(instance=item)
+        availability_formset = ContentAvailabilityFormSet(
+            instance=item,
+            prefix='availability',
+        )
 
-    return render(request, 'content/edit.html', {'form': form, 'item': item})
+    return render(
+        request,
+        'content/edit.html',
+        {
+            'form': form,
+            'availability_formset': availability_formset,
+            'item': item,
+        },
+    )
 
 
 @login_required
@@ -99,4 +124,11 @@ def import_external_content(request):
         item = ContentItem.objects.create(url=url, **defaults)
 
     Watchlist.objects.get_or_create(user=request.user, content=item)
-    return redirect(request.POST.get('next') or '/')
+    if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+        return JsonResponse({
+            'saved': True,
+            'content_id': item.id,
+            'remove_url': reverse('watchlist:remove', args=[item.id]),
+            'label': '✓ Saved to Watchlist',
+        })
+    return redirect('/')

@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="container py-4" style="max-width: 720px;">
+<div class="container py-4" style="max-width: 860px;">
     <h2 class="mb-3">Edit {{ item.title }}</h2>
 
     <form method="post">
@@ -29,7 +29,47 @@
             {{ form.content_type.errors }}
         </div>
 
-        <button type="submit" class="btn btn-primary">Save</button>
+        <hr class="my-4">
+        <h4>Watch providers</h4>
+        <p class="text-muted">Add more legitimate destinations for this title. Existing provider links can be edited or removed here.</p>
+
+        {{ availability_formset.management_form }}
+        {{ availability_formset.non_form_errors }}
+        <div class="d-flex flex-column gap-3 mb-3">
+            {% for provider_form in availability_formset %}
+                <div class="provider-editor p-3 border rounded">
+                    {{ provider_form.id }}
+                    {{ provider_form.non_field_errors }}
+                    <div class="row g-2 align-items-end">
+                        <div class="col-md-3">
+                            {{ provider_form.provider.label_tag }}
+                            {{ provider_form.provider }}
+                            {{ provider_form.provider.errors }}
+                        </div>
+                        <div class="col-md-5">
+                            {{ provider_form.url.label_tag }}
+                            {{ provider_form.url }}
+                            {{ provider_form.url.errors }}
+                        </div>
+                        <div class="col-md-2">
+                            {{ provider_form.access_type.label_tag }}
+                            {{ provider_form.access_type }}
+                            {{ provider_form.access_type.errors }}
+                        </div>
+                        <div class="col-md-2">
+                            {% if provider_form.instance.pk %}
+                                <div class="form-check mt-4">
+                                    {{ provider_form.DELETE }}
+                                    <label class="form-check-label" for="{{ provider_form.DELETE.id_for_label }}">Remove</label>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+
+        <button type="submit" class="btn btn-primary">Save changes</button>
         <a href="/" class="btn btn-outline-secondary">Cancel</a>
     </form>
 </div>

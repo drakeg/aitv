@@ -2,6 +2,7 @@ import re
 from urllib.parse import parse_qs, urlparse
 
 from django import forms
+from django.forms import inlineformset_factory
 
 from .models import ContentAvailability, ContentItem
 from .providers import detect_provider, ensure_direct_availability
@@ -77,6 +78,28 @@ class ContentItemForm(forms.ModelForm):
                 ).delete()
             ensure_direct_availability(instance)
         return instance
+
+
+class ContentAvailabilityForm(forms.ModelForm):
+    class Meta:
+        model = ContentAvailability
+        fields = ['provider', 'url', 'access_type']
+        widgets = {
+            'provider': forms.TextInput(attrs={'placeholder': 'Provider name'}),
+            'url': forms.URLInput(attrs={'placeholder': 'Direct provider URL'}),
+        }
+
+    def clean_provider(self):
+        return self.cleaned_data['provider'].strip()
+
+
+ContentAvailabilityFormSet = inlineformset_factory(
+    ContentItem,
+    ContentAvailability,
+    form=ContentAvailabilityForm,
+    extra=1,
+    can_delete=True,
+)
 
 
 class QuickAddForm(ContentItemForm):
