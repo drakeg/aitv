@@ -17,15 +17,20 @@ def edit_content(request, content_id):
     item = get_object_or_404(ContentItem, id=content_id)
     if request.method == 'POST':
         form = ContentItemForm(request.POST, instance=item)
+        has_availability_formset = 'availability-TOTAL_FORMS' in request.POST
         availability_formset = ContentAvailabilityFormSet(
-            request.POST,
+            request.POST if has_availability_formset else None,
             instance=item,
             prefix='availability',
         )
-        if form.is_valid() and availability_formset.is_valid():
+        availability_valid = (
+            availability_formset.is_valid() if has_availability_formset else True
+        )
+        if form.is_valid() and availability_valid:
             item = form.save()
-            availability_formset.instance = item
-            availability_formset.save()
+            if has_availability_formset:
+                availability_formset.instance = item
+                availability_formset.save()
             return redirect('/')
     else:
         form = ContentItemForm(instance=item)
