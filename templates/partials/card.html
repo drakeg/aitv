@@ -37,30 +37,37 @@
 
         {% if user.is_authenticated %}
             {% if item.is_external %}
-                <form method="post" action="{% url 'content:import_external' %}">
-                    {% csrf_token %}
-                    <input type="hidden" name="title" value="{{ item.title }}">
-                    <input type="hidden" name="url" value="{{ item.url }}">
-                    <input type="hidden" name="genre" value="{{ item.genre|default:'Movie' }}">
-                    <input type="hidden" name="thumbnail" value="{{ item.thumbnail }}">
-                    <input type="hidden" name="content_type" value="{{ item.content_type }}">
-                    <input type="hidden" name="description" value="{{ item.description }}">
-                    <input type="hidden" name="release_year" value="{{ item.release_year|default:'' }}">
-                    <input type="hidden" name="rating" value="{{ item.rating|default:'' }}">
-                    <input type="hidden" name="external_source" value="{{ item.external_source }}">
-                    <input type="hidden" name="external_id" value="{{ item.external_id }}">
-                    <button type="submit" class="btn btn-sm btn-success w-100 mt-1">⭐ Save to Watchlist</button>
-                </form>
+                {% if item.saved_content_id %}
+                    <form method="post" action="{% url 'watchlist:remove' item.saved_content_id %}">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-sm btn-danger w-100 mt-1" title="Remove from watchlist">✓ Saved to Watchlist</button>
+                    </form>
+                {% else %}
+                    <form method="post" action="{% url 'content:import_external' %}">
+                        {% csrf_token %}
+                        <input type="hidden" name="title" value="{{ item.title }}">
+                        <input type="hidden" name="url" value="{{ item.url }}">
+                        <input type="hidden" name="genre" value="{{ item.genre|default:'Movie' }}">
+                        <input type="hidden" name="thumbnail" value="{{ item.thumbnail }}">
+                        <input type="hidden" name="content_type" value="{{ item.content_type }}">
+                        <input type="hidden" name="description" value="{{ item.description }}">
+                        <input type="hidden" name="release_year" value="{{ item.release_year|default:'' }}">
+                        <input type="hidden" name="rating" value="{{ item.rating|default:'' }}">
+                        <input type="hidden" name="external_source" value="{{ item.external_source }}">
+                        <input type="hidden" name="external_id" value="{{ item.external_id }}">
+                        <button type="submit" class="btn btn-sm btn-success w-100 mt-1">⭐ Save to Watchlist</button>
+                    </form>
+                {% endif %}
             {% else %}
                 {% if item.id in watchlist_ids %}
                     <form method="post" action="{% url 'watchlist:remove' item.id %}">
                         {% csrf_token %}
-                        <button type="submit" class="btn btn-sm btn-danger w-100 mt-1">❌ Watchlist</button>
+                        <button type="submit" class="btn btn-sm btn-danger w-100 mt-1">✓ Saved to Watchlist</button>
                     </form>
                 {% else %}
                     <form method="post" action="{% url 'watchlist:add' item.id %}">
                         {% csrf_token %}
-                        <button type="submit" class="btn btn-sm btn-success w-100 mt-1">⭐ Watchlist</button>
+                        <button type="submit" class="btn btn-sm btn-success w-100 mt-1">⭐ Save to Watchlist</button>
                     </form>
                 {% endif %}
 
