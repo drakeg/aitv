@@ -2,7 +2,7 @@ from decimal import Decimal, InvalidOperation
 from urllib.parse import urlparse
 
 from django.contrib.auth.decorators import login_required
-from django.http import HttpResponseBadRequest
+from django.http import HttpResponseBadRequest, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_POST
 
@@ -123,4 +123,11 @@ def import_external_content(request):
         item = ContentItem.objects.create(url=url, **defaults)
 
     Watchlist.objects.get_or_create(user=request.user, content=item)
+    if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+        return JsonResponse({
+            'saved': True,
+            'content_id': item.id,
+            'remove_url': f'/watchlist/{item.id}/remove/',
+            'label': '✓ Saved to Watchlist',
+        })
     return redirect('/')
