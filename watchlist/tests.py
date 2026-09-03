@@ -44,3 +44,36 @@ class WatchlistFlowTests(TestCase):
         )
         self.assertRedirects(remove_response, reverse('watchlist:list'))
         self.assertFalse(Watchlist.objects.filter(user=self.user, content=self.item).exists())
+
+    def test_async_add_and_remove_return_state_without_redirect(self):
+        self.client.force_login(self.user)
+        headers = {'HTTP_X_REQUESTED_WITH': 'XMLHttpRequest'}
+
+        add_response = self.client.post(
+            reverse('watchlist:add', args=[self.item.id]),
+            **headers,
+        )
+        self.assertEqual(add_response.status_code, 200)
+        self.assertJSONEqual(
+            add_response.content,
+            {
+                'saved': True,
+                'content_id': self.item.id,
+                'label': '✓ Saved to Watchlist',
+            },
+        )
+
+        remove_response = self.client.post(
+            reverse('watchlist:remove', args=[self.item.id]),
+            **headers,
+        )
+        self.assertEqual(remove_response.status_code, 200)
+        self.assertJSONEqual(
+            remove_response.content,
+            {
+                'saved': False,
+                'content_id': self.item.id,
+                'label': '⭐ Save to Watchlist',
+            },
+        )
+        self.assertFalse(Watchlist.objects.filter(user=self.user, content=self.item).exists())
