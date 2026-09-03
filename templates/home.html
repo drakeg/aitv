@@ -26,13 +26,8 @@
 <div class="mb-4">
     <h4 class="mb-2">🔎 Search & Browse Results</h4>
     <div class="row-scroll">
-        {% for item in browse_results %}
-            {% include "partials/card.html" %}
-        {% empty %}
-            <div class="empty-state">
-                <strong>No matching titles found.</strong>
-                <div class="text-muted">Try a broader search, another content type, or a different provider.</div>
-            </div>
+        {% for item in browse_results %}{% include "partials/card.html" %}{% empty %}
+            <div class="empty-state"><strong>No matching titles found.</strong><div class="text-muted">Try a broader search, another content type, or a different provider.</div></div>
         {% endfor %}
     </div>
 </div>
@@ -41,80 +36,63 @@
 {% if user.is_authenticated %}
 <div class="quick-add mb-3">
     <form method="post" class="d-flex gap-2 align-items-center flex-wrap">
-        {% csrf_token %}
-        {{ form.title }}
-        {{ form.url }}
-        {{ form.genre }}
-        {{ form.content_type }}
+        {% csrf_token %}{{ form.title }}{{ form.url }}{{ form.genre }}{{ form.content_type }}
         <button class="btn btn-success">+</button>
     </form>
 </div>
 {% endif %}
 
 <div class="mb-4">
-    <h4 class="mb-2">📡 Watch on Networks</h4>
+    <h4 class="mb-1">📺 On TV Today</h4>
+    <div class="small text-muted mb-2">Live schedule data from TVmaze. Network/service and official destination are shown on each card.</div>
     <div class="row-scroll">
-        {% for item in network_items %}
-            {% include "partials/card.html" %}
-        {% empty %}
-            <div class="text-muted">No direct network sources in the local catalog yet.</div>
+        {% for item in live_tv %}{% include "partials/card.html" %}{% empty %}
+            <div class="text-muted">Live US TV schedule is temporarily unavailable.</div>
         {% endfor %}
     </div>
 </div>
 
 <div class="mb-4">
-    <h4 class="mb-2">🎬 Trending Movies</h4>
+    <h4 class="mb-1">🎞️ Watch Free Now</h4>
+    <div class="small text-muted mb-2">Live playable movie records from the Internet Archive.</div>
     <div class="row-scroll">
-        {% for item in trending_movies %}
-            {% include "partials/card.html" %}
-        {% empty %}
-            <div class="text-muted">Live movie discovery is unavailable. Configure a TMDB credential or try again later.</div>
+        {% for item in free_movies %}{% include "partials/card.html" %}{% empty %}
+            <div class="text-muted">Internet Archive movie discovery is temporarily unavailable.</div>
         {% endfor %}
     </div>
 </div>
 
 <div class="mb-4">
-    <h4 class="mb-2">📺 Trending TV</h4>
+    <h4 class="mb-2">📡 Saved Network Sources</h4>
     <div class="row-scroll">
-        {% for item in trending_tv %}
-            {% include "partials/card.html" %}
-        {% empty %}
-            <div class="text-muted">Live TV discovery is unavailable. Configure a TMDB credential or try again later.</div>
+        {% for item in network_items %}{% include "partials/card.html" %}{% empty %}
+            <div class="text-muted">No saved network sources yet.</div>
         {% endfor %}
     </div>
 </div>
 
 <div class="mb-4">
-    <h4 class="mb-2">🍿 Movies</h4>
+    <h4 class="mb-1">🎬 Trending Movies</h4>
+    <div class="small text-muted mb-2">Discovery metadata; watch sources are intentionally prioritized above.</div>
     <div class="row-scroll">
-        {% for item in movies %}
-            {% include "partials/card.html" %}
-        {% empty %}
-            <div class="text-muted">No movies in the local catalog yet.</div>
+        {% for item in trending_movies %}{% include "partials/card.html" %}{% empty %}
+            <div class="text-muted">TMDB movie discovery is unavailable.</div>
         {% endfor %}
     </div>
 </div>
 
 <div class="mb-4">
-    <h4 class="mb-2">📺 TV Shows</h4>
+    <h4 class="mb-1">📺 Trending TV</h4>
+    <div class="small text-muted mb-2">Discovery metadata; use the live TV row above for current network/service destinations.</div>
     <div class="row-scroll">
-        {% for item in tv %}
-            {% include "partials/card.html" %}
-        {% empty %}
-            <div class="text-muted">No TV shows in the local catalog yet.</div>
+        {% for item in trending_tv %}{% include "partials/card.html" %}{% empty %}
+            <div class="text-muted">TMDB TV discovery is unavailable.</div>
         {% endfor %}
     </div>
 </div>
 
-<div class="mb-5">
-    <h4 class="mb-2">▶️ Web Video</h4>
-    <div class="row-scroll">
-        {% for item in youtube %}
-            {% include "partials/card.html" %}
-        {% empty %}
-            <div class="text-muted">No YouTube videos in the local catalog yet.</div>
-        {% endfor %}
-    </div>
-</div>
+<div class="mb-4"><h4 class="mb-2">🍿 Saved Movies</h4><div class="row-scroll">{% for item in movies %}{% include "partials/card.html" %}{% empty %}<div class="text-muted">No movies in the local catalog yet.</div>{% endfor %}</div></div>
+<div class="mb-4"><h4 class="mb-2">📺 Saved TV Shows</h4><div class="row-scroll">{% for item in tv %}{% include "partials/card.html" %}{% empty %}<div class="text-muted">No TV shows in the local catalog yet.</div>{% endfor %}</div></div>
+<div class="mb-5"><h4 class="mb-2">▶️ Web Video</h4><div class="row-scroll">{% for item in youtube %}{% include "partials/card.html" %}{% empty %}<div class="text-muted">No YouTube videos in the local catalog yet.</div>{% endfor %}</div></div>
 
 {% endblock %}
