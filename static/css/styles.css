@@ -125,18 +125,35 @@ h4 {
 }
 
 /* =========================
-   QUICK ADD BAR
+   BROWSE + QUICK ADD
 ========================= */
+.browse-bar,
 .quick-add {
     background: #1c1c1c;
     padding: 10px;
     border-radius: 6px;
-    max-width: 900px;
+    max-width: 1000px;
 }
 
-.quick-add input {
-    height: 30px;
+.browse-bar input[type="search"] {
+    min-width: 280px;
+    flex: 1 1 320px;
+}
+
+.browse-bar input,
+.browse-bar select,
+.quick-add input,
+.quick-add select {
+    min-height: 32px;
     font-size: 0.8rem;
+}
+
+.empty-state {
+    background: #1e1e1e;
+    border: 1px solid #333;
+    border-radius: 8px;
+    padding: 14px;
+    min-width: 300px;
 }
 
 /* =========================
