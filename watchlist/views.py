@@ -1,6 +1,7 @@
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
+from django.urls import reverse
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.views.decorators.http import require_POST
 
@@ -25,6 +26,8 @@ def _watchlist_response(request, *, content, saved):
             'saved': saved,
             'content_id': content.id,
             'label': '✓ Saved to Watchlist' if saved else '⭐ Save to Watchlist',
+            'add_url': reverse('watchlist:add', args=[content.id]),
+            'remove_url': reverse('watchlist:remove', args=[content.id]),
         })
     return redirect(_safe_fallback_url(request))
 
