@@ -3,7 +3,16 @@
     {% if item.thumbnail %}
         <img src="{{ item.thumbnail }}" alt="{% if item.title %}{{ item.title }}{% else %}{{ item.name|default:'Content item' }}{% endif %}">
     {% else %}
-        <div class="d-flex align-items-center justify-content-center bg-light text-muted" style="height: 170px;">No image</div>
+        {% with first_availability=item.availabilities.all.0 %}
+            <div class="card-placeholder" aria-label="{% if item.title %}{{ item.title }}{% else %}{{ item.name|default:'Content item' }}{% endif %}">
+                {% if first_availability %}
+                    <span class="card-placeholder-provider">{{ first_availability.provider }}</span>
+                    <span class="card-placeholder-kind">Watch source</span>
+                {% else %}
+                    <span class="card-placeholder-provider">No image</span>
+                {% endif %}
+            </div>
+        {% endwith %}
     {% endif %}
 
     <div class="p-2">
@@ -13,7 +22,7 @@
             {% if item.rating %}<span class="badge text-bg-light">★ {{ item.rating }}</span>{% endif %}
         </div>
 
-        <strong class="content-title">
+        <strong class="content-title" title="{% if item.title %}{{ item.title }}{% else %}{{ item.name|default:'Untitled' }}{% endif %}">
             {% if item.title %}{{ item.title|truncatechars:28 }}{% else %}{{ item.name|default:'Untitled'|truncatechars:28 }}{% endif %}
         </strong>
 
