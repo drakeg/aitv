@@ -4,21 +4,15 @@
 
 <div class="browse-bar mb-3">
     <form method="get" class="d-flex gap-2 align-items-center flex-wrap">
-        <input type="search" name="q" value="{{ browse_query }}" placeholder="Search titles, genres, descriptions" aria-label="Search catalog">
+        <input type="search" name="q" value="{{ browse_query }}" placeholder="Search live titles, genres, networks" aria-label="Search live discovery">
         <select name="type" aria-label="Content type">
             <option value="">All types</option>
             <option value="movie" {% if browse_type == 'movie' %}selected{% endif %}>Movies</option>
             <option value="tv" {% if browse_type == 'tv' %}selected{% endif %}>TV Shows</option>
-            <option value="video" {% if browse_type == 'video' %}selected{% endif %}>Web Video</option>
-        </select>
-        <select name="provider" aria-label="Provider">
-            <option value="">All providers</option>
-            {% for provider in providers %}
-                <option value="{{ provider }}" {% if browse_provider == provider %}selected{% endif %}>{{ provider }}</option>
-            {% endfor %}
         </select>
         <button class="btn btn-primary" type="submit">Search</button>
         {% if browse_active %}<a class="btn btn-secondary" href="{% url 'home' %}">Clear</a>{% endif %}
+        <span class="small text-muted">Dashboard results come only from live upstream sources.</span>
     </form>
 </div>
 
@@ -28,21 +22,12 @@
 
 {% if browse_active %}
 <div class="mb-4">
-    <h4 class="mb-2">🔎 Search & Browse Results</h4>
+    <h4 class="mb-2">🔎 Live Search Results</h4>
     <div class="row-scroll">
         {% for item in browse_results %}{% include "partials/card.html" %}{% empty %}
-            <div class="empty-state"><strong>No matching titles found.</strong><div class="text-muted">Try a broader search, another content type, or a different provider.</div></div>
+            <div class="empty-state"><strong>No matching live titles found.</strong><div class="text-muted">Try a broader title, genre, or content type.</div></div>
         {% endfor %}
     </div>
-</div>
-{% endif %}
-
-{% if user.is_authenticated %}
-<div class="quick-add mb-3">
-    <form method="post" class="d-flex gap-2 align-items-center flex-wrap">
-        {% csrf_token %}{{ form.title }}{{ form.url }}{{ form.genre }}{{ form.content_type }}
-        <button class="btn btn-success">+</button>
-    </form>
 </div>
 {% endif %}
 
@@ -58,7 +43,7 @@
 
 <div class="mb-4">
     <h4 class="mb-1">🎞️ Watch Free Now</h4>
-    <div class="small text-muted mb-2">Live playable movie records from the Internet Archive.</div>
+    <div class="small text-muted mb-2">Live playable movie records pulled from the Internet Archive.</div>
     <div class="row-scroll">
         {% for item in free_movies %}{% include "partials/card.html" %}{% empty %}
             <div class="text-muted">Internet Archive movie discovery is temporarily unavailable.</div>
@@ -67,17 +52,8 @@
 </div>
 
 <div class="mb-4">
-    <h4 class="mb-2">📡 Saved Network Sources</h4>
-    <div class="row-scroll">
-        {% for item in network_items %}{% include "partials/card.html" %}{% empty %}
-            <div class="text-muted">No saved network sources yet.</div>
-        {% endfor %}
-    </div>
-</div>
-
-<div class="mb-4">
     <h4 class="mb-1">🎬 Trending Movies</h4>
-    <div class="small text-muted mb-2">TMDB discovery enriched with runtime and US watch-provider availability when available.</div>
+    <div class="small text-muted mb-2">Live TMDB discovery enriched with runtime and current US watch-provider availability when supplied upstream.</div>
     <div class="row-scroll">
         {% for item in trending_movies %}{% include "partials/card.html" %}{% empty %}
             <div class="text-muted">No movie discovery currently matches your preferences.</div>
@@ -85,18 +61,14 @@
     </div>
 </div>
 
-<div class="mb-4">
+<div class="mb-5">
     <h4 class="mb-1">📺 Trending TV</h4>
-    <div class="small text-muted mb-2">TMDB discovery enriched with network/service, episode/runtime context, and US watch-provider availability.</div>
+    <div class="small text-muted mb-2">Live TMDB discovery enriched with network/service, episode/runtime context, and current US watch-provider availability.</div>
     <div class="row-scroll">
         {% for item in trending_tv %}{% include "partials/card.html" %}{% empty %}
             <div class="text-muted">No TV discovery currently matches your preferences.</div>
         {% endfor %}
     </div>
 </div>
-
-<div class="mb-4"><h4 class="mb-2">🍿 Saved Movies</h4><div class="row-scroll">{% for item in movies %}{% include "partials/card.html" %}{% empty %}<div class="text-muted">No movies in the local catalog yet.</div>{% endfor %}</div></div>
-<div class="mb-4"><h4 class="mb-2">📺 Saved TV Shows</h4><div class="row-scroll">{% for item in tv %}{% include "partials/card.html" %}{% empty %}<div class="text-muted">No TV shows in the local catalog yet.</div>{% endfor %}</div></div>
-<div class="mb-5"><h4 class="mb-2">▶️ Web Video</h4><div class="row-scroll">{% for item in youtube %}{% include "partials/card.html" %}{% empty %}<div class="text-muted">No YouTube videos in the local catalog yet.</div>{% endfor %}</div></div>
 
 {% endblock %}
