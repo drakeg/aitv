@@ -1,5 +1,6 @@
 from django.contrib.auth import login
 from django.contrib.auth.forms import UserCreationForm
+from django.db.models import Q
 from django.shortcuts import redirect, render
 
 from content.forms import QuickAddForm
@@ -25,18 +26,8 @@ def register(request):
     return render(request, 'registration/register.html', {'form': form})
 
 
-def _mark_saved_discovery_items(items, saved_external_items):
-    for item in items:
-        key = (
-            item.get('external_source', ''),
-            item.get('external_id', ''),
-            item.get('content_type', ''),
-        )
-        item['saved_content_id'] = saved_external_items.get(key)
-
-
 def home(request):
-    db_items = list(ContentItem.objects.prefetch_related('availabilities').all())
+    db_queryset = ContentItem.objects.prefetch_related('availabilities').all()
 
     if request.method == 'POST' and request.user.is_authenticated:
         form = QuickAddForm(request.POST)
@@ -50,26 +41,25 @@ def home(request):
     trending_tv = fetch_trending_tv()
 
     watchlist_ids = []
-    saved_external_items = {}
+    saved_external_ids = set()
     if request.user.is_authenticated:
-        watchlist_entries = list(
+        saved_items = list(
             Watchlist.objects.filter(user=request.user)
             .select_related('content')
         )
-        watchlist_ids = [entry.content_id for entry in watchlist_entries]
-        saved_external_items = {
-            (
-                entry.content.external_source,
-                entry.content.external_id,
-                entry.content.content_type,
-            ): entry.content_id
-            for entry in watchlist_entries
+        watchlist_ids = [entry.content_id for entry in saved_items]
+        saved_external_ids = {
+            (entry.content.external_source, entry.content.external_id, entry.content.content_type): entry.content_id
+            for entry in saved_items
             if entry.content.external_source and entry.content.external_id
         }
 
-    _mark_saved_discovery_items(trending_movies, saved_external_items)
-    _mark_saved_discovery_items(trending_tv, saved_external_items)
+    for item in [*trending_movies, *trending_tv]:
+        item.saved_content_id = saved_external_ids.get(
+            (item.external_source, item.external_id, item.content_type)
+        )
 
+    db_items = list(db_queryset)
     network_items = [
         item
         for item in db_items
@@ -78,6 +68,37 @@ def home(request):
             for availability in item.availabilities.all()
         )
     ]
+
+    query = request.GET.get('q', '').strip()
+    content_type = request.GET.get('type', '').strip()
+    provider = request.GET.get('provider', '').strip()
+    browse_active = bool(query or content_type or provider)
+    browse_results = []
+
+    if browse_active:
+        browse_queryset = db_queryset
+        if query:
+            browse_queryset = browse_queryset.filter(
+                Q(title__icontains=query)
+                | Q(genre__icontains=query)
+                | Q(description__icontains=query)
+            )
+        if content_type in {
+            ContentItem.ContentType.MOVIE,
+            ContentItem.ContentType.TV,
+            ContentItem.ContentType.VIDEO,
+        }:
+            browse_queryset = browse_queryset.filter(content_type=content_type)
+        if provider:
+            browse_queryset = browse_queryset.filter(availabilities__provider__iexact=provider)
+        browse_results = list(browse_queryset.distinct().order_by('title'))
+
+    providers = sorted({
+        availability.provider
+        for item in db_items
+        for availability in item.availabilities.all()
+        if availability.provider
+    })
 
     context = {
         'form': form,
@@ -88,6 +109,12 @@ def home(request):
         'tv': [x for x in db_items if x.content_type == ContentItem.ContentType.TV],
         'youtube': [x for x in db_items if x.source_type == 'youtube'],
         'watchlist_ids': watchlist_ids,
+        'browse_active': browse_active,
+        'browse_results': browse_results,
+        'browse_query': query,
+        'browse_type': content_type,
+        'browse_provider': provider,
+        'providers': providers,
     }
 
     return render(request, 'home.html', context)
