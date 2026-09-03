@@ -34,6 +34,9 @@ h4 { font-weight: 600; color: #ddd; margin-bottom: 8px; margin-left: 5px; }
 .browse-bar, .quick-add { background: #1c1c1c; padding: 10px; border-radius: 6px; max-width: 1000px; }
 .browse-bar input[type="search"] { min-width: 280px; flex: 1 1 320px; }
 .browse-bar input, .browse-bar select, .quick-add input, .quick-add select { min-height: 32px; font-size: 0.8rem; }
+.genre-choice { display: inline-flex; align-items: center; gap: 5px; background: #292929; border: 1px solid #444; border-radius: 999px; padding: 5px 9px; font-size: 0.76rem; cursor: pointer; }
+.genre-choice input { min-height: 0 !important; margin: 0; }
+.genre-choice:has(input:checked) { border-color: #888; background: #3a3a3a; }
 .empty-state { background: #1e1e1e; border: 1px solid #333; border-radius: 8px; padding: 14px; min-width: 300px; }
 input, select { background-color: #333 !important; color: white !important; border: 1px solid #555 !important; }
 input::placeholder { color: #aaa; }
