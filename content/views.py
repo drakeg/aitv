@@ -8,7 +8,7 @@ from django.views.decorators.http import require_POST
 
 from watchlist.models import Watchlist
 
-from .forms import ContentItemForm
+from .forms import ContentAvailabilityFormSet, ContentItemForm
 from .models import ContentItem
 
 
@@ -17,13 +17,32 @@ def edit_content(request, content_id):
     item = get_object_or_404(ContentItem, id=content_id)
     if request.method == 'POST':
         form = ContentItemForm(request.POST, instance=item)
-        if form.is_valid():
-            form.save()
+        availability_formset = ContentAvailabilityFormSet(
+            request.POST,
+            instance=item,
+            prefix='availability',
+        )
+        if form.is_valid() and availability_formset.is_valid():
+            item = form.save()
+            availability_formset.instance = item
+            availability_formset.save()
             return redirect('/')
     else:
         form = ContentItemForm(instance=item)
+        availability_formset = ContentAvailabilityFormSet(
+            instance=item,
+            prefix='availability',
+        )
 
-    return render(request, 'content/edit.html', {'form': form, 'item': item})
+    return render(
+        request,
+        'content/edit.html',
+        {
+            'form': form,
+            'availability_formset': availability_formset,
+            'item': item,
+        },
+    )
 
 
 @login_required
@@ -99,4 +118,4 @@ def import_external_content(request):
         item = ContentItem.objects.create(url=url, **defaults)
 
     Watchlist.objects.get_or_create(user=request.user, content=item)
-    return redirect(request.POST.get('next') or '/')
+    return redirect('/')
