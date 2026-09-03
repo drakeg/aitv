@@ -83,10 +83,13 @@ def fetch_trending_tv():
     return _fetch_tmdb('/trending/tv/week', 'tv')
 
 
-def fetch_tmdb_watch_context(content_type, external_id):
-    """Fetch current US watch context for one TMDB discovery card."""
+def fetch_tmdb_watch_context(content_type, external_id, region='US'):
+    """Fetch current watch context for one TMDB discovery card in a region."""
     if content_type not in {'movie', 'tv'} or not str(external_id).isdigit():
         return {}
+    region = str(region or 'US').strip().upper()
+    if len(region) != 2 or not region.isalpha():
+        region = 'US'
 
     read_token = os.getenv('TMDB_READ_ACCESS_TOKEN', '').strip()
     api_key = os.getenv('TMDB_API_KEY', '').strip()
@@ -112,7 +115,7 @@ def fetch_tmdb_watch_context(content_type, external_id):
     except (requests.RequestException, ValueError):
         return {}
 
-    us = (data.get('watch/providers') or {}).get('results', {}).get('US', {})
+    regional = (data.get('watch/providers') or {}).get('results', {}).get(region, {})
     provider_rows = []
     seen = set()
     access_groups = (
@@ -123,7 +126,7 @@ def fetch_tmdb_watch_context(content_type, external_id):
         ('buy', 'Buy'),
     )
     for key, access_label in access_groups:
-        for provider in us.get(key, []) or []:
+        for provider in regional.get(key, []) or []:
             name = str(provider.get('provider_name') or '').strip()
             if not name or name in seen:
                 continue
@@ -151,6 +154,7 @@ def fetch_tmdb_watch_context(content_type, external_id):
 
     visible_providers = provider_rows[:2]
     return {
+        'region': region,
         'network': network_names[0] if network_names else '',
         'networks': network_names,
         'runtime': runtime,
@@ -158,8 +162,9 @@ def fetch_tmdb_watch_context(content_type, external_id):
         'providers': visible_providers,
         'provider_count': len(provider_rows),
         'additional_provider_count': max(0, len(provider_rows) - len(visible_providers)),
-        'watch_url': us.get('link') or '',
-        'has_watch_details': bool(network_names or runtime or episode_label or provider_rows or us.get('link')),
+        'watch_url': regional.get('link') or '',
+        'is_available_in_region': bool(provider_rows or regional.get('link')),
+        'has_watch_details': bool(network_names or runtime or episode_label or provider_rows or regional.get('link')),
     }
 
 
@@ -176,9 +181,12 @@ def _strip_html(value):
     return ' '.join(unescape(text).split())
 
 
-def fetch_live_tv_schedule(limit=40):
+def fetch_live_tv_schedule(limit=40, country='US'):
+    country = str(country or 'US').strip().upper()
+    if len(country) != 2 or not country.isalpha():
+        country = 'US'
     try:
-        response = requests.get(f'{TVMAZE_API_ROOT}/schedule', params={'country': 'US'}, timeout=_timeout())
+        response = requests.get(f'{TVMAZE_API_ROOT}/schedule', params={'country': country}, timeout=_timeout())
         response.raise_for_status()
         episodes = response.json()
     except (requests.RequestException, ValueError):
