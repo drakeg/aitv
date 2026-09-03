@@ -26,7 +26,7 @@ PROVIDER_RULES = (
         'domains': ('fox.com',),
         'provider': 'FOX',
         'source_type': 'network',
-        'access_type': ContentAvailability.AccessType.OTHER,
+        'access_type': ContentAvailability.AccessType.AUTH,
     },
     {
         'domains': ('pbs.org',),
