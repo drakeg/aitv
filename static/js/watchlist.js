@@ -29,13 +29,13 @@ document.addEventListener('submit', async (event) => {
         button.classList.toggle('btn-danger', result.saved);
         button.title = result.saved ? 'Remove from watchlist' : 'Save to watchlist';
 
-        if (result.saved) {
-            form.action = result.remove_url || `/watchlist/remove/${result.content_id}/`;
-            form.dataset.contentId = result.content_id;
-            delete form.dataset.externalSave;
-        } else {
-            form.action = `/watchlist/add/${result.content_id}/`;
+        if (result.saved && result.remove_url) {
+            form.action = result.remove_url;
+        } else if (!result.saved && result.add_url) {
+            form.action = result.add_url;
         }
+        form.dataset.contentId = result.content_id;
+        delete form.dataset.externalSave;
     } catch (error) {
         console.error(error);
         button.textContent = originalLabel;
