@@ -41,7 +41,7 @@ def home(request):
     trending_tv = fetch_trending_tv()
 
     watchlist_ids = []
-    saved_external_ids = set()
+    saved_external_ids = {}
     if request.user.is_authenticated:
         saved_items = list(
             Watchlist.objects.filter(user=request.user)
@@ -55,9 +55,14 @@ def home(request):
         }
 
     for item in [*trending_movies, *trending_tv]:
-        item.saved_content_id = saved_external_ids.get(
-            (item.external_source, item.external_id, item.content_type)
-        )
+        if isinstance(item, dict):
+            item['saved_content_id'] = saved_external_ids.get(
+                (item.get('external_source'), item.get('external_id'), item.get('content_type'))
+            )
+        else:
+            item.saved_content_id = saved_external_ids.get(
+                (item.external_source, item.external_id, item.content_type)
+            )
 
     db_items = list(db_queryset)
     network_items = [
