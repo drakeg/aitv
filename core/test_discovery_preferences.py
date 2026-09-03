@@ -38,12 +38,8 @@ class DiscoveryPreferenceTests(TestCase):
         }
 
     def setUp(self):
-        self.user = get_user_model().objects.create_user(
-            username='viewer', password='test-password'
-        )
-        self.news_user = get_user_model().objects.create_user(
-            username='newsviewer', password='test-password'
-        )
+        self.user = get_user_model().objects.create_user(username='viewer', password='test-password')
+        self.news_user = get_user_model().objects.create_user(username='newsviewer', password='test-password')
 
     @patch('core.views.fetch_free_archive_movies', return_value=[])
     @patch('core.views.fetch_trending_movies', return_value=[])
@@ -58,24 +54,32 @@ class DiscoveryPreferenceTests(TestCase):
         self.assertContains(response, 'Evening News')
         self.assertContains(response, 'Funny Show')
 
+    def test_profile_requires_login_and_exposes_all_categories(self):
+        response = self.client.get(reverse('profile'))
+        self.assertEqual(response.status_code, 302)
+
+        self.client.force_login(self.user)
+        response = self.client.get(reverse('profile'))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Discovery preferences')
+        self.assertContains(response, 'value="News"', html=False)
+        self.assertContains(response, 'value="Crime"', html=False)
+
     @patch('core.views.fetch_free_archive_movies', return_value=[])
     @patch('core.views.fetch_trending_movies', return_value=[])
     @patch('core.views.fetch_trending_tv', return_value=[])
     @patch('core.views.fetch_live_tv_schedule')
-    def test_user_can_save_preferences_without_news(self, mock_live, *_mocks):
+    def test_user_can_save_preferences_from_profile_without_news(self, mock_live, *_mocks):
         mock_live.return_value = [
             self._item('Evening News', ['News'], is_news=True, show_type='News'),
             self._item('Police Drama', ['Crime', 'Drama']),
         ]
         self.client.force_login(self.user)
         response = self.client.post(
-            reverse('home'),
-            {
-                'action': 'save_discovery_preferences',
-                'preferred_genres': ['Comedy', 'Crime', 'Drama'],
-            },
+            reverse('profile'),
+            {'preferred_genres': ['Comedy', 'Crime', 'Drama']},
         )
-        self.assertRedirects(response, reverse('home'))
+        self.assertRedirects(response, reverse('profile'))
 
         preference = DiscoveryPreference.objects.get(user=self.user)
         self.assertTrue(preference.customized)
@@ -84,6 +88,8 @@ class DiscoveryPreferenceTests(TestCase):
         response = self.client.get(reverse('home'))
         self.assertNotContains(response, 'Evening News')
         self.assertContains(response, 'Police Drama')
+        self.assertContains(response, 'Edit preferences')
+        self.assertNotContains(response, 'Tune my discovery')
 
     @patch('core.views.fetch_free_archive_movies', return_value=[])
     @patch('core.views.fetch_trending_movies', return_value=[])
@@ -94,16 +100,8 @@ class DiscoveryPreferenceTests(TestCase):
             self._item('Evening News', ['News'], is_news=True, show_type='News'),
             self._item('Police Drama', ['Crime', 'Drama']),
         ]
-        DiscoveryPreference.objects.create(
-            user=self.user,
-            preferred_genres=['Crime', 'Drama'],
-            customized=True,
-        )
-        DiscoveryPreference.objects.create(
-            user=self.news_user,
-            preferred_genres=['News'],
-            customized=True,
-        )
+        DiscoveryPreference.objects.create(user=self.user, preferred_genres=['Crime', 'Drama'], customized=True)
+        DiscoveryPreference.objects.create(user=self.news_user, preferred_genres=['News'], customized=True)
 
         self.client.force_login(self.user)
         response = self.client.get(reverse('home'))
@@ -119,10 +117,8 @@ class DiscoveryPreferenceTests(TestCase):
     @patch('core.views.fetch_trending_movies', return_value=[])
     @patch('core.views.fetch_trending_tv', return_value=[])
     @patch('core.views.fetch_live_tv_schedule', return_value=[])
-    def test_news_is_a_normal_genre_choice_not_a_disable_news_control(self, *_mocks):
+    def test_authenticated_navigation_includes_profile(self, *_mocks):
         self.client.force_login(self.user)
         response = self.client.get(reverse('home'))
-        self.assertContains(response, 'Tune my discovery')
-        self.assertContains(response, 'value="News"', html=False)
-        self.assertNotContains(response, 'Include news/current affairs')
-        self.assertNotContains(response, 'News is hidden by default')
+        self.assertContains(response, 'Profile')
+        self.assertContains(response, reverse('profile'))
