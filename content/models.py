@@ -59,5 +59,11 @@ class ContentAvailability(models.Model):
         ]
         ordering = ['provider']
 
+    @property
+    def action_label(self):
+        if self.access_type in {self.AccessType.FREE, self.AccessType.ADS}:
+            return f'Watch on {self.provider}'
+        return f'Open {self.provider}'
+
     def __str__(self):
         return f'{self.content}: {self.provider}'
