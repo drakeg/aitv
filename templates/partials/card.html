@@ -47,12 +47,12 @@
         {% if user.is_authenticated %}
             {% if item.is_external %}
                 {% if item.saved_content_id %}
-                    <form method="post" action="{% url 'watchlist:remove' item.saved_content_id %}">
+                    <form method="post" action="{% url 'watchlist:remove' item.saved_content_id %}" data-watchlist-form data-content-id="{{ item.saved_content_id }}">
                         {% csrf_token %}
                         <button type="submit" class="btn btn-sm btn-danger w-100 mt-1" title="Remove from watchlist">✓ Saved to Watchlist</button>
                     </form>
                 {% else %}
-                    <form method="post" action="{% url 'content:import_external' %}">
+                    <form method="post" action="{% url 'content:import_external' %}" data-watchlist-form data-external-save="true">
                         {% csrf_token %}
                         <input type="hidden" name="title" value="{{ item.title }}">
                         <input type="hidden" name="url" value="{{ item.url }}">
@@ -69,12 +69,12 @@
                 {% endif %}
             {% else %}
                 {% if item.id in watchlist_ids %}
-                    <form method="post" action="{% url 'watchlist:remove' item.id %}">
+                    <form method="post" action="{% url 'watchlist:remove' item.id %}" data-watchlist-form data-content-id="{{ item.id }}">
                         {% csrf_token %}
                         <button type="submit" class="btn btn-sm btn-danger w-100 mt-1">✓ Saved to Watchlist</button>
                     </form>
                 {% else %}
-                    <form method="post" action="{% url 'watchlist:add' item.id %}">
+                    <form method="post" action="{% url 'watchlist:add' item.id %}" data-watchlist-form data-content-id="{{ item.id }}">
                         {% csrf_token %}
                         <button type="submit" class="btn btn-sm btn-success w-100 mt-1">⭐ Save to Watchlist</button>
                     </form>
