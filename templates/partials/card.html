@@ -13,15 +13,27 @@
             {% if item.rating %}<span class="badge text-bg-light">★ {{ item.rating }}</span>{% endif %}
         </div>
 
+        <strong class="content-title">
+            {% if item.title %}{{ item.title|truncatechars:28 }}{% else %}{{ item.name|default:'Untitled'|truncatechars:28 }}{% endif %}
+        </strong>
+
         {% if not item.is_external %}
             {% for availability in item.availabilities.all %}
-                <div class="small text-muted mt-1">{{ availability.provider }} · {{ availability.get_access_type_display }}</div>
+                <a href="{{ availability.url }}" target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-primary w-100 mt-1">
+                    {{ availability.action_label }}
+                </a>
+            {% empty %}
+                {% if item.source_type == 'tmdb' %}
+                    <div class="small text-muted mt-1">No direct watch source yet.</div>
+                    <a href="{{ item.url }}" target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-outline-secondary w-100 mt-1">TMDB details</a>
+                {% else %}
+                    <a href="{{ item.url }}" target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-primary w-100 mt-1">Open title</a>
+                {% endif %}
             {% endfor %}
+        {% else %}
+            <div class="small text-muted mt-1">Discovery metadata</div>
+            <a href="{{ item.url }}" target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-outline-secondary w-100 mt-1">TMDB details</a>
         {% endif %}
-
-        <a href="{{ item.url }}" target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-primary w-100 mt-1" title="Open source">
-            {% if item.title %}{{ item.title|truncatechars:28 }}{% else %}{{ item.name|default:'Untitled'|truncatechars:28 }}{% endif %}
-        </a>
 
         {% if user.is_authenticated %}
             {% if item.is_external %}
