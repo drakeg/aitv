@@ -4,7 +4,7 @@ from django.db.models import Q
 from django.shortcuts import redirect, render
 
 from content.forms import QuickAddForm
-from content.models import ContentItem
+from content.models import ContentItem, DiscoveryPreference
 from content.providers import NETWORK_PROVIDERS
 from content.services import (
     fetch_free_archive_movies,
@@ -15,18 +15,31 @@ from content.services import (
 from watchlist.models import Watchlist
 
 DISCOVERY_GENRES = (
-    'Comedy',
-    'Crime',
-    'Drama',
     'Action',
     'Adventure',
-    'Mystery',
-    'Reality',
-    'Science Fiction',
-    'Sci-Fi & Fantasy',
-    'Thriller',
-    'Documentary',
     'Animation',
+    'Comedy',
+    'Crime',
+    'Documentary',
+    'Drama',
+    'Family',
+    'Fantasy',
+    'History',
+    'Horror',
+    'Kids',
+    'Music',
+    'Mystery',
+    'News',
+    'Reality',
+    'Romance',
+    'Sci-Fi & Fantasy',
+    'Science Fiction',
+    'Soap',
+    'Sports',
+    'Talk',
+    'Thriller',
+    'War & Politics',
+    'Western',
 )
 
 
@@ -44,21 +57,40 @@ def register(request):
     return render(request, 'registration/register.html', {'form': form})
 
 
-def _filter_discovery(items, genre='', include_news=False):
+def _filter_discovery(items, preferred_genres, customized=False):
+    if not customized:
+        return items
+
+    wanted = {genre.casefold() for genre in preferred_genres}
     filtered = []
-    wanted = genre.casefold()
     for item in items:
-        if not include_news and item.get('is_news'):
-            continue
-        genres = [str(value) for value in item.get('genres', [])]
-        if wanted and not any(value.casefold() == wanted for value in genres):
-            continue
-        filtered.append(item)
+        categories = {str(value).casefold() for value in item.get('genres', [])}
+        show_type = str(item.get('show_type') or '').strip()
+        if show_type:
+            categories.add(show_type.casefold())
+        if item.get('is_news'):
+            categories.add('news')
+        if categories & wanted:
+            filtered.append(item)
     return filtered
 
 
 def home(request):
     db_queryset = ContentItem.objects.prefetch_related('availabilities').all()
+
+    preference = None
+    if request.user.is_authenticated:
+        preference, _ = DiscoveryPreference.objects.get_or_create(user=request.user)
+        if request.method == 'POST' and request.POST.get('action') == 'save_discovery_preferences':
+            selected = [
+                genre for genre in request.POST.getlist('preferred_genres')
+                if genre in DISCOVERY_GENRES
+            ]
+            preference.preferred_genres = selected
+            preference.customized = True
+            preference.save(update_fields=['preferred_genres', 'customized'])
+            return redirect('home')
+
     if request.method == 'POST' and request.user.is_authenticated:
         form = QuickAddForm(request.POST)
         if form.is_valid():
@@ -67,26 +99,22 @@ def home(request):
     else:
         form = QuickAddForm()
 
-    discovery_genre = request.GET.get('genre', '').strip()
-    if discovery_genre not in DISCOVERY_GENRES:
-        discovery_genre = ''
-    include_news = request.GET.get('include_news') == '1'
+    customized = bool(preference and preference.customized)
+    preferred_genres = (
+        preference.preferred_genres
+        if customized
+        else list(DISCOVERY_GENRES)
+    )
 
     live_tv = _filter_discovery(
-        fetch_live_tv_schedule(),
-        genre=discovery_genre,
-        include_news=include_news,
+        fetch_live_tv_schedule(), preferred_genres, customized=customized
     )
     free_movies = fetch_free_archive_movies()
     trending_movies = _filter_discovery(
-        fetch_trending_movies(),
-        genre=discovery_genre,
-        include_news=include_news,
+        fetch_trending_movies(), preferred_genres, customized=customized
     )
     trending_tv = _filter_discovery(
-        fetch_trending_tv(),
-        genre=discovery_genre,
-        include_news=include_news,
+        fetch_trending_tv(), preferred_genres, customized=customized
     )
 
     watchlist_ids = []
@@ -153,7 +181,7 @@ def home(request):
         'browse_provider': provider,
         'providers': providers,
         'discovery_genres': DISCOVERY_GENRES,
-        'discovery_genre': discovery_genre,
-        'include_news': include_news,
+        'preferred_genres': preferred_genres,
+        'preferences_customized': customized,
     }
     return render(request, 'home.html', context)
