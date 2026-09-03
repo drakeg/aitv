@@ -6,7 +6,6 @@ services:
       - .env
     command: >-
       sh -c "python manage.py migrate --noinput &&
-             if [ \"$$LOAD_DEMO_CONTENT\" = \"true\" ]; then python manage.py seed_demo_content; fi &&
              python manage.py runserver 0.0.0.0:8000"
     ports:
       - "${APP_PORT:-8000}:8000"
@@ -15,7 +14,8 @@ services:
       DJANGO_DEBUG: "${DJANGO_DEBUG:-true}"
       DJANGO_ALLOWED_HOSTS: "${DJANGO_ALLOWED_HOSTS:-127.0.0.1,localhost,0.0.0.0}"
       TMDB_API_KEY: "${TMDB_API_KEY:-}"
+      TMDB_READ_ACCESS_TOKEN: "${TMDB_READ_ACCESS_TOKEN:-}"
       TMDB_TIMEOUT_SECONDS: "${TMDB_TIMEOUT_SECONDS:-5}"
-      LOAD_DEMO_CONTENT: "${LOAD_DEMO_CONTENT:-true}"
+      SOURCE_TIMEOUT_SECONDS: "${SOURCE_TIMEOUT_SECONDS:-5}"
     volumes:
       - .:/app

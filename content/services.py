@@ -84,13 +84,7 @@ def fetch_trending_tv():
 
 
 def fetch_tmdb_watch_context(content_type, external_id):
-    """Fetch richer US watch context for one TMDB discovery card.
-
-    TMDB does not expose direct provider deep links in trending results. The detail
-    response gives TV networks, runtime/episode context, and JustWatch-backed US
-    provider names plus TMDB's watch-options link. This data is loaded separately
-    so the main dashboard is not blocked by 20 additional API calls.
-    """
+    """Fetch current US watch context for one TMDB discovery card."""
     if content_type not in {'movie', 'tv'} or not str(external_id).isdigit():
         return {}
 
@@ -155,13 +149,17 @@ def fetch_tmdb_watch_context(content_type, external_id):
             runtimes = data.get('episode_run_time') or []
             runtime = runtimes[0] if runtimes else None
 
+    visible_providers = provider_rows[:2]
     return {
         'network': network_names[0] if network_names else '',
         'networks': network_names,
         'runtime': runtime,
         'episode_label': episode_label,
-        'providers': provider_rows[:6],
+        'providers': visible_providers,
+        'provider_count': len(provider_rows),
+        'additional_provider_count': max(0, len(provider_rows) - len(visible_providers)),
         'watch_url': us.get('link') or '',
+        'has_watch_details': bool(network_names or runtime or episode_label or provider_rows or us.get('link')),
     }
 
 
@@ -185,10 +183,14 @@ def fetch_live_tv_schedule(limit=40):
         episodes = response.json()
     except (requests.RequestException, ValueError):
         return []
+    if not isinstance(episodes, list):
+        return []
 
     items = []
     seen = set()
     for episode in episodes:
+        if not isinstance(episode, dict):
+            continue
         show = episode.get('show') or {}
         show_id = show.get('id')
         official_url = (show.get('officialSite') or '').strip()
@@ -238,19 +240,28 @@ def fetch_free_archive_movies(limit=10):
     try:
         response = requests.get(ARCHIVE_SEARCH_URL, params=params, timeout=_timeout())
         response.raise_for_status()
-        docs = response.json().get('response', {}).get('docs', [])
+        payload = response.json()
+        docs = payload.get('response', {}).get('docs', []) if isinstance(payload, dict) else []
     except (requests.RequestException, ValueError):
+        return []
+    if not isinstance(docs, list):
         return []
     items = []
     for doc in docs:
+        if not isinstance(doc, dict):
+            continue
         identifier, title = str(doc.get('identifier') or '').strip(), str(doc.get('title') or '').strip()
         if not identifier or not title:
             continue
         year = doc.get('year')
-        if isinstance(year, list): year = year[0] if year else None
-        try: year = int(year) if year else None
-        except (TypeError, ValueError): year = None
+        if isinstance(year, list):
+            year = year[0] if year else None
+        try:
+            year = int(year) if year else None
+        except (TypeError, ValueError):
+            year = None
         description = doc.get('description') or ''
-        if isinstance(description, list): description = ' '.join(str(part) for part in description)
+        if isinstance(description, list):
+            description = ' '.join(str(part) for part in description)
         items.append({'id': f'archive_{identifier}', 'title': title, 'genre': 'Free Movie', 'genres': [], 'thumbnail': f'https://archive.org/services/img/{identifier}', 'url': f'https://archive.org/details/{identifier}', 'details_url': f'https://archive.org/details/{identifier}', 'source_type': 'internet_archive', 'content_type': 'movie', 'description': _strip_html(description), 'release_year': year, 'rating': None, 'external_source': 'internet_archive', 'external_id': identifier, 'is_external': True, 'is_live_source': True, 'provider': 'Internet Archive', 'network': '', 'access_type': 'free', 'action_label': 'Watch free on Internet Archive', 'is_news': False})
     return items

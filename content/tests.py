@@ -1,17 +1,15 @@
 import os
-from io import StringIO
 from unittest.mock import Mock, patch
 
 import requests
 from django.contrib.auth import get_user_model
-from django.core.management import call_command
 from django.test import SimpleTestCase, TestCase
 from django.urls import reverse
 
 from content.forms import QuickAddForm, extract_youtube_video_id
 from content.models import ContentAvailability, ContentItem
 from content.providers import detect_provider
-from content.services import fetch_trending_movies, fetch_trending_tv
+from content.services import fetch_tmdb_watch_context, fetch_trending_movies, fetch_trending_tv
 from watchlist.models import Watchlist
 
 
@@ -87,6 +85,34 @@ class TrendingContentServiceTests(SimpleTestCase):
     def test_invalid_timeout_returns_empty_list(self):
         self.assertEqual(fetch_trending_movies(), [])
 
+    @patch.dict(os.environ, {'TMDB_API_KEY': 'test-key'}, clear=True)
+    @patch('content.services.requests.get')
+    def test_watch_context_keeps_provider_list_compact(self, mock_get):
+        response = Mock()
+        response.raise_for_status.return_value = None
+        response.json.return_value = {
+            'runtime': 111,
+            'watch/providers': {
+                'results': {
+                    'US': {
+                        'link': 'https://www.themoviedb.org/movie/42/watch',
+                        'free': [{'provider_name': 'Free One'}],
+                        'ads': [{'provider_name': 'Ads Two'}],
+                        'flatrate': [{'provider_name': 'Subscription Three'}],
+                        'rent': [{'provider_name': 'Rent Four'}],
+                    }
+                }
+            },
+        }
+        mock_get.return_value = response
+
+        context = fetch_tmdb_watch_context('movie', '42')
+
+        self.assertEqual(len(context['providers']), 2)
+        self.assertEqual(context['provider_count'], 4)
+        self.assertEqual(context['additional_provider_count'], 2)
+        self.assertEqual(context['runtime'], 111)
+
 
 class YouTubeParsingTests(SimpleTestCase):
     def test_supported_youtube_urls(self):
@@ -160,26 +186,6 @@ class DirectProviderFormTests(TestCase):
         self.assertTrue(form.is_valid(), form.errors)
         item = form.save()
         self.assertEqual(item.availabilities.get().action_label, 'Watch on PBS')
-
-
-class DemoContentCommandTests(TestCase):
-    def test_seed_demo_content_is_idempotent_and_multisource(self):
-        output = StringIO()
-        call_command('seed_demo_content', stdout=output)
-        first_count = ContentItem.objects.count()
-        call_command('seed_demo_content', stdout=output)
-        self.assertEqual(first_count, 9)
-        self.assertEqual(ContentItem.objects.count(), 9)
-        self.assertEqual(ContentItem.objects.filter(content_type='movie').count(), 2)
-        self.assertEqual(ContentItem.objects.filter(content_type='tv').count(), 5)
-        self.assertEqual(ContentItem.objects.filter(content_type='video').count(), 2)
-        self.assertEqual(ContentItem.objects.filter(source_type='network').count(), 3)
-        self.assertTrue(ContentItem.objects.filter(source_type='internet_archive').exists())
-        self.assertTrue(ContentItem.objects.filter(source_type='tmdb').exists())
-        self.assertEqual(ContentAvailability.objects.count(), 7)
-        self.assertTrue(ContentAvailability.objects.filter(provider='CBS').exists())
-        self.assertTrue(ContentAvailability.objects.filter(provider='PBS').exists())
-        self.assertTrue(ContentAvailability.objects.filter(provider='FOX').exists())
 
 
 class ContentManagementTests(TestCase):
