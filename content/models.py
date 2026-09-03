@@ -35,6 +35,7 @@ class ContentAvailability(models.Model):
         ADS = 'ads', 'Free with ads'
         RENT = 'rent', 'Rent'
         BUY = 'buy', 'Buy'
+        AUTH = 'auth', 'TV provider sign-in required'
         OTHER = 'other', 'Other'
 
     content = models.ForeignKey(
@@ -63,6 +64,14 @@ class ContentAvailability(models.Model):
     def action_label(self):
         if self.access_type in {self.AccessType.FREE, self.AccessType.ADS}:
             return f'Watch on {self.provider}'
+        if self.access_type == self.AccessType.AUTH:
+            return f'{self.provider} · Sign-in required'
+        if self.access_type == self.AccessType.SUBSCRIPTION:
+            return f'{self.provider} · Subscription'
+        if self.access_type == self.AccessType.RENT:
+            return f'Rent on {self.provider}'
+        if self.access_type == self.AccessType.BUY:
+            return f'Buy on {self.provider}'
         return f'Open {self.provider}'
 
     def __str__(self):
