@@ -6,11 +6,11 @@ TMDB_API_ROOT = 'https://api.themoviedb.org/3'
 TMDB_IMAGE_ROOT = 'https://image.tmdb.org/t/p/w500'
 
 
-def _tmdb_request(path):
+def _tmdb_json(path):
     read_token = os.getenv('TMDB_READ_ACCESS_TOKEN', '').strip()
     api_key = os.getenv('TMDB_API_KEY', '').strip()
     if not read_token and not api_key:
-        return []
+        return {}
 
     try:
         timeout = float(os.getenv('TMDB_TIMEOUT_SECONDS', '5'))
@@ -28,9 +28,14 @@ def _tmdb_request(path):
             **request_kwargs,
         )
         response.raise_for_status()
-        return response.json().get('results', [])
+        payload = response.json()
+        return payload if isinstance(payload, dict) else {}
     except (requests.RequestException, ValueError):
-        return []
+        return {}
+
+
+def _tmdb_request(path):
+    return _tmdb_json(path).get('results', [])
 
 
 def _normalize_tmdb_item(item, content_type):
@@ -80,3 +85,39 @@ def fetch_trending_movies():
 
 def fetch_trending_tv():
     return _fetch_tmdb('/trending/tv/week', 'tv')
+
+
+def fetch_watch_providers(content_type, external_id, region='US'):
+    """Return TMDB/JustWatch availability hints for one title on demand."""
+    if content_type not in {'movie', 'tv'} or not str(external_id).isdigit():
+        return {'providers': [], 'link': ''}
+
+    payload = _tmdb_json(f'/{content_type}/{external_id}/watch/providers')
+    region_data = payload.get('results', {}).get(region, {})
+    if not isinstance(region_data, dict):
+        return {'providers': [], 'link': ''}
+
+    access_groups = (
+        ('flatrate', 'Subscription'),
+        ('free', 'Free'),
+        ('ads', 'Free with ads'),
+        ('rent', 'Rent'),
+        ('buy', 'Buy'),
+    )
+    providers = []
+    seen = set()
+    for key, access_label in access_groups:
+        for provider in region_data.get(key, []) or []:
+            name = str(provider.get('provider_name', '')).strip()
+            if not name or name in seen:
+                continue
+            seen.add(name)
+            providers.append({
+                'name': name,
+                'access': access_label,
+            })
+
+    return {
+        'providers': providers,
+        'link': str(region_data.get('link', '')).strip(),
+    }
