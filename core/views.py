@@ -1,4 +1,5 @@
 from django.contrib.auth import login
+from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import UserCreationForm
 from django.db.models import Q
 from django.shortcuts import redirect, render
@@ -15,31 +16,10 @@ from content.services import (
 from watchlist.models import Watchlist
 
 DISCOVERY_GENRES = (
-    'Action',
-    'Adventure',
-    'Animation',
-    'Comedy',
-    'Crime',
-    'Documentary',
-    'Drama',
-    'Family',
-    'Fantasy',
-    'History',
-    'Horror',
-    'Kids',
-    'Music',
-    'Mystery',
-    'News',
-    'Reality',
-    'Romance',
-    'Sci-Fi & Fantasy',
-    'Science Fiction',
-    'Soap',
-    'Sports',
-    'Talk',
-    'Thriller',
-    'War & Politics',
-    'Western',
+    'Action', 'Adventure', 'Animation', 'Comedy', 'Crime', 'Documentary', 'Drama',
+    'Family', 'Fantasy', 'History', 'Horror', 'Kids', 'Music', 'Mystery', 'News',
+    'Reality', 'Romance', 'Sci-Fi & Fantasy', 'Science Fiction', 'Soap', 'Sports',
+    'Talk', 'Thriller', 'War & Politics', 'Western',
 )
 
 
@@ -57,10 +37,30 @@ def register(request):
     return render(request, 'registration/register.html', {'form': form})
 
 
+@login_required
+def profile(request):
+    preference, _ = DiscoveryPreference.objects.get_or_create(user=request.user)
+    if request.method == 'POST':
+        selected = [
+            genre for genre in request.POST.getlist('preferred_genres')
+            if genre in DISCOVERY_GENRES
+        ]
+        preference.preferred_genres = selected
+        preference.customized = True
+        preference.save(update_fields=['preferred_genres', 'customized'])
+        return redirect('profile')
+
+    selected = preference.preferred_genres if preference.customized else list(DISCOVERY_GENRES)
+    return render(request, 'accounts/profile.html', {
+        'discovery_genres': DISCOVERY_GENRES,
+        'preferred_genres': selected,
+        'preferences_customized': preference.customized,
+    })
+
+
 def _filter_discovery(items, preferred_genres, customized=False):
     if not customized:
         return items
-
     wanted = {genre.casefold() for genre in preferred_genres}
     filtered = []
     for item in items:
@@ -81,15 +81,6 @@ def home(request):
     preference = None
     if request.user.is_authenticated:
         preference, _ = DiscoveryPreference.objects.get_or_create(user=request.user)
-        if request.method == 'POST' and request.POST.get('action') == 'save_discovery_preferences':
-            selected = [
-                genre for genre in request.POST.getlist('preferred_genres')
-                if genre in DISCOVERY_GENRES
-            ]
-            preference.preferred_genres = selected
-            preference.customized = True
-            preference.save(update_fields=['preferred_genres', 'customized'])
-            return redirect('home')
 
     if request.method == 'POST' and request.user.is_authenticated:
         form = QuickAddForm(request.POST)
@@ -100,22 +91,12 @@ def home(request):
         form = QuickAddForm()
 
     customized = bool(preference and preference.customized)
-    preferred_genres = (
-        preference.preferred_genres
-        if customized
-        else list(DISCOVERY_GENRES)
-    )
+    preferred_genres = preference.preferred_genres if customized else list(DISCOVERY_GENRES)
 
-    live_tv = _filter_discovery(
-        fetch_live_tv_schedule(), preferred_genres, customized=customized
-    )
+    live_tv = _filter_discovery(fetch_live_tv_schedule(), preferred_genres, customized=customized)
     free_movies = fetch_free_archive_movies()
-    trending_movies = _filter_discovery(
-        fetch_trending_movies(), preferred_genres, customized=customized
-    )
-    trending_tv = _filter_discovery(
-        fetch_trending_tv(), preferred_genres, customized=customized
-    )
+    trending_movies = _filter_discovery(fetch_trending_movies(), preferred_genres, customized=customized)
+    trending_tv = _filter_discovery(fetch_trending_tv(), preferred_genres, customized=customized)
 
     watchlist_ids = []
     saved_external_ids = {}
@@ -180,8 +161,6 @@ def home(request):
         'browse_type': content_type,
         'browse_provider': provider,
         'providers': providers,
-        'discovery_genres': DISCOVERY_GENRES,
-        'preferred_genres': preferred_genres,
         'preferences_customized': customized,
     }
     return render(request, 'home.html', context)
