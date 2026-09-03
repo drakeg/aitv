@@ -44,7 +44,7 @@ class ContentCardTemplateTests(TestCase):
         self.assertIn('Watch on PBS', rendered)
         self.assertNotIn('Open source', rendered)
 
-    def test_tmdb_discovery_loads_watch_context_and_keeps_details_secondary(self):
+    def test_tmdb_discovery_loads_compact_watch_context_and_keeps_details_secondary(self):
         rendered = render_to_string(
             'partials/card.html',
             {
@@ -65,7 +65,9 @@ class ContentCardTemplateTests(TestCase):
 
         self.assertIn('Crime, Drama', rendered)
         self.assertIn('data-tmdb-context', rendered)
-        self.assertIn('Loading network and watch options', rendered)
+        self.assertIn('data-content-type="tv"', rendered)
+        self.assertIn('Loading network, episode, runtime', rendered)
+        self.assertIn('Loading watch sources', rendered)
         self.assertIn('See watch options', rendered)
         self.assertIn('TMDB details', rendered)
         self.assertNotIn('Open source', rendered)
