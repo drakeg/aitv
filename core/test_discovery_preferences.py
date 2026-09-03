@@ -1,11 +1,14 @@
 from unittest.mock import patch
 
+from django.contrib.auth import get_user_model
 from django.test import TestCase
 from django.urls import reverse
 
+from content.models import DiscoveryPreference
+
 
 class DiscoveryPreferenceTests(TestCase):
-    def _item(self, title, genres, *, is_news=False):
+    def _item(self, title, genres, *, is_news=False, show_type='Scripted'):
         return {
             'id': title.lower().replace(' ', '-'),
             'title': title,
@@ -30,42 +33,96 @@ class DiscoveryPreferenceTests(TestCase):
             'episode_label': 'S1 E1',
             'airtime': '20:00',
             'runtime': 60,
+            'show_type': show_type,
             'is_news': is_news,
         }
 
+    def setUp(self):
+        self.user = get_user_model().objects.create_user(
+            username='viewer', password='test-password'
+        )
+        self.news_user = get_user_model().objects.create_user(
+            username='newsviewer', password='test-password'
+        )
+
     @patch('core.views.fetch_free_archive_movies', return_value=[])
     @patch('core.views.fetch_trending_movies', return_value=[])
     @patch('core.views.fetch_trending_tv', return_value=[])
     @patch('core.views.fetch_live_tv_schedule')
-    def test_news_is_hidden_by_default(self, mock_live, *_mocks):
+    def test_default_experience_does_not_globally_hide_news(self, mock_live, *_mocks):
         mock_live.return_value = [
-            self._item('Evening News', ['News'], is_news=True),
+            self._item('Evening News', ['News'], is_news=True, show_type='News'),
             self._item('Funny Show', ['Comedy']),
         ]
         response = self.client.get(reverse('home'))
-        self.assertNotContains(response, 'Evening News')
-        self.assertContains(response, 'Funny Show')
-        self.assertContains(response, 'News is hidden by default.')
-
-    @patch('core.views.fetch_free_archive_movies', return_value=[])
-    @patch('core.views.fetch_trending_movies', return_value=[])
-    @patch('core.views.fetch_trending_tv', return_value=[])
-    @patch('core.views.fetch_live_tv_schedule')
-    def test_news_can_be_explicitly_included(self, mock_live, *_mocks):
-        mock_live.return_value = [self._item('Evening News', ['News'], is_news=True)]
-        response = self.client.get(reverse('home'), {'include_news': '1'})
         self.assertContains(response, 'Evening News')
+        self.assertContains(response, 'Funny Show')
 
     @patch('core.views.fetch_free_archive_movies', return_value=[])
     @patch('core.views.fetch_trending_movies', return_value=[])
     @patch('core.views.fetch_trending_tv', return_value=[])
     @patch('core.views.fetch_live_tv_schedule')
-    def test_genre_filter_focuses_live_discovery(self, mock_live, *_mocks):
+    def test_user_can_save_preferences_without_news(self, mock_live, *_mocks):
         mock_live.return_value = [
-            self._item('Funny Show', ['Comedy']),
+            self._item('Evening News', ['News'], is_news=True, show_type='News'),
             self._item('Police Drama', ['Crime', 'Drama']),
         ]
-        response = self.client.get(reverse('home'), {'genre': 'Crime'})
+        self.client.force_login(self.user)
+        response = self.client.post(
+            reverse('home'),
+            {
+                'action': 'save_discovery_preferences',
+                'preferred_genres': ['Comedy', 'Crime', 'Drama'],
+            },
+        )
+        self.assertRedirects(response, reverse('home'))
+
+        preference = DiscoveryPreference.objects.get(user=self.user)
+        self.assertTrue(preference.customized)
+        self.assertEqual(preference.preferred_genres, ['Comedy', 'Crime', 'Drama'])
+
+        response = self.client.get(reverse('home'))
+        self.assertNotContains(response, 'Evening News')
         self.assertContains(response, 'Police Drama')
-        self.assertNotContains(response, 'Funny Show')
-        self.assertContains(response, 'On TV Today · Crime')
+
+    @patch('core.views.fetch_free_archive_movies', return_value=[])
+    @patch('core.views.fetch_trending_movies', return_value=[])
+    @patch('core.views.fetch_trending_tv', return_value=[])
+    @patch('core.views.fetch_live_tv_schedule')
+    def test_preferences_are_isolated_per_user(self, mock_live, *_mocks):
+        mock_live.return_value = [
+            self._item('Evening News', ['News'], is_news=True, show_type='News'),
+            self._item('Police Drama', ['Crime', 'Drama']),
+        ]
+        DiscoveryPreference.objects.create(
+            user=self.user,
+            preferred_genres=['Crime', 'Drama'],
+            customized=True,
+        )
+        DiscoveryPreference.objects.create(
+            user=self.news_user,
+            preferred_genres=['News'],
+            customized=True,
+        )
+
+        self.client.force_login(self.user)
+        response = self.client.get(reverse('home'))
+        self.assertNotContains(response, 'Evening News')
+        self.assertContains(response, 'Police Drama')
+
+        self.client.force_login(self.news_user)
+        response = self.client.get(reverse('home'))
+        self.assertContains(response, 'Evening News')
+        self.assertNotContains(response, 'Police Drama')
+
+    @patch('core.views.fetch_free_archive_movies', return_value=[])
+    @patch('core.views.fetch_trending_movies', return_value=[])
+    @patch('core.views.fetch_trending_tv', return_value=[])
+    @patch('core.views.fetch_live_tv_schedule', return_value=[])
+    def test_news_is_a_normal_genre_choice_not_a_disable_news_control(self, *_mocks):
+        self.client.force_login(self.user)
+        response = self.client.get(reverse('home'))
+        self.assertContains(response, 'Tune my discovery')
+        self.assertContains(response, 'value="News"', html=False)
+        self.assertNotContains(response, 'Include news/current affairs')
+        self.assertNotContains(response, 'News is hidden by default')
