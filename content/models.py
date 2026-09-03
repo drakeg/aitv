@@ -68,6 +68,7 @@ class DiscoveryPreference(models.Model):
     customized = models.BooleanField(default=False)
     region = models.CharField(max_length=2, default='US')
     require_region_availability = models.BooleanField(default=True)
+    notify_new_releases = models.BooleanField(default=False)
 
     def __str__(self):
         return f'Discovery preferences for {self.user}'
