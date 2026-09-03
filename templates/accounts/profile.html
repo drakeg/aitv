@@ -11,6 +11,29 @@
     </div>
 
     <div class="profile-section mb-3">
+        <h5>Account details</h5>
+        <p class="text-muted small">Contact details stay with your account and can be used for opt-in viewing notifications.</p>
+        <form method="post" class="row g-2 align-items-end">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="account">
+            <div class="col-md-4">
+                <label class="form-label small" for="{{ account_form.first_name.id_for_label }}">First name</label>
+                {{ account_form.first_name }}
+            </div>
+            <div class="col-md-4">
+                <label class="form-label small" for="{{ account_form.last_name.id_for_label }}">Last name</label>
+                {{ account_form.last_name }}
+            </div>
+            <div class="col-md-4">
+                <label class="form-label small" for="{{ account_form.email.id_for_label }}">Email address</label>
+                {{ account_form.email }}
+                {% if account_form.email.errors %}<div class="small text-danger">{{ account_form.email.errors|striptags }}</div>{% endif %}
+            </div>
+            <div class="col-12"><button class="btn btn-primary" type="submit">Save account details</button></div>
+        </form>
+    </div>
+
+    <div class="profile-section mb-3">
         <h5>Where I watch</h5>
         <p class="text-muted small">Use regional provider availability so discovery does not recommend titles you cannot actually watch where you live.</p>
         <div class="d-flex gap-3 align-items-end flex-wrap">
@@ -29,20 +52,31 @@
         </div>
     </div>
 
+    <div class="profile-section mb-3">
+        <h5>Notifications</h5>
+        <p class="text-muted small">This prepares your account for release alerts. Delivery will only be enabled when an email address is saved.</p>
+        <label class="genre-choice mb-0">
+            <input type="checkbox" name="notify_new_releases" value="1" form="discovery-preferences" {% if notify_new_releases %}checked{% endif %} {% if not user.email %}disabled{% endif %}>
+            Email me when new episodes or releases are found for saved titles
+        </label>
+        {% if not user.email %}<div class="small text-muted mt-2">Add an email address above before enabling release notifications.</div>{% endif %}
+    </div>
+
     <div class="profile-section">
         <h5>Discovery preferences</h5>
         <p class="text-muted small">Choose the genres and program types you want to see in live and trending discovery. These settings apply only to your account.</p>
         <form method="post" id="discovery-preferences">
             {% csrf_token %}
+            <input type="hidden" name="action" value="discovery">
             <div class="d-flex gap-2 align-items-center flex-wrap mb-3">
                 {% for genre in discovery_genres %}
                     <label class="genre-choice mb-0">
                         <input type="checkbox" name="preferred_genres" value="{{ genre }}" {% if genre in preferred_genres %}checked{% endif %}>
-                        {{ genre }}
+                        {% if genre == 'Soap' %}Soap / Soap Opera{% else %}{{ genre }}{% endif %}
                     </label>
                 {% endfor %}
             </div>
-            <button class="btn btn-primary" type="submit">Save preferences</button>
+            <button class="btn btn-primary" type="submit">Save viewing preferences</button>
             {% if not preferences_customized %}<span class="small text-muted ms-2">Currently showing all categories.</span>{% endif %}
         </form>
     </div>
