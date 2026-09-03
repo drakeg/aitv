@@ -83,6 +83,88 @@ def fetch_trending_tv():
     return _fetch_tmdb('/trending/tv/week', 'tv')
 
 
+def fetch_tmdb_watch_context(content_type, external_id):
+    """Fetch richer US watch context for one TMDB discovery card.
+
+    TMDB does not expose direct provider deep links in trending results. The detail
+    response gives TV networks, runtime/episode context, and JustWatch-backed US
+    provider names plus TMDB's watch-options link. This data is loaded separately
+    so the main dashboard is not blocked by 20 additional API calls.
+    """
+    if content_type not in {'movie', 'tv'} or not str(external_id).isdigit():
+        return {}
+
+    read_token = os.getenv('TMDB_READ_ACCESS_TOKEN', '').strip()
+    api_key = os.getenv('TMDB_API_KEY', '').strip()
+    if not read_token and not api_key:
+        return {}
+
+    params = {'append_to_response': 'watch/providers'}
+    headers = None
+    if read_token:
+        headers = {'Authorization': f'Bearer {read_token}', 'accept': 'application/json'}
+    else:
+        params['api_key'] = api_key
+
+    try:
+        response = requests.get(
+            f'{TMDB_API_ROOT}/{content_type}/{external_id}',
+            params=params,
+            headers=headers,
+            timeout=_timeout(),
+        )
+        response.raise_for_status()
+        data = response.json()
+    except (requests.RequestException, ValueError):
+        return {}
+
+    us = (data.get('watch/providers') or {}).get('results', {}).get('US', {})
+    provider_rows = []
+    seen = set()
+    access_groups = (
+        ('free', 'Free'),
+        ('ads', 'Free with ads'),
+        ('flatrate', 'Subscription'),
+        ('rent', 'Rent'),
+        ('buy', 'Buy'),
+    )
+    for key, access_label in access_groups:
+        for provider in us.get(key, []) or []:
+            name = str(provider.get('provider_name') or '').strip()
+            if not name or name in seen:
+                continue
+            provider_rows.append({'name': name, 'access': access_label})
+            seen.add(name)
+
+    network_names = [
+        str(network.get('name')).strip()
+        for network in (data.get('networks') or [])
+        if network.get('name')
+    ]
+
+    runtime = data.get('runtime') if content_type == 'movie' else None
+    episode_label = ''
+    if content_type == 'tv':
+        last_episode = data.get('last_episode_to_air') or {}
+        season = last_episode.get('season_number')
+        episode = last_episode.get('episode_number')
+        if season is not None and episode is not None:
+            episode_label = f'S{season} E{episode}'
+        runtime = last_episode.get('runtime')
+        if runtime is None:
+            runtimes = data.get('episode_run_time') or []
+            runtime = runtimes[0] if runtimes else None
+
+    return {
+        'network': network_names[0] if network_names else '',
+        'networks': network_names,
+        'runtime': runtime,
+        'episode_label': episode_label,
+        'providers': provider_rows[:6],
+        'watch_url': us.get('link') or '',
+    }
+
+
 def _strip_html(value):
     if not value:
         return ''
