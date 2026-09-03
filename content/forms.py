@@ -4,6 +4,7 @@ from urllib.parse import parse_qs, urlparse
 from django import forms
 
 from .models import ContentItem
+from .providers import detect_provider, ensure_direct_availability
 
 YOUTUBE_HOSTS = {'youtube.com', 'www.youtube.com', 'm.youtube.com', 'youtu.be'}
 YOUTUBE_ID_RE = re.compile(r'^[A-Za-z0-9_-]{11}$')
@@ -34,7 +35,7 @@ class ContentItemForm(forms.ModelForm):
         fields = ['title', 'url', 'genre', 'content_type']
         widgets = {
             'title': forms.TextInput(attrs={'placeholder': 'Title'}),
-            'url': forms.URLInput(attrs={'placeholder': 'Paste URL'}),
+            'url': forms.URLInput(attrs={'placeholder': 'Paste direct watch/source URL'}),
             'genre': forms.TextInput(attrs={'placeholder': 'Genre'}),
         }
 
@@ -48,11 +49,16 @@ class ContentItemForm(forms.ModelForm):
         previous_source_type = self.instance.source_type if self.instance.pk else ''
         instance = super().save(commit=False)
         video_id = extract_youtube_video_id(instance.url)
+        provider = detect_provider(instance.url)
 
         if video_id:
             instance.source_type = 'youtube'
             instance.content_type = ContentItem.ContentType.VIDEO
             instance.thumbnail = f'https://img.youtube.com/vi/{video_id}/hqdefault.jpg'
+        elif provider:
+            instance.source_type = provider['source_type']
+            if previous_source_type == 'youtube':
+                instance.thumbnail = None
         elif not instance.external_source:
             instance.source_type = 'manual'
             if previous_source_type == 'youtube':
@@ -60,6 +66,7 @@ class ContentItemForm(forms.ModelForm):
 
         if commit:
             instance.save()
+            ensure_direct_availability(instance)
         return instance
 
 
