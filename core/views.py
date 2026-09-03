@@ -6,7 +6,12 @@ from django.shortcuts import redirect, render
 from content.forms import QuickAddForm
 from content.models import ContentItem
 from content.providers import NETWORK_PROVIDERS
-from content.services import fetch_trending_movies, fetch_trending_tv
+from content.services import (
+    fetch_free_archive_movies,
+    fetch_live_tv_schedule,
+    fetch_trending_movies,
+    fetch_trending_tv,
+)
 from watchlist.models import Watchlist
 
 
@@ -37,6 +42,8 @@ def home(request):
     else:
         form = QuickAddForm()
 
+    live_tv = fetch_live_tv_schedule()
+    free_movies = fetch_free_archive_movies()
     trending_movies = fetch_trending_movies()
     trending_tv = fetch_trending_tv()
 
@@ -54,7 +61,7 @@ def home(request):
             if entry.content.external_source and entry.content.external_id
         }
 
-    for item in [*trending_movies, *trending_tv]:
+    for item in [*live_tv, *free_movies, *trending_movies, *trending_tv]:
         if isinstance(item, dict):
             item['saved_content_id'] = saved_external_ids.get(
                 (item.get('external_source'), item.get('external_id'), item.get('content_type'))
@@ -107,6 +114,8 @@ def home(request):
 
     context = {
         'form': form,
+        'live_tv': live_tv,
+        'free_movies': free_movies,
         'trending_movies': trending_movies[:10],
         'trending_tv': trending_tv[:10],
         'network_items': network_items,
