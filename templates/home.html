@@ -22,6 +22,10 @@
     </form>
 </div>
 
+{% if user.is_authenticated and preferences_customized %}
+<div class="small text-muted mb-3">Discovery is personalized for your account. <a href="{% url 'profile' %}">Edit preferences</a></div>
+{% endif %}
+
 {% if browse_active %}
 <div class="mb-4">
     <h4 class="mb-2">🔎 Search & Browse Results</h4>
@@ -44,10 +48,10 @@
 
 <div class="mb-4">
     <h4 class="mb-1">📺 On TV Today</h4>
-    <div class="small text-muted mb-2">Live schedule data from TVmaze. Network/service and official destination are shown on each card.</div>
+    <div class="small text-muted mb-2">Live schedule data with network/service, episode, runtime, airtime, and official destination.</div>
     <div class="row-scroll">
         {% for item in live_tv %}{% include "partials/card.html" %}{% empty %}
-            <div class="text-muted">Live US TV schedule is temporarily unavailable.</div>
+            <div class="text-muted">No live shows currently match your discovery preferences.</div>
         {% endfor %}
     </div>
 </div>
@@ -73,20 +77,20 @@
 
 <div class="mb-4">
     <h4 class="mb-1">🎬 Trending Movies</h4>
-    <div class="small text-muted mb-2">Discovery metadata; watch sources are intentionally prioritized above.</div>
+    <div class="small text-muted mb-2">TMDB discovery enriched with runtime and US watch-provider availability when available.</div>
     <div class="row-scroll">
         {% for item in trending_movies %}{% include "partials/card.html" %}{% empty %}
-            <div class="text-muted">TMDB movie discovery is unavailable.</div>
+            <div class="text-muted">No movie discovery currently matches your preferences.</div>
         {% endfor %}
     </div>
 </div>
 
 <div class="mb-4">
     <h4 class="mb-1">📺 Trending TV</h4>
-    <div class="small text-muted mb-2">Discovery metadata; use the live TV row above for current network/service destinations.</div>
+    <div class="small text-muted mb-2">TMDB discovery enriched with network/service, episode/runtime context, and US watch-provider availability.</div>
     <div class="row-scroll">
         {% for item in trending_tv %}{% include "partials/card.html" %}{% empty %}
-            <div class="text-muted">TMDB TV discovery is unavailable.</div>
+            <div class="text-muted">No TV discovery currently matches your preferences.</div>
         {% endfor %}
     </div>
 </div>

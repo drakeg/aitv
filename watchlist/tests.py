@@ -2,7 +2,7 @@ from django.contrib.auth import get_user_model
 from django.test import TestCase
 from django.urls import reverse
 
-from content.models import ContentItem
+from content.models import ContentAvailability, ContentItem
 from .models import Watchlist
 
 
@@ -44,6 +44,24 @@ class WatchlistFlowTests(TestCase):
         )
         self.assertRedirects(remove_response, reverse('watchlist:list'))
         self.assertFalse(Watchlist.objects.filter(user=self.user, content=self.item).exists())
+
+    def test_watchlist_reuses_dashboard_card_presentation(self):
+        self.client.force_login(self.user)
+        Watchlist.objects.create(user=self.user, content=self.item)
+        ContentAvailability.objects.create(
+            content=self.item,
+            provider='Example Network',
+            url='https://example.com/watch-me',
+            access_type=ContentAvailability.AccessType.FREE,
+        )
+
+        response = self.client.get(reverse('watchlist:list'))
+
+        self.assertContains(response, 'row-scroll')
+        self.assertContains(response, 'content-title')
+        self.assertContains(response, 'Watch on Example Network')
+        self.assertContains(response, '✓ Saved to Watchlist')
+        self.assertNotContains(response, 'card-body')
 
     def test_async_add_and_remove_return_state_without_redirect(self):
         self.client.force_login(self.user)

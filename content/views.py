@@ -2,15 +2,17 @@ from decimal import Decimal, InvalidOperation
 from urllib.parse import urlparse
 
 from django.contrib.auth.decorators import login_required
+from django.core.cache import cache
 from django.http import HttpResponseBadRequest, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
-from django.views.decorators.http import require_POST
+from django.views.decorators.http import require_GET, require_POST
 
 from watchlist.models import Watchlist
 
 from .forms import ContentAvailabilityFormSet, ContentItemForm
 from .models import ContentItem
+from .services import fetch_tmdb_watch_context
 
 
 @login_required
@@ -57,6 +59,18 @@ def delete_content(request, content_id):
     item = get_object_or_404(ContentItem, id=content_id)
     item.delete()
     return redirect('/')
+
+
+@require_GET
+def tmdb_watch_context(request, content_type, external_id):
+    if content_type not in {'movie', 'tv'}:
+        return HttpResponseBadRequest('Invalid content type.')
+    cache_key = f'tmdb-watch-context:{content_type}:{external_id}'
+    context = cache.get(cache_key)
+    if context is None:
+        context = fetch_tmdb_watch_context(content_type, external_id)
+        cache.set(cache_key, context, 1800)
+    return JsonResponse(context)
 
 
 def _optional_int(value):

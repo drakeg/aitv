@@ -32,7 +32,23 @@
         <strong class="content-title" title="{% if item.title %}{{ item.title }}{% else %}{{ item.name|default:'Untitled' }}{% endif %}">
             {% if item.title %}{{ item.title|truncatechars:28 }}{% else %}{{ item.name|default:'Untitled'|truncatechars:28 }}{% endif %}
         </strong>
-        {% if item.episode_label or item.airtime %}<div class="small source-meta">{{ item.episode_label }}{% if item.episode_label and item.airtime %} · {% endif %}{{ item.airtime }}</div>{% endif %}
+
+        {% if item.genre %}<div class="small source-genre" title="{{ item.genre }}">{{ item.genre|truncatechars:34 }}</div>{% endif %}
+        {% if item.episode_label or item.runtime or item.airtime %}
+            <div class="small source-meta">
+                {% if item.episode_label %}{{ item.episode_label }}{% endif %}
+                {% if item.episode_label and item.runtime %} · {% endif %}{% if item.runtime %}{{ item.runtime }} min{% endif %}
+                {% if item.airtime and item.episode_label or item.airtime and item.runtime %} · {% endif %}{% if item.airtime %}{{ item.airtime }}{% endif %}
+            </div>
+        {% endif %}
+
+        {% if item.source_type == 'tmdb' and item.external_id %}
+            <div class="tmdb-watch-context small" data-tmdb-context data-context-url="{% url 'content:tmdb_watch_context' item.content_type item.external_id %}">
+                <div class="source-meta" data-context-summary>Loading network and watch options…</div>
+                <div class="provider-options" data-context-providers></div>
+                <a class="btn btn-sm btn-primary w-100 mt-1 d-none" target="_blank" rel="noopener noreferrer" data-context-watch>See watch options</a>
+            </div>
+        {% endif %}
 
         {% if item.is_live_source %}
             <a href="{{ item.url }}" target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-primary w-100 mt-1">{{ item.action_label|default:'Watch now' }}</a>
@@ -41,15 +57,12 @@
             {% for availability in item.availabilities.all %}
                 <a href="{{ availability.url }}" target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-primary w-100 mt-1">{{ availability.action_label }}</a>
             {% empty %}
-                {% if item.source_type == 'tmdb' %}
-                    <div class="small text-muted mt-1">No watch source found yet.</div>
-                    <a href="{{ item.url }}" target="_blank" rel="noopener noreferrer" class="source-details-link">TMDB details</a>
-                {% else %}
+                {% if item.source_type != 'tmdb' %}
                     <a href="{{ item.url }}" target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-primary w-100 mt-1">Open title</a>
                 {% endif %}
             {% endfor %}
+            {% if item.source_type == 'tmdb' %}<a href="{{ item.url }}" target="_blank" rel="noopener noreferrer" class="source-details-link">TMDB details</a>{% endif %}
         {% else %}
-            <div class="small text-muted mt-1">Discovery metadata</div>
             <a href="{{ item.details_url|default:item.url }}" target="_blank" rel="noopener noreferrer" class="source-details-link">TMDB details</a>
         {% endif %}
 

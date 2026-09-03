@@ -44,7 +44,7 @@ class ContentCardTemplateTests(TestCase):
         self.assertIn('Watch on PBS', rendered)
         self.assertNotIn('Open source', rendered)
 
-    def test_tmdb_discovery_is_labeled_as_details_not_watch_source(self):
+    def test_tmdb_discovery_loads_watch_context_and_keeps_details_secondary(self):
         rendered = render_to_string(
             'partials/card.html',
             {
@@ -52,7 +52,7 @@ class ContentCardTemplateTests(TestCase):
                     'id': 'tmdb_tv_7',
                     'title': 'Example Series',
                     'url': 'https://www.themoviedb.org/tv/7',
-                    'genre': 'TV',
+                    'genre': 'Crime, Drama',
                     'content_type': 'tv',
                     'source_type': 'tmdb',
                     'external_source': 'tmdb',
@@ -63,6 +63,9 @@ class ContentCardTemplateTests(TestCase):
             },
         )
 
-        self.assertIn('Discovery metadata', rendered)
+        self.assertIn('Crime, Drama', rendered)
+        self.assertIn('data-tmdb-context', rendered)
+        self.assertIn('Loading network and watch options', rendered)
+        self.assertIn('See watch options', rendered)
         self.assertIn('TMDB details', rendered)
         self.assertNotIn('Open source', rendered)

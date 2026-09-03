@@ -20,6 +20,7 @@ The goal is fewer clicks to legitimate content. TMDB is treated as metadata/disc
 - Authenticated add/edit/delete controls for managed content
 - Built-in account registration, login, and logout flows
 - Dedicated per-user watchlist page with provider-first watch actions
+- Per-user discovery preferences so each account can independently choose genres/program types such as Comedy, Crime, Drama, News, Reality, and more
 - Django admin support for catalog and availability data
 - SQLite development database
 - Fast Docker Compose local workflow with configurable host port
@@ -77,11 +78,13 @@ docker compose run --rm web python manage.py createsuperuser
 docker compose down
 ```
 
-## Accounts and watchlists
+## Accounts, watchlists, and discovery preferences
 
 Use **Register** in the navigation bar to create a normal StreamHub account. Registration signs the new user in immediately. Existing users can use the dedicated login page; logout is a CSRF-protected POST action.
 
 Each signed-in user has an independent watchlist at `/watchlist/`. Catalog cards add and remove titles using POST-only controls. Saved titles retain their direct provider buttons on the watchlist page rather than forcing the user back through a metadata site.
+
+Discovery tuning is also per-user. The public/default experience does not globally suppress News or any other category. Signed-in users can select the genres and program types they want in live/trending discovery, and those choices do not affect other accounts or saved/local catalog items.
 
 ## Direct-source workflow
 

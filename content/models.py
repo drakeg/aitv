@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.db import models
 
 
@@ -76,3 +77,16 @@ class ContentAvailability(models.Model):
 
     def __str__(self):
         return f'{self.content}: {self.provider}'
+
+
+class DiscoveryPreference(models.Model):
+    user = models.OneToOneField(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='discovery_preference',
+    )
+    preferred_genres = models.JSONField(default=list, blank=True)
+    customized = models.BooleanField(default=False)
+
+    def __str__(self):
+        return f'Discovery preferences for {self.user}'

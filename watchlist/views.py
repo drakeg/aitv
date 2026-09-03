@@ -34,13 +34,21 @@ def _watchlist_response(request, *, content, saved):
 
 @login_required
 def watchlist(request):
-    entries = (
+    entries = list(
         Watchlist.objects.filter(user=request.user)
         .select_related('content')
         .prefetch_related('content__availabilities')
         .order_by('-added_at')
     )
-    return render(request, 'watchlist/list.html', {'entries': entries})
+    watchlist_ids = [entry.content_id for entry in entries]
+    return render(
+        request,
+        'watchlist/list.html',
+        {
+            'entries': entries,
+            'watchlist_ids': watchlist_ids,
+        },
+    )
 
 
 @login_required
