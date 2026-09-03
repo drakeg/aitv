@@ -23,7 +23,18 @@
                             {{ entry.content.get_content_type_display }}{% if entry.content.release_year %} · {{ entry.content.release_year }}{% endif %}
                         </p>
                         {% if entry.content.description %}<p class="card-text">{{ entry.content.description|truncatechars:180 }}</p>{% endif %}
-                        <a href="{{ entry.content.url }}" target="_blank" rel="noopener noreferrer" class="btn btn-primary btn-sm">Open</a>
+
+                        {% for availability in entry.content.availabilities.all %}
+                            <a href="{{ availability.url }}" target="_blank" rel="noopener noreferrer" class="btn btn-primary btn-sm">{{ availability.action_label }}</a>
+                        {% empty %}
+                            {% if entry.content.source_type == 'tmdb' %}
+                                <span class="text-muted small">No direct watch source yet.</span>
+                                <a href="{{ entry.content.url }}" target="_blank" rel="noopener noreferrer" class="btn btn-outline-secondary btn-sm">TMDB details</a>
+                            {% else %}
+                                <a href="{{ entry.content.url }}" target="_blank" rel="noopener noreferrer" class="btn btn-primary btn-sm">Open title</a>
+                            {% endif %}
+                        {% endfor %}
+
                         <form method="post" action="{% url 'watchlist:remove' entry.content.id %}" class="d-inline">
                             {% csrf_token %}
                             <input type="hidden" name="next" value="{% url 'watchlist:list' %}">
@@ -34,9 +45,7 @@
             </div>
         {% empty %}
             <div class="col-12">
-                <div class="alert alert-secondary">
-                    Your watchlist is empty. Browse the catalog and save something that looks interesting.
-                </div>
+                <div class="alert alert-secondary">Your watchlist is empty. Browse the catalog and save something that looks interesting.</div>
             </div>
         {% endfor %}
     </div>
