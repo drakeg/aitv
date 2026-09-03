@@ -22,6 +22,25 @@
     </form>
 </div>
 
+<div class="browse-bar mb-3">
+    <form method="get" class="d-flex gap-2 align-items-center flex-wrap">
+        <strong class="me-1">What I want to watch:</strong>
+        <select name="genre" aria-label="Discovery genre">
+            <option value="">All entertainment</option>
+            {% for genre in discovery_genres %}
+                <option value="{{ genre }}" {% if discovery_genre == genre %}selected{% endif %}>{{ genre }}</option>
+            {% endfor %}
+        </select>
+        <label class="d-flex align-items-center gap-1 mb-0">
+            <input type="checkbox" name="include_news" value="1" {% if include_news %}checked{% endif %}>
+            Include news/current affairs
+        </label>
+        <button class="btn btn-primary" type="submit">Apply</button>
+        {% if discovery_genre or include_news %}<a class="btn btn-secondary" href="{% url 'home' %}">Reset</a>{% endif %}
+        <span class="small text-muted">News is hidden by default.</span>
+    </form>
+</div>
+
 {% if browse_active %}
 <div class="mb-4">
     <h4 class="mb-2">🔎 Search & Browse Results</h4>
@@ -43,11 +62,11 @@
 {% endif %}
 
 <div class="mb-4">
-    <h4 class="mb-1">📺 On TV Today</h4>
-    <div class="small text-muted mb-2">Live schedule data from TVmaze. Network/service and official destination are shown on each card.</div>
+    <h4 class="mb-1">📺 On TV Today{% if discovery_genre %} · {{ discovery_genre }}{% endif %}</h4>
+    <div class="small text-muted mb-2">Live schedule data from TVmaze. News/current affairs are hidden unless you opt in.</div>
     <div class="row-scroll">
         {% for item in live_tv %}{% include "partials/card.html" %}{% empty %}
-            <div class="text-muted">Live US TV schedule is temporarily unavailable.</div>
+            <div class="text-muted">No matching entertainment is currently available in the live US schedule.</div>
         {% endfor %}
     </div>
 </div>
@@ -72,21 +91,21 @@
 </div>
 
 <div class="mb-4">
-    <h4 class="mb-1">🎬 Trending Movies</h4>
-    <div class="small text-muted mb-2">Discovery metadata; watch sources are intentionally prioritized above.</div>
+    <h4 class="mb-1">🎬 Trending Movies{% if discovery_genre %} · {{ discovery_genre }}{% endif %}</h4>
+    <div class="small text-muted mb-2">Entertainment discovery from TMDB; metadata links remain secondary.</div>
     <div class="row-scroll">
         {% for item in trending_movies %}{% include "partials/card.html" %}{% empty %}
-            <div class="text-muted">TMDB movie discovery is unavailable.</div>
+            <div class="text-muted">No matching movie discovery right now.</div>
         {% endfor %}
     </div>
 </div>
 
 <div class="mb-4">
-    <h4 class="mb-1">📺 Trending TV</h4>
-    <div class="small text-muted mb-2">Discovery metadata; use the live TV row above for current network/service destinations.</div>
+    <h4 class="mb-1">📺 Trending TV{% if discovery_genre %} · {{ discovery_genre }}{% endif %}</h4>
+    <div class="small text-muted mb-2">Entertainment discovery from TMDB; news/current affairs are hidden by default.</div>
     <div class="row-scroll">
         {% for item in trending_tv %}{% include "partials/card.html" %}{% empty %}
-            <div class="text-muted">TMDB TV discovery is unavailable.</div>
+            <div class="text-muted">No matching TV discovery right now.</div>
         {% endfor %}
     </div>
 </div>
