@@ -67,12 +67,12 @@ DEMO_ITEMS = [
         'genre': 'Reality, Music',
         'source_type': 'network',
         'content_type': 'tv',
-        'description': 'FOX series page with direct network watch access where available.',
+        'description': 'FOX series page; viewing may require eligible provider or subscription sign-in.',
         'release_year': 2019,
         'availability': {
             'provider': 'FOX',
             'url': 'https://www.fox.com/the-masked-singer/',
-            'access_type': 'other',
+            'access_type': 'auth',
         },
     },
     {
