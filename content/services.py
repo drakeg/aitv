@@ -126,12 +126,14 @@ def fetch_live_tv_schedule(limit=40):
             action_label = f'Watch on {provider_name}'
         season, number = episode.get('season'), episode.get('number')
         episode_label = f'S{season} E{number}' if season is not None and number is not None else ''
-        genres = show.get('genres') or []
+        genres = [str(value) for value in (show.get('genres') or [])]
         show_type = (show.get('type') or '').strip()
+        if show_type and show_type not in genres:
+            genres.append(show_type)
         is_news = show_type.lower() in NEWS_TERMS or any(str(g).lower() in NEWS_TERMS for g in genres)
         items.append({
             'id': f'tvmaze_{show_id}', 'title': show.get('name') or 'Untitled',
-            'genre': ', '.join(genres) or show_type or 'TV', 'genres': genres,
+            'genre': ', '.join(genres) or 'TV', 'genres': genres,
             'thumbnail': image.get('medium') or image.get('original') or '', 'url': official_url,
             'details_url': show.get('url') or '', 'source_type': 'tvmaze', 'content_type': 'tv',
             'description': _strip_html(show.get('summary')),
