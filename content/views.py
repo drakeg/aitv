@@ -6,6 +6,8 @@ from django.http import HttpResponseBadRequest
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_POST
 
+from watchlist.models import Watchlist
+
 from .forms import ContentItemForm
 from .models import ContentItem
 
@@ -83,17 +85,18 @@ def import_external_content(request):
         'external_id': external_id,
     }
 
-    existing = ContentItem.objects.filter(
+    item = ContentItem.objects.filter(
         external_source='tmdb',
         external_id=external_id,
         content_type=content_type,
     ).first()
-    if existing:
+    if item:
         for field, value in defaults.items():
-            setattr(existing, field, value)
-        existing.url = url
-        existing.save()
+            setattr(item, field, value)
+        item.url = url
+        item.save()
     else:
-        ContentItem.objects.create(url=url, **defaults)
+        item = ContentItem.objects.create(url=url, **defaults)
 
-    return redirect('/')
+    Watchlist.objects.get_or_create(user=request.user, content=item)
+    return redirect(request.POST.get('next') or '/')

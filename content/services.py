@@ -7,16 +7,25 @@ TMDB_IMAGE_ROOT = 'https://image.tmdb.org/t/p/w500'
 
 
 def _tmdb_request(path):
+    read_token = os.getenv('TMDB_READ_ACCESS_TOKEN', '').strip()
     api_key = os.getenv('TMDB_API_KEY', '').strip()
-    if not api_key:
+    if not read_token and not api_key:
         return []
 
     try:
         timeout = float(os.getenv('TMDB_TIMEOUT_SECONDS', '5'))
+        request_kwargs = {'timeout': timeout}
+        if read_token:
+            request_kwargs['headers'] = {
+                'Authorization': f'Bearer {read_token}',
+                'accept': 'application/json',
+            }
+        else:
+            request_kwargs['params'] = {'api_key': api_key}
+
         response = requests.get(
             f'{TMDB_API_ROOT}{path}',
-            params={'api_key': api_key},
-            timeout=timeout,
+            **request_kwargs,
         )
         response.raise_for_status()
         return response.json().get('results', [])

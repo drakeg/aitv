@@ -16,12 +16,23 @@
 {% endif %}
 
 <div class="mb-4">
+    <h4 class="mb-2">📡 Watch on Networks</h4>
+    <div class="row-scroll">
+        {% for item in network_items %}
+            {% include "partials/card.html" %}
+        {% empty %}
+            <div class="text-muted">No direct network sources in the local catalog yet.</div>
+        {% endfor %}
+    </div>
+</div>
+
+<div class="mb-4">
     <h4 class="mb-2">🎬 Trending Movies</h4>
     <div class="row-scroll">
         {% for item in trending_movies %}
             {% include "partials/card.html" %}
         {% empty %}
-            <div class="text-muted">Add a TMDB API key to enable live movie discovery.</div>
+            <div class="text-muted">Configure either TMDB credential to enable live movie discovery.</div>
         {% endfor %}
     </div>
 </div>
@@ -32,7 +43,7 @@
         {% for item in trending_tv %}
             {% include "partials/card.html" %}
         {% empty %}
-            <div class="text-muted">Add a TMDB API key to enable live TV discovery.</div>
+            <div class="text-muted">Configure either TMDB credential to enable live TV discovery.</div>
         {% endfor %}
     </div>
 </div>
