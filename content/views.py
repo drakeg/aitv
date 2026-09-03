@@ -4,6 +4,7 @@ from urllib.parse import urlparse
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponseBadRequest, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
+from django.urls import reverse
 from django.views.decorators.http import require_POST
 
 from watchlist.models import Watchlist
@@ -127,7 +128,7 @@ def import_external_content(request):
         return JsonResponse({
             'saved': True,
             'content_id': item.id,
-            'remove_url': f'/watchlist/{item.id}/remove/',
+            'remove_url': reverse('watchlist:remove', args=[item.id]),
             'label': '✓ Saved to Watchlist',
         })
     return redirect('/')
