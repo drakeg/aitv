@@ -25,6 +25,16 @@ def register(request):
     return render(request, 'registration/register.html', {'form': form})
 
 
+def _mark_saved_discovery_items(items, saved_external_items):
+    for item in items:
+        key = (
+            item.get('external_source', ''),
+            item.get('external_id', ''),
+            item.get('content_type', ''),
+        )
+        item['saved_content_id'] = saved_external_items.get(key)
+
+
 def home(request):
     db_items = list(ContentItem.objects.prefetch_related('availabilities').all())
 
@@ -40,11 +50,25 @@ def home(request):
     trending_tv = fetch_trending_tv()
 
     watchlist_ids = []
+    saved_external_items = {}
     if request.user.is_authenticated:
-        watchlist_ids = list(
+        watchlist_entries = list(
             Watchlist.objects.filter(user=request.user)
-            .values_list('content_id', flat=True)
+            .select_related('content')
         )
+        watchlist_ids = [entry.content_id for entry in watchlist_entries]
+        saved_external_items = {
+            (
+                entry.content.external_source,
+                entry.content.external_id,
+                entry.content.content_type,
+            ): entry.content_id
+            for entry in watchlist_entries
+            if entry.content.external_source and entry.content.external_id
+        }
+
+    _mark_saved_discovery_items(trending_movies, saved_external_items)
+    _mark_saved_discovery_items(trending_tv, saved_external_items)
 
     network_items = [
         item
