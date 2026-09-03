@@ -2,6 +2,8 @@ services:
   web:
     build:
       context: .
+    env_file:
+      - .env
     command: >-
       sh -c "python manage.py migrate --noinput &&
              if [ \"$$LOAD_DEMO_CONTENT\" = \"true\" ]; then python manage.py seed_demo_content; fi &&
