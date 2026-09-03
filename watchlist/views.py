@@ -1,10 +1,22 @@
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
+from django.utils.http import url_has_allowed_host_and_scheme
 from django.views.decorators.http import require_POST
 
 from content.models import ContentItem
 from .models import Watchlist
+
+
+def _safe_fallback_url(request):
+    candidate = request.POST.get('next') or request.META.get('HTTP_REFERER')
+    if candidate and url_has_allowed_host_and_scheme(
+        candidate,
+        allowed_hosts={request.get_host()},
+        require_https=request.is_secure(),
+    ):
+        return candidate
+    return '/'
 
 
 def _watchlist_response(request, *, content, saved):
@@ -14,7 +26,7 @@ def _watchlist_response(request, *, content, saved):
             'content_id': content.id,
             'label': '✓ Saved to Watchlist' if saved else '⭐ Save to Watchlist',
         })
-    return redirect('/')
+    return redirect(_safe_fallback_url(request))
 
 
 @login_required
