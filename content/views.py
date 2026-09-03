@@ -37,20 +37,13 @@ def edit_content(request, content_id):
             return redirect('/')
     else:
         form = ContentItemForm(instance=item)
-        availability_formset = ContentAvailabilityFormSet(
-            instance=item,
-            prefix='availability',
-        )
+        availability_formset = ContentAvailabilityFormSet(instance=item, prefix='availability')
 
-    return render(
-        request,
-        'content/edit.html',
-        {
-            'form': form,
-            'availability_formset': availability_formset,
-            'item': item,
-        },
-    )
+    return render(request, 'content/edit.html', {
+        'form': form,
+        'availability_formset': availability_formset,
+        'item': item,
+    })
 
 
 @login_required
@@ -65,10 +58,13 @@ def delete_content(request, content_id):
 def tmdb_watch_context(request, content_type, external_id):
     if content_type not in {'movie', 'tv'}:
         return HttpResponseBadRequest('Invalid content type.')
-    cache_key = f'tmdb-watch-context:{content_type}:{external_id}'
+    region = request.GET.get('region', 'US').strip().upper()
+    if len(region) != 2 or not region.isalpha():
+        region = 'US'
+    cache_key = f'tmdb-watch-context:{region}:{content_type}:{external_id}'
     context = cache.get(cache_key)
     if context is None:
-        context = fetch_tmdb_watch_context(content_type, external_id)
+        context = fetch_tmdb_watch_context(content_type, external_id, region=region)
         cache.set(cache_key, context, 1800)
     return JsonResponse(context)
 

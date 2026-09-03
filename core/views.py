@@ -18,6 +18,18 @@ DISCOVERY_GENRES = (
     'Reality', 'Romance', 'Sci-Fi & Fantasy', 'Science Fiction', 'Soap', 'Sports',
     'Talk', 'Thriller', 'War & Politics', 'Western',
 )
+REGION_CHOICES = (
+    ('US', 'United States'),
+    ('CA', 'Canada'),
+    ('GB', 'United Kingdom'),
+    ('AU', 'Australia'),
+    ('DE', 'Germany'),
+    ('FR', 'France'),
+    ('ES', 'Spain'),
+    ('IT', 'Italy'),
+    ('JP', 'Japan'),
+)
+REGION_CODES = {code for code, _label in REGION_CHOICES}
 
 
 def register(request):
@@ -42,9 +54,16 @@ def profile(request):
             genre for genre in request.POST.getlist('preferred_genres')
             if genre in DISCOVERY_GENRES
         ]
+        region = request.POST.get('region', 'US').upper()
+        if region not in REGION_CODES:
+            region = 'US'
         preference.preferred_genres = selected
         preference.customized = True
-        preference.save(update_fields=['preferred_genres', 'customized'])
+        preference.region = region
+        preference.require_region_availability = request.POST.get('require_region_availability') == '1'
+        preference.save(update_fields=[
+            'preferred_genres', 'customized', 'region', 'require_region_availability'
+        ])
         return redirect('profile')
 
     selected = preference.preferred_genres if preference.customized else list(DISCOVERY_GENRES)
@@ -52,6 +71,9 @@ def profile(request):
         'discovery_genres': DISCOVERY_GENRES,
         'preferred_genres': selected,
         'preferences_customized': preference.customized,
+        'region_choices': REGION_CHOICES,
+        'discovery_region': preference.region,
+        'require_region_availability': preference.require_region_availability,
     })
 
 
@@ -99,8 +121,10 @@ def home(request):
 
     customized = bool(preference and preference.customized)
     preferred_genres = preference.preferred_genres if customized else list(DISCOVERY_GENRES)
+    discovery_region = preference.region if preference else 'US'
+    require_region_availability = bool(preference and preference.require_region_availability)
 
-    live_tv = _filter_discovery(fetch_live_tv_schedule(), preferred_genres, customized=customized)
+    live_tv = _filter_discovery(fetch_live_tv_schedule(country=discovery_region), preferred_genres, customized=customized)
     free_movies = fetch_free_archive_movies()
     trending_movies = _filter_discovery(fetch_trending_movies(), preferred_genres, customized=customized)
     trending_tv = _filter_discovery(fetch_trending_tv(), preferred_genres, customized=customized)
@@ -137,5 +161,7 @@ def home(request):
         'browse_query': request.GET.get('q', '').strip(),
         'browse_type': content_type,
         'preferences_customized': customized,
+        'discovery_region': discovery_region,
+        'require_region_availability': require_region_availability,
     }
     return render(request, 'home.html', context)

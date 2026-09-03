@@ -14,6 +14,7 @@ h4 { font-weight: 600; color: #ddd; margin-bottom: 8px; margin-left: 5px; }
 .row-scroll::-webkit-scrollbar { height: 6px; }
 .row-scroll::-webkit-scrollbar-thumb { background: #444; border-radius: 3px; }
 .card { --bs-card-color: #fff; flex: 0 0 180px; width: 180px; height: auto !important; background: #1e1e1e; color: #fff; border-radius: 8px; overflow: hidden; display: flex; flex-direction: column; align-self: flex-start; transition: transform 0.2s ease, box-shadow 0.2s ease; }
+.card.region-pending { display: none; }
 .card:hover { transform: scale(1.03); box-shadow: 0 8px 20px rgba(0,0,0,0.6); z-index: 10; }
 .card img, .card-placeholder { width: 100%; height: 105px; flex: 0 0 105px; }
 .card img { object-fit: cover; }
