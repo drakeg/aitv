@@ -49,7 +49,7 @@
                     <input type="hidden" name="rating" value="{{ item.rating|default:'' }}">
                     <input type="hidden" name="external_source" value="{{ item.external_source }}">
                     <input type="hidden" name="external_id" value="{{ item.external_id }}">
-                    <button type="submit" class="btn btn-sm btn-success w-100 mt-1">＋ Library</button>
+                    <button type="submit" class="btn btn-sm btn-success w-100 mt-1">⭐ Save to Watchlist</button>
                 </form>
             {% else %}
                 {% if item.id in watchlist_ids %}
