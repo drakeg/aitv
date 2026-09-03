@@ -12,6 +12,8 @@ from content.services import (
 )
 from watchlist.models import Watchlist
 
+from .forms import AccountProfileForm
+
 DISCOVERY_GENRES = (
     'Action', 'Adventure', 'Animation', 'Comedy', 'Crime', 'Documentary', 'Drama',
     'Family', 'Fantasy', 'History', 'Horror', 'Kids', 'Music', 'Mystery', 'News',
@@ -30,6 +32,10 @@ REGION_CHOICES = (
     ('JP', 'Japan'),
 )
 REGION_CODES = {code for code, _label in REGION_CHOICES}
+CATEGORY_ALIASES = {
+    'soap opera': {'soap'},
+    'soap operas': {'soap'},
+}
 
 
 def register(request):
@@ -49,44 +55,78 @@ def register(request):
 @login_required
 def profile(request):
     preference, _ = DiscoveryPreference.objects.get_or_create(user=request.user)
+    account_form = AccountProfileForm(initial={
+        'first_name': request.user.first_name,
+        'last_name': request.user.last_name,
+        'email': request.user.email,
+    })
+
     if request.method == 'POST':
-        selected = [
-            genre for genre in request.POST.getlist('preferred_genres')
-            if genre in DISCOVERY_GENRES
-        ]
-        region = request.POST.get('region', 'US').upper()
-        if region not in REGION_CODES:
-            region = 'US'
-        preference.preferred_genres = selected
-        preference.customized = True
-        preference.region = region
-        preference.require_region_availability = request.POST.get('require_region_availability') == '1'
-        preference.save(update_fields=[
-            'preferred_genres', 'customized', 'region', 'require_region_availability'
-        ])
-        return redirect('profile')
+        action = request.POST.get('action', 'discovery')
+        if action == 'account':
+            account_form = AccountProfileForm(request.POST)
+            if account_form.is_valid():
+                request.user.first_name = account_form.cleaned_data['first_name']
+                request.user.last_name = account_form.cleaned_data['last_name']
+                request.user.email = account_form.cleaned_data['email']
+                request.user.save(update_fields=['first_name', 'last_name', 'email'])
+                return redirect('profile')
+        else:
+            selected = [
+                genre for genre in request.POST.getlist('preferred_genres')
+                if genre in DISCOVERY_GENRES
+            ]
+            region = request.POST.get('region', 'US').upper()
+            if region not in REGION_CODES:
+                region = 'US'
+            notify_new_releases = request.POST.get('notify_new_releases') == '1'
+            if notify_new_releases and not request.user.email:
+                notify_new_releases = False
+            preference.preferred_genres = selected
+            preference.customized = True
+            preference.region = region
+            preference.require_region_availability = request.POST.get('require_region_availability') == '1'
+            preference.notify_new_releases = notify_new_releases
+            preference.save(update_fields=[
+                'preferred_genres', 'customized', 'region', 'require_region_availability',
+                'notify_new_releases',
+            ])
+            return redirect('profile')
 
     selected = preference.preferred_genres if preference.customized else list(DISCOVERY_GENRES)
     return render(request, 'accounts/profile.html', {
+        'account_form': account_form,
         'discovery_genres': DISCOVERY_GENRES,
         'preferred_genres': selected,
         'preferences_customized': preference.customized,
         'region_choices': REGION_CHOICES,
         'discovery_region': preference.region,
         'require_region_availability': preference.require_region_availability,
+        'notify_new_releases': preference.notify_new_releases,
     })
+
+
+def _expanded_category(value):
+    normalized = str(value or '').strip().casefold()
+    if not normalized:
+        return set()
+    return {normalized, *CATEGORY_ALIASES.get(normalized, set())}
 
 
 def _filter_discovery(items, preferred_genres, customized=False):
     if not customized:
         return items
-    wanted = {genre.casefold() for genre in preferred_genres}
+    wanted = set()
+    for genre in preferred_genres:
+        wanted.update(_expanded_category(genre))
     filtered = []
     for item in items:
-        categories = {str(value).casefold() for value in item.get('genres', [])}
+        categories = set()
+        for value in item.get('genres', []):
+            categories.update(_expanded_category(value))
         show_type = str(item.get('show_type') or '').strip()
         if show_type:
-            categories.add(show_type.casefold())
+            categories.update(_expanded_category(show_type))
         if item.get('is_news'):
             categories.add('news')
         if categories & wanted:
