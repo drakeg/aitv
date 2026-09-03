@@ -10,13 +10,14 @@ from django.urls import reverse
 
 from content.forms import QuickAddForm, extract_youtube_video_id
 from content.models import ContentAvailability, ContentItem
+from content.providers import detect_provider
 from content.services import fetch_trending_movies, fetch_trending_tv
 
 
 class TrendingContentServiceTests(SimpleTestCase):
     @patch.dict(os.environ, {}, clear=True)
     @patch('content.services.requests.get')
-    def test_missing_api_key_skips_request(self, mock_get):
+    def test_missing_tmdb_credentials_skip_request(self, mock_get):
         self.assertEqual(fetch_trending_movies(), [])
         self.assertEqual(fetch_trending_tv(), [])
         mock_get.assert_not_called()
@@ -27,7 +28,7 @@ class TrendingContentServiceTests(SimpleTestCase):
         clear=True,
     )
     @patch('content.services.requests.get')
-    def test_trending_movies_are_normalized_with_metadata(self, mock_get):
+    def test_api_key_auth_and_movie_metadata(self, mock_get):
         response = Mock()
         response.raise_for_status.return_value = None
         response.json.return_value = {
@@ -55,6 +56,29 @@ class TrendingContentServiceTests(SimpleTestCase):
             'https://api.themoviedb.org/3/trending/movie/week',
             params={'api_key': 'test-key'},
             timeout=3.0,
+        )
+
+    @patch.dict(
+        os.environ,
+        {'TMDB_API_KEY': 'fallback-key', 'TMDB_READ_ACCESS_TOKEN': 'read-token'},
+        clear=True,
+    )
+    @patch('content.services.requests.get')
+    def test_read_access_token_is_preferred_when_configured(self, mock_get):
+        response = Mock()
+        response.raise_for_status.return_value = None
+        response.json.return_value = {'results': []}
+        mock_get.return_value = response
+
+        fetch_trending_movies()
+
+        mock_get.assert_called_once_with(
+            'https://api.themoviedb.org/3/trending/movie/week',
+            headers={
+                'Authorization': 'Bearer read-token',
+                'accept': 'application/json',
+            },
+            timeout=5.0,
         )
 
     @patch.dict(os.environ, {'TMDB_API_KEY': 'test-key'}, clear=True)
@@ -139,6 +163,57 @@ class YouTubeParsingTests(SimpleTestCase):
         self.assertEqual(item.content_type, 'tv')
 
 
+class ProviderDetectionTests(SimpleTestCase):
+    def test_network_and_streaming_hosts_are_recognized(self):
+        cases = {
+            'https://www.abc.com/shows/example': 'ABC',
+            'https://www.cbs.com/shows/survivor/': 'CBS',
+            'https://www.nbc.com/example': 'NBC',
+            'https://www.fox.com/example': 'FOX',
+            'https://www.pbs.org/show/frontline/': 'PBS',
+            'https://www.cwtv.com/shows/example/': 'The CW',
+            'https://tubitv.com/movies/example': 'Tubi',
+            'https://www.netflix.com/title/example': 'Netflix',
+        }
+        for url, expected in cases.items():
+            with self.subTest(url=url):
+                self.assertEqual(detect_provider(url)['provider'], expected)
+
+    def test_provider_spoofed_hosts_are_not_recognized(self):
+        self.assertIsNone(detect_provider('https://cbs.com.example.com/shows/survivor'))
+        self.assertIsNone(detect_provider('https://example.com/?next=https://pbs.org/show/frontline'))
+
+
+class DirectProviderFormTests(TestCase):
+    def test_direct_network_url_creates_availability(self):
+        form = QuickAddForm(data={
+            'title': 'Survivor',
+            'url': 'https://www.cbs.com/shows/survivor/',
+            'genre': 'Reality',
+            'content_type': 'tv',
+        })
+        self.assertTrue(form.is_valid(), form.errors)
+
+        item = form.save()
+
+        self.assertEqual(item.source_type, 'network')
+        availability = ContentAvailability.objects.get(content=item)
+        self.assertEqual(availability.provider, 'CBS')
+        self.assertEqual(availability.url, item.url)
+        self.assertEqual(availability.action_label, 'Open CBS')
+
+    def test_free_provider_uses_watch_action_label(self):
+        form = QuickAddForm(data={
+            'title': 'FRONTLINE',
+            'url': 'https://www.pbs.org/show/frontline/',
+            'genre': 'Documentary',
+            'content_type': 'tv',
+        })
+        self.assertTrue(form.is_valid(), form.errors)
+        item = form.save()
+        self.assertEqual(item.availabilities.get().action_label, 'Watch on PBS')
+
+
 class DemoContentCommandTests(TestCase):
     def test_seed_demo_content_is_idempotent_and_multisource(self):
         output = StringIO()
@@ -146,14 +221,18 @@ class DemoContentCommandTests(TestCase):
         first_count = ContentItem.objects.count()
         call_command('seed_demo_content', stdout=output)
 
-        self.assertEqual(first_count, 6)
-        self.assertEqual(ContentItem.objects.count(), 6)
+        self.assertEqual(first_count, 9)
+        self.assertEqual(ContentItem.objects.count(), 9)
         self.assertEqual(ContentItem.objects.filter(content_type='movie').count(), 2)
-        self.assertEqual(ContentItem.objects.filter(content_type='tv').count(), 2)
+        self.assertEqual(ContentItem.objects.filter(content_type='tv').count(), 5)
         self.assertEqual(ContentItem.objects.filter(content_type='video').count(), 2)
+        self.assertEqual(ContentItem.objects.filter(source_type='network').count(), 3)
         self.assertTrue(ContentItem.objects.filter(source_type='internet_archive').exists())
         self.assertTrue(ContentItem.objects.filter(source_type='tmdb').exists())
-        self.assertEqual(ContentAvailability.objects.count(), 4)
+        self.assertEqual(ContentAvailability.objects.count(), 7)
+        self.assertTrue(ContentAvailability.objects.filter(provider='CBS').exists())
+        self.assertTrue(ContentAvailability.objects.filter(provider='PBS').exists())
+        self.assertTrue(ContentAvailability.objects.filter(provider='FOX').exists())
 
 
 class ContentManagementTests(TestCase):
