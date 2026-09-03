@@ -2,72 +2,70 @@
 
 {% block content %}
 
-<!-- QUICK ADD -->
 {% if user.is_authenticated %}
 <div class="quick-add mb-3">
-    <form method="post" class="d-flex gap-2 align-items-center">
+    <form method="post" class="d-flex gap-2 align-items-center flex-wrap">
         {% csrf_token %}
-
         {{ form.title }}
         {{ form.url }}
         {{ form.genre }}
-
+        {{ form.content_type }}
         <button class="btn btn-success">+</button>
     </form>
 </div>
 {% endif %}
 
-<!-- SECTION TEMPLATE -->
-{% comment %} Reusable layout pattern {% endcomment %}
-
-<!-- TRENDING -->
 <div class="mb-4">
-    <h4 class="mb-2">🔥 Trending</h4>
-
+    <h4 class="mb-2">🎬 Trending Movies</h4>
     <div class="row-scroll">
-        {% for item in trending %}
+        {% for item in trending_movies %}
             {% include "partials/card.html" %}
         {% empty %}
-            <div class="text-muted">No content yet</div>
+            <div class="text-muted">Add a TMDB API key to enable live movie discovery.</div>
         {% endfor %}
     </div>
 </div>
 
-<!-- COMEDY -->
 <div class="mb-4">
-    <h4 class="mb-2">😂 Comedy</h4>
-
+    <h4 class="mb-2">📺 Trending TV</h4>
     <div class="row-scroll">
-        {% for item in comedy %}
+        {% for item in trending_tv %}
             {% include "partials/card.html" %}
         {% empty %}
-            <div class="text-muted">No comedy content</div>
+            <div class="text-muted">Add a TMDB API key to enable live TV discovery.</div>
         {% endfor %}
     </div>
 </div>
 
-<!-- ACTION -->
 <div class="mb-4">
-    <h4 class="mb-2">🎬 Action</h4>
-
+    <h4 class="mb-2">🍿 Movies</h4>
     <div class="row-scroll">
-        {% for item in action %}
+        {% for item in movies %}
             {% include "partials/card.html" %}
         {% empty %}
-            <div class="text-muted">No action content</div>
+            <div class="text-muted">No movies in the local catalog yet.</div>
         {% endfor %}
     </div>
 </div>
 
-<!-- YOUTUBE -->
+<div class="mb-4">
+    <h4 class="mb-2">📺 TV Shows</h4>
+    <div class="row-scroll">
+        {% for item in tv %}
+            {% include "partials/card.html" %}
+        {% empty %}
+            <div class="text-muted">No TV shows in the local catalog yet.</div>
+        {% endfor %}
+    </div>
+</div>
+
 <div class="mb-5">
-    <h4 class="mb-2">▶️ YouTube</h4>
-
+    <h4 class="mb-2">▶️ Web Video</h4>
     <div class="row-scroll">
         {% for item in youtube %}
             {% include "partials/card.html" %}
         {% empty %}
-            <div class="text-muted">No YouTube content</div>
+            <div class="text-muted">No YouTube videos in the local catalog yet.</div>
         {% endfor %}
     </div>
 </div>

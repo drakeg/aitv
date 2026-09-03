@@ -3,21 +3,43 @@
     {% if item.thumbnail %}
         <img src="{{ item.thumbnail }}" alt="{% if item.title %}{{ item.title }}{% else %}{{ item.name|default:'Content item' }}{% endif %}">
     {% else %}
-        <img src="https://via.placeholder.com/300x170?text=No+Image" alt="No image available">
+        <div class="d-flex align-items-center justify-content-center bg-light text-muted" style="height: 170px;">
+            No image
+        </div>
     {% endif %}
 
     <div class="p-2">
+        <div class="d-flex gap-1 flex-wrap mb-1">
+            {% if item.content_type %}
+                <span class="badge text-bg-secondary">{{ item.content_type|upper }}</span>
+            {% endif %}
+            {% if item.release_year %}
+                <span class="badge text-bg-light">{{ item.release_year }}</span>
+            {% endif %}
+            {% if item.rating %}
+                <span class="badge text-bg-light">★ {{ item.rating }}</span>
+            {% endif %}
+        </div>
+
         <strong>
             {% if item.title %}
-                {{ item.title|truncatechars:20 }}
+                {{ item.title|truncatechars:28 }}
             {% else %}
-                {{ item.name|default:'Untitled'|truncatechars:20 }}
+                {{ item.name|default:'Untitled'|truncatechars:28 }}
             {% endif %}
         </strong>
 
+        {% if not item.is_external %}
+            {% for availability in item.availabilities.all %}
+                <div class="small text-muted mt-1">
+                    {{ availability.provider }} · {{ availability.get_access_type_display }}
+                </div>
+            {% endfor %}
+        {% endif %}
+
         <a href="{{ item.url }}" target="_blank" rel="noopener noreferrer"
            class="btn btn-sm btn-primary w-100 mt-1">
-            ▶
+            Open source
         </a>
 
         {% if user.is_authenticated %}
@@ -28,6 +50,12 @@
                     <input type="hidden" name="url" value="{{ item.url }}">
                     <input type="hidden" name="genre" value="{{ item.genre|default:'Movie' }}">
                     <input type="hidden" name="thumbnail" value="{{ item.thumbnail }}">
+                    <input type="hidden" name="content_type" value="{{ item.content_type }}">
+                    <input type="hidden" name="description" value="{{ item.description }}">
+                    <input type="hidden" name="release_year" value="{{ item.release_year|default:'' }}">
+                    <input type="hidden" name="rating" value="{{ item.rating|default:'' }}">
+                    <input type="hidden" name="external_source" value="{{ item.external_source }}">
+                    <input type="hidden" name="external_id" value="{{ item.external_id }}">
                     <button type="submit" class="btn btn-sm btn-success w-100 mt-1">
                         ＋ Library
                     </button>

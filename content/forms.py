@@ -1,3 +1,4 @@
+import re
 from urllib.parse import parse_qs, urlparse
 
 from django import forms
@@ -5,6 +6,7 @@ from django import forms
 from .models import ContentItem
 
 YOUTUBE_HOSTS = {'youtube.com', 'www.youtube.com', 'm.youtube.com', 'youtu.be'}
+YOUTUBE_ID_RE = re.compile(r'^[A-Za-z0-9_-]{11}$')
 
 
 def extract_youtube_video_id(url):
@@ -23,18 +25,24 @@ def extract_youtube_video_id(url):
         candidate = parts[1] if len(parts) >= 2 and parts[0] in {'shorts', 'embed'} else ''
 
     candidate = candidate.strip()
-    return candidate if len(candidate) == 11 else None
+    return candidate if YOUTUBE_ID_RE.fullmatch(candidate) else None
 
 
 class ContentItemForm(forms.ModelForm):
     class Meta:
         model = ContentItem
-        fields = ['title', 'url', 'genre']
+        fields = ['title', 'url', 'genre', 'content_type']
         widgets = {
             'title': forms.TextInput(attrs={'placeholder': 'Title'}),
             'url': forms.URLInput(attrs={'placeholder': 'Paste URL'}),
             'genre': forms.TextInput(attrs={'placeholder': 'Genre'}),
         }
+
+    def clean_title(self):
+        return self.cleaned_data['title'].strip()
+
+    def clean_genre(self):
+        return self.cleaned_data['genre'].strip()
 
     def save(self, commit=True):
         previous_source_type = self.instance.source_type if self.instance.pk else ''
@@ -43,9 +51,10 @@ class ContentItemForm(forms.ModelForm):
 
         if video_id:
             instance.source_type = 'youtube'
+            instance.content_type = ContentItem.ContentType.VIDEO
             instance.thumbnail = f'https://img.youtube.com/vi/{video_id}/hqdefault.jpg'
-        else:
-            instance.source_type = 'movie'
+        elif not instance.external_source:
+            instance.source_type = 'manual'
             if previous_source_type == 'youtube':
                 instance.thumbnail = None
 

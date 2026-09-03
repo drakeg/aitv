@@ -2,10 +2,11 @@ import os
 
 import requests
 
-TMDB_TRENDING_URL = 'https://api.themoviedb.org/3/trending/movie/week'
+TMDB_API_ROOT = 'https://api.themoviedb.org/3'
+TMDB_IMAGE_ROOT = 'https://image.tmdb.org/t/p/w500'
 
 
-def fetch_trending_movies():
+def _tmdb_request(path):
     api_key = os.getenv('TMDB_API_KEY', '').strip()
     if not api_key:
         return []
@@ -13,33 +14,60 @@ def fetch_trending_movies():
     try:
         timeout = float(os.getenv('TMDB_TIMEOUT_SECONDS', '5'))
         response = requests.get(
-            TMDB_TRENDING_URL,
+            f'{TMDB_API_ROOT}{path}',
             params={'api_key': api_key},
             timeout=timeout,
         )
         response.raise_for_status()
-        results = response.json().get('results', [])
+        return response.json().get('results', [])
     except (requests.RequestException, ValueError):
         return []
 
-    movies = []
-    for movie in results:
-        movie_id = movie.get('id')
-        if movie_id is None:
-            continue
 
-        poster_path = movie.get('poster_path')
-        movies.append({
-            'id': f'tmdb_{movie_id}',
-            'title': movie.get('title'),
-            'genre': 'Movie',
-            'thumbnail': (
-                f'https://image.tmdb.org/t/p/w500{poster_path}'
-                if poster_path else ''
-            ),
-            'url': f'https://www.themoviedb.org/movie/{movie_id}',
-            'source_type': 'movie',
-            'is_external': True,
-        })
+def _normalize_tmdb_item(item, content_type):
+    item_id = item.get('id')
+    if item_id is None:
+        return None
 
-    return movies
+    is_tv = content_type == 'tv'
+    title = item.get('name') if is_tv else item.get('title')
+    date_value = item.get('first_air_date') if is_tv else item.get('release_date')
+    year = None
+    if date_value and len(date_value) >= 4 and date_value[:4].isdigit():
+        year = int(date_value[:4])
+
+    poster_path = item.get('poster_path')
+    rating = item.get('vote_average')
+
+    return {
+        'id': f'tmdb_{content_type}_{item_id}',
+        'title': title or 'Untitled',
+        'genre': 'TV' if is_tv else 'Movie',
+        'thumbnail': f'{TMDB_IMAGE_ROOT}{poster_path}' if poster_path else '',
+        'url': f'https://www.themoviedb.org/{"tv" if is_tv else "movie"}/{item_id}',
+        'source_type': 'tmdb',
+        'content_type': content_type,
+        'description': item.get('overview', ''),
+        'release_year': year,
+        'rating': round(float(rating), 1) if rating is not None else None,
+        'external_source': 'tmdb',
+        'external_id': str(item_id),
+        'is_external': True,
+    }
+
+
+def _fetch_tmdb(path, content_type):
+    normalized = []
+    for item in _tmdb_request(path):
+        result = _normalize_tmdb_item(item, content_type)
+        if result:
+            normalized.append(result)
+    return normalized
+
+
+def fetch_trending_movies():
+    return _fetch_tmdb('/trending/movie/week', 'movie')
+
+
+def fetch_trending_tv():
+    return _fetch_tmdb('/trending/tv/week', 'tv')

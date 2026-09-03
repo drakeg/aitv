@@ -9,15 +9,16 @@ from django.test import SimpleTestCase, TestCase
 from django.urls import reverse
 
 from content.forms import QuickAddForm, extract_youtube_video_id
-from content.models import ContentItem
-from content.services import fetch_trending_movies
+from content.models import ContentAvailability, ContentItem
+from content.services import fetch_trending_movies, fetch_trending_tv
 
 
-class TrendingMoviesServiceTests(SimpleTestCase):
+class TrendingContentServiceTests(SimpleTestCase):
     @patch.dict(os.environ, {}, clear=True)
     @patch('content.services.requests.get')
     def test_missing_api_key_skips_request(self, mock_get):
         self.assertEqual(fetch_trending_movies(), [])
+        self.assertEqual(fetch_trending_tv(), [])
         mock_get.assert_not_called()
 
     @patch.dict(
@@ -26,25 +27,29 @@ class TrendingMoviesServiceTests(SimpleTestCase):
         clear=True,
     )
     @patch('content.services.requests.get')
-    def test_trending_movies_are_normalized(self, mock_get):
+    def test_trending_movies_are_normalized_with_metadata(self, mock_get):
         response = Mock()
         response.raise_for_status.return_value = None
         response.json.return_value = {
-            'results': [
-                {
-                    'id': 42,
-                    'title': 'Example Movie',
-                    'poster_path': '/poster.jpg',
-                }
-            ]
+            'results': [{
+                'id': 42,
+                'title': 'Example Movie',
+                'poster_path': '/poster.jpg',
+                'overview': 'A useful example.',
+                'release_date': '2026-08-01',
+                'vote_average': 8.27,
+            }]
         }
         mock_get.return_value = response
 
         movies = fetch_trending_movies()
 
         self.assertEqual(len(movies), 1)
-        self.assertEqual(movies[0]['id'], 'tmdb_42')
-        self.assertEqual(movies[0]['title'], 'Example Movie')
+        self.assertEqual(movies[0]['id'], 'tmdb_movie_42')
+        self.assertEqual(movies[0]['content_type'], 'movie')
+        self.assertEqual(movies[0]['release_year'], 2026)
+        self.assertEqual(movies[0]['rating'], 8.3)
+        self.assertEqual(movies[0]['external_source'], 'tmdb')
         self.assertTrue(movies[0]['is_external'])
         mock_get.assert_called_once_with(
             'https://api.themoviedb.org/3/trending/movie/week',
@@ -54,9 +59,30 @@ class TrendingMoviesServiceTests(SimpleTestCase):
 
     @patch.dict(os.environ, {'TMDB_API_KEY': 'test-key'}, clear=True)
     @patch('content.services.requests.get')
+    def test_trending_tv_uses_name_and_first_air_date(self, mock_get):
+        response = Mock()
+        response.raise_for_status.return_value = None
+        response.json.return_value = {
+            'results': [{
+                'id': 7,
+                'name': 'Example Series',
+                'first_air_date': '2024-02-20',
+                'vote_average': 7.5,
+            }]
+        }
+        mock_get.return_value = response
+
+        shows = fetch_trending_tv()
+
+        self.assertEqual(shows[0]['title'], 'Example Series')
+        self.assertEqual(shows[0]['content_type'], 'tv')
+        self.assertEqual(shows[0]['release_year'], 2024)
+        self.assertEqual(shows[0]['url'], 'https://www.themoviedb.org/tv/7')
+
+    @patch.dict(os.environ, {'TMDB_API_KEY': 'test-key'}, clear=True)
+    @patch('content.services.requests.get')
     def test_request_failure_returns_empty_list(self, mock_get):
         mock_get.side_effect = requests.RequestException('unavailable')
-
         self.assertEqual(fetch_trending_movies(), [])
 
     @patch.dict(
@@ -78,44 +104,56 @@ class YouTubeParsingTests(SimpleTestCase):
             f'https://www.youtube.com/embed/{video_id}',
             f'https://m.youtube.com/watch?v={video_id}',
         ]
-
         for url in urls:
             with self.subTest(url=url):
                 self.assertEqual(extract_youtube_video_id(url), video_id)
 
-    def test_non_youtube_and_spoofed_hosts_are_rejected(self):
+    def test_non_youtube_spoofed_and_invalid_ids_are_rejected(self):
         self.assertIsNone(extract_youtube_video_id('https://example.com/watch?v=dQw4w9WgXcQ'))
         self.assertIsNone(extract_youtube_video_id('https://youtube.com.example.com/watch?v=dQw4w9WgXcQ'))
+        self.assertIsNone(extract_youtube_video_id('https://youtube.com/watch?v=invalid!id!'))
 
-    def test_quick_add_sets_youtube_metadata(self):
+    def test_quick_add_sets_youtube_metadata_and_video_type(self):
         form = QuickAddForm(data={
             'title': 'Example',
             'url': 'https://youtu.be/dQw4w9WgXcQ?si=test',
             'genre': 'Music',
+            'content_type': 'movie',
         })
-
         self.assertTrue(form.is_valid(), form.errors)
         item = form.save(commit=False)
         self.assertEqual(item.source_type, 'youtube')
-        self.assertEqual(
-            item.thumbnail,
-            'https://img.youtube.com/vi/dQw4w9WgXcQ/hqdefault.jpg',
-        )
+        self.assertEqual(item.content_type, 'video')
+        self.assertEqual(item.thumbnail, 'https://img.youtube.com/vi/dQw4w9WgXcQ/hqdefault.jpg')
+
+    def test_manual_non_youtube_content_preserves_selected_type(self):
+        form = QuickAddForm(data={
+            'title': 'Example Series',
+            'url': 'https://example.com/series',
+            'genre': 'Drama',
+            'content_type': 'tv',
+        })
+        self.assertTrue(form.is_valid(), form.errors)
+        item = form.save(commit=False)
+        self.assertEqual(item.source_type, 'manual')
+        self.assertEqual(item.content_type, 'tv')
 
 
 class DemoContentCommandTests(TestCase):
-    def test_seed_demo_content_is_idempotent(self):
+    def test_seed_demo_content_is_idempotent_and_multisource(self):
         output = StringIO()
-
         call_command('seed_demo_content', stdout=output)
         first_count = ContentItem.objects.count()
         call_command('seed_demo_content', stdout=output)
 
-        self.assertEqual(first_count, 4)
-        self.assertEqual(ContentItem.objects.count(), 4)
-        self.assertEqual(ContentItem.objects.filter(source_type='youtube').count(), 4)
-        self.assertTrue(ContentItem.objects.filter(genre__icontains='comedy').exists())
-        self.assertTrue(ContentItem.objects.filter(genre__icontains='action').exists())
+        self.assertEqual(first_count, 6)
+        self.assertEqual(ContentItem.objects.count(), 6)
+        self.assertEqual(ContentItem.objects.filter(content_type='movie').count(), 2)
+        self.assertEqual(ContentItem.objects.filter(content_type='tv').count(), 2)
+        self.assertEqual(ContentItem.objects.filter(content_type='video').count(), 2)
+        self.assertTrue(ContentItem.objects.filter(source_type='internet_archive').exists())
+        self.assertTrue(ContentItem.objects.filter(source_type='tmdb').exists())
+        self.assertEqual(ContentAvailability.objects.count(), 4)
 
 
 class ContentManagementTests(TestCase):
@@ -128,44 +166,78 @@ class ContentManagementTests(TestCase):
             title='Managed Item',
             url='https://example.com/video',
             genre='Drama',
-            source_type='movie',
+            source_type='manual',
+            content_type='movie',
         )
 
     def test_edit_requires_authentication(self):
         response = self.client.get(reverse('content:edit', args=[self.item.id]))
         self.assertEqual(response.status_code, 302)
 
-    def test_authenticated_user_can_edit_content(self):
+    def test_authenticated_user_can_edit_content_type(self):
         self.client.force_login(self.user)
         response = self.client.post(
             reverse('content:edit', args=[self.item.id]),
-            {'title': 'Updated', 'url': 'https://example.com/updated', 'genre': 'Drama'},
+            {
+                'title': 'Updated',
+                'url': 'https://example.com/updated',
+                'genre': 'Drama',
+                'content_type': 'tv',
+            },
         )
-
         self.assertEqual(response.status_code, 302)
         self.item.refresh_from_db()
         self.assertEqual(self.item.title, 'Updated')
+        self.assertEqual(self.item.content_type, 'tv')
 
     def test_delete_requires_post(self):
         self.client.force_login(self.user)
         response = self.client.get(reverse('content:delete', args=[self.item.id]))
         self.assertEqual(response.status_code, 405)
 
-    def test_tmdb_card_can_be_imported_once(self):
+    def test_tmdb_movie_card_can_be_imported_once_with_metadata(self):
         self.client.force_login(self.user)
         payload = {
             'title': 'Example Movie',
             'url': 'https://www.themoviedb.org/movie/42',
             'genre': 'Movie',
             'thumbnail': 'https://image.tmdb.org/t/p/w500/poster.jpg',
+            'content_type': 'movie',
+            'description': 'Example overview',
+            'release_year': '2026',
+            'rating': '8.4',
+            'external_source': 'tmdb',
+            'external_id': '42',
         }
-
         first = self.client.post(reverse('content:import_external'), payload)
         second = self.client.post(reverse('content:import_external'), payload)
 
         self.assertEqual(first.status_code, 302)
         self.assertEqual(second.status_code, 302)
-        self.assertEqual(
-            ContentItem.objects.filter(url='https://www.themoviedb.org/movie/42').count(),
-            1,
-        )
+        matches = ContentItem.objects.filter(external_source='tmdb', external_id='42')
+        self.assertEqual(matches.count(), 1)
+        item = matches.get()
+        self.assertEqual(item.content_type, 'movie')
+        self.assertEqual(item.release_year, 2026)
+
+    def test_tmdb_tv_card_can_be_imported(self):
+        self.client.force_login(self.user)
+        response = self.client.post(reverse('content:import_external'), {
+            'title': 'Example Series',
+            'url': 'https://www.themoviedb.org/tv/7',
+            'genre': 'TV',
+            'content_type': 'tv',
+            'external_source': 'tmdb',
+            'external_id': '7',
+        })
+        self.assertEqual(response.status_code, 302)
+        self.assertTrue(ContentItem.objects.filter(content_type='tv', external_id='7').exists())
+
+    def test_external_import_rejects_missing_tmdb_identity(self):
+        self.client.force_login(self.user)
+        response = self.client.post(reverse('content:import_external'), {
+            'title': 'Fake',
+            'url': 'https://www.themoviedb.org/movie/42',
+            'content_type': 'movie',
+        })
+        self.assertEqual(response.status_code, 400)
