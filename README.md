@@ -1,57 +1,42 @@
 # AI TV / StreamHub
 
-AI TV is a Django-based personal streaming dashboard for collecting content from multiple sources, browsing curated categories, tracking a per-user watchlist, and supplementing locally stored content with external discovery data such as TMDB trending movies.
+AI TV is a Django-based personal streaming dashboard for discovering movies, TV shows, and web video across multiple sources, maintaining a local catalog, tracking where titles are available, and keeping a separate watchlist for each user.
 
 ## Current capabilities
 
-- Django web dashboard with reusable templates and static assets
-- Local `ContentItem` catalog with title, URL, genre, duration, thumbnail, and source type
-- Quick Add form for adding content from the home page
-- Robust YouTube detection for watch, short-link, Shorts, embed, and mobile URLs
-- Automatic YouTube thumbnail generation
-- TMDB weekly trending movie integration
-- One-click import of TMDB discovery results into the managed library
-- Authenticated edit/delete controls for locally managed content
-- Per-user watchlist model with duplicate prevention
-- Django admin support for managed data
+- Multi-source catalog with explicit movie, TV, and web-video types
+- Rich title metadata including description, release year, rating, source identity, poster, and genre
+- Separate provider availability records so one title can have multiple watch options without being duplicated
+- TMDB weekly trending movie and TV discovery when an API key is configured
+- Mixed local/container demo catalog with movies, TV shows, YouTube, TMDB examples, and free Internet Archive sources
+- Robust YouTube URL/video-ID detection and automatic thumbnails
+- One-click TMDB movie/TV discovery import into the managed library
+- Authenticated add/edit/delete controls for managed content
+- Built-in account registration, login, and logout flows
+- Dedicated per-user watchlist page with POST-only add/remove actions
+- Django admin support for catalog and availability data
 - SQLite development database
-- Docker Compose workflow for fast local testing
-- Optional idempotent demo catalog for local/container testing
+- Fast Docker Compose local workflow with configurable host port
+- Automated Django checks and tests in GitHub Actions
 
 ## Project structure
 
 ```text
 aitv/
-├── content/         # Content catalog, forms, views, external services, and demo seed command
-├── core/            # Site-level models, admin, and home/dashboard view
+├── content/         # Catalog, provider availability, forms, discovery services, and demo data
+├── core/            # Site-level models, dashboard, registration, and tests
 ├── notifications/   # Notification application foundation
 ├── streamhub/       # Django project settings, URLs, and WSGI entry point
-├── watchlist/       # Per-user watchlist functionality
-├── static/          # Site CSS and other static assets
-├── templates/       # Shared Django templates
+├── watchlist/       # Per-user watchlist page and controls
+├── static/          # Site CSS and static assets
+├── templates/       # Shared, account, content, and watchlist templates
 ├── Dockerfile
 ├── docker-compose.yml
 ├── manage.py
 └── requirements.txt
 ```
 
-## Requirements
-
-For the standard local workflow:
-
-- Python 3.10+
-- pip
-
-For the Docker workflow:
-
-- Docker Engine or Docker Desktop
-- Docker Compose v2 (`docker compose`)
-
-A TMDB API key is optional and only required for live trending movies.
-
 ## Quick local testing with Docker
-
-Docker is the fastest way to bring up the project for local testing.
 
 ```bash
 git clone https://github.com/drakeg/aitv.git
@@ -60,57 +45,47 @@ cp .env.example .env
 docker compose up --build
 ```
 
-The container runs database migrations automatically, loads a small demo catalog, and starts Django on all container interfaces. The demo seed is idempotent, so restarting the container does not create duplicate rows. By default the site is available at `http://127.0.0.1:8000/`.
+The container automatically runs migrations, refreshes the idempotent demo catalog, and starts Django. The default site is `http://127.0.0.1:8000/`.
 
-To use another host port, change `APP_PORT` in `.env`, for example:
-
-```dotenv
-APP_PORT=8080
-```
-
-Then browse to `http://127.0.0.1:8080/`.
-
-To start with an empty catalog instead, set:
+To use another host port, set `APP_PORT` in `.env`, for example:
 
 ```dotenv
-LOAD_DEMO_CONTENT=false
+APP_PORT=8007
 ```
 
-You can also seed or refresh the demo catalog manually:
+Set `LOAD_DEMO_CONTENT=false` for an empty catalog. You can manually refresh the demo catalog with:
 
 ```bash
 docker compose run --rm web python manage.py seed_demo_content
 ```
 
-Because the repository is bind-mounted into the development container, Python/template/static-file changes are available immediately through Django's development reloader without rebuilding the image. Rebuild when dependencies or the Dockerfile change.
+The source tree is bind-mounted, so normal Python/template/static changes are picked up by Django's development reloader without rebuilding the image. Rebuild when dependencies or the Dockerfile change.
 
-Useful Docker commands:
+Useful commands:
 
 ```bash
-# Start or rebuild
-docker compose up --build
-
-# Start in the background
 docker compose up -d --build
-
-# View logs
 docker compose logs -f web
-
-# Run the test suite in the container
 docker compose run --rm web python manage.py test
-
-# Create an admin user
 docker compose run --rm web python manage.py createsuperuser
-
-# Stop containers
 docker compose down
 ```
 
-## Content workflow
+## Accounts and watchlists
 
-Authenticated users can use Quick Add on the home page to store a URL, title, and genre. Supported YouTube URL formats are normalized for metadata detection, including `youtube.com/watch`, `youtu.be`, `youtube.com/shorts`, `youtube.com/embed`, and mobile YouTube URLs. Hostnames are checked exactly so look-alike domains are not classified as YouTube.
+Use **Register** in the navigation bar to create a normal StreamHub account. Registration signs the new user in immediately. Existing users can use the dedicated login page; logout is a CSRF-protected POST action.
 
-Locally managed cards expose Edit and Delete controls. When TMDB discovery is enabled, external trending cards expose an **+ Library** action that imports the movie into the local `ContentItem` catalog. Re-importing the same TMDB URL updates the existing item rather than creating a duplicate.
+Each signed-in user has an independent watchlist at `/watchlist/`. Catalog cards add and remove titles using POST-only controls, and the dedicated watchlist page provides a focused saved-title view.
+
+## Content and discovery workflow
+
+Quick Add accepts a title, URL, genre, and content type. Supported YouTube URL shapes include `youtube.com/watch`, `youtu.be`, Shorts, embeds, and mobile URLs, with strict video-ID character validation.
+
+The catalog stores a title once while `ContentAvailability` records represent individual providers/watch locations. This allows a movie or TV series to gain additional sources later without creating duplicate title cards.
+
+With `TMDB_API_KEY` configured, the dashboard displays separate trending movie and TV rows. Discovery cards can be imported into the managed library while retaining TMDB identity and metadata. TMDB failures or a missing API key do not prevent the dashboard from loading.
+
+The local demo data intentionally exercises multiple source types, including free Internet Archive availability, so Docker testing is useful without external API credentials.
 
 ## Standard local setup
 
@@ -121,110 +96,82 @@ python -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
 cp .env.example .env
-```
-
-On Windows PowerShell, activate the virtual environment with:
-
-```powershell
-.venv\Scripts\Activate.ps1
-```
-
-The application reads configuration from environment variables. The `.env.example` file documents the supported values. If you use a local `.env` file outside Docker Compose, export/source it in your shell or use your preferred environment loader before starting Django.
-
-Run the initial database setup:
-
-```bash
 python manage.py migrate
-python manage.py createsuperuser
-```
-
-Start the development server:
-
-```bash
 python manage.py runserver
 ```
 
-Then browse to `http://127.0.0.1:8000/`. Django admin is available at `/admin/`.
+On Windows PowerShell use `.venv\Scripts\Activate.ps1` to activate the environment. Django admin is available at `/admin/`; create an admin with `python manage.py createsuperuser` when needed.
 
 ## Configuration
 
 | Variable | Default | Purpose |
 | --- | --- | --- |
 | `APP_PORT` | `8000` | Host port exposed by Docker Compose. |
-| `DJANGO_SECRET_KEY` | development-only fallback | Django signing secret. Set a strong value outside local development. |
+| `DJANGO_SECRET_KEY` | development-only fallback | Django signing secret. |
 | `DJANGO_DEBUG` | `true` | Enables/disables Django debug mode. |
-| `DJANGO_ALLOWED_HOSTS` | empty outside Compose | Comma-separated hostnames accepted by Django. |
-| `TMDB_API_KEY` | empty | Enables TMDB trending movie discovery when configured. |
-| `TMDB_TIMEOUT_SECONDS` | `5` | Timeout for TMDB HTTP requests. |
-| `LOAD_DEMO_CONTENT` | `true` in Compose | Loads/refreshes a small demo catalog at container startup. |
-
-When `TMDB_API_KEY` is not configured or TMDB cannot be reached, the dashboard continues to load and simply omits live trending results.
+| `DJANGO_ALLOWED_HOSTS` | empty outside Compose | Comma-separated accepted hostnames. |
+| `TMDB_API_KEY` | empty | Enables TMDB movie and TV discovery. |
+| `TMDB_TIMEOUT_SECONDS` | `5` | Timeout for TMDB requests. |
+| `LOAD_DEMO_CONTENT` | `true` in Compose | Loads/refreshes demo catalog data at startup. |
 
 ## Testing
 
-Run the Django test suite locally with:
-
 ```bash
+python manage.py check
 python manage.py test
 ```
 
-Or run it through Docker:
+Or through Docker:
 
 ```bash
 docker compose run --rm web python manage.py test
 ```
 
-Run Django's deployment/configuration checks with:
-
-```bash
-python manage.py check
-```
-
-GitHub Actions runs these checks for pull requests and pushes to `main`.
+GitHub Actions runs Django checks and the test suite for pull requests and pushes to `main`.
 
 ## Architecture notes
 
-`core.views.home` assembles the dashboard. Local catalog entries come from `ContentItem`; authenticated users can submit the Quick Add form; watchlist IDs are loaded for the signed-in user; and TMDB discovery is isolated behind `content.services` so external API failures do not take down the page. The `content` application now owns URL parsing, local content management routes, and importing discovery results into the local catalog.
+`core.views.home` assembles local catalog rows and external TMDB discovery. `ContentItem` represents a movie, TV title, or web video; `ContentAvailability` represents individual providers or watch URLs. The `content` app owns ingestion, discovery normalization, editing, and imports. The `watchlist` app owns user-specific saved titles. Django's built-in authentication system provides sessions and credentials while project templates provide the user-facing account flows.
 
-The Docker setup intentionally remains development-focused. It uses Django's development server, bind-mounts the working tree for rapid iteration, stores the SQLite database in the repository working directory, and optionally seeds a small local demo catalog. Production deployment settings, a production database, static-file serving, authentication UX, and background refresh jobs remain future concerns.
+The Docker path remains development-focused: Django's development server, bind-mounted source, SQLite, and optional demo data. Production container/server, database, static serving, security headers, and health checks remain deployment work.
 
 ## Development roadmap
 
 ### Sprint 1 — Foundation and reliability
 
-- [x] Replace hard-coded runtime configuration with environment-driven settings
-- [x] Make TMDB integration optional and resilient to network/API failures
-- [x] Add baseline automated tests
-- [x] Add CI for Django checks and tests
-- [x] Document installation, configuration, architecture, and development workflow
-- [x] Add a fast Docker Compose workflow for local testing
+- [x] Environment-driven runtime configuration
+- [x] Resilient optional TMDB integration
+- [x] Baseline automated tests and CI
+- [x] Installation/configuration/architecture documentation
+- [x] Fast Docker Compose local workflow
 
 ### Sprint 2 — Content ingestion and metadata
 
-- [x] Add repeatable demo content for useful local/container testing
-- [x] Harden URL parsing and YouTube video-ID extraction
-- [ ] Add richer content metadata and validation
-- [x] Add edit/delete flows for locally managed content
-- [x] Improve discovery-to-library ingestion so external results can become managed items
+- [x] Repeatable mixed-source demo content
+- [x] Hardened URL parsing and YouTube extraction
+- [x] Rich content metadata and explicit movie/TV/video types
+- [x] Separate provider availability model
+- [x] Edit/delete flows for managed content
+- [x] Movie and TV discovery-to-library ingestion
 
 ### Sprint 3 — User experience
 
-- [ ] Add complete login/logout/registration flows
-- [ ] Add a dedicated watchlist page and richer watchlist controls
+- [x] Complete login/logout/registration flows
+- [x] Dedicated watchlist page and safer watchlist controls
 - [ ] Improve filtering/search and category browsing
 - [ ] Add useful empty/error/loading states
 
 ### Sprint 4 — Deployment readiness
 
-- [ ] Add production-oriented container/settings path
-- [ ] Add a production database configuration path
-- [ ] Add static-file and security-header configuration
-- [ ] Add deployment documentation and health checks
+- [ ] Production-oriented container/settings path
+- [ ] Production database configuration path
+- [ ] Static-file and security-header configuration
+- [ ] Deployment documentation and health checks
 
 ## Security
 
-Do not commit real API keys or production secrets. `.env` is ignored by Git; use environment variables or a secrets manager in deployed environments.
+Do not commit real API keys or production secrets. `.env` is ignored by Git; use environment variables or a secrets manager in deployed environments. State-changing catalog and watchlist actions use POST requests with Django CSRF protection.
 
 ## Status
 
-This project is under active development. The current focus is expanding reliable content ingestion and local testability on top of the established foundation.
+The project now has a multi-source movie/TV/video catalog and functional user accounts. Current work is focused on browsing/search UX before deployment hardening.

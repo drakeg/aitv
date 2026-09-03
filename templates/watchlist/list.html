@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <div>
+            <h2 class="mb-1">My Watchlist</h2>
+            <p class="text-muted mb-0">Titles you saved to watch later.</p>
+        </div>
+        <a href="{% url 'home' %}" class="btn btn-outline-secondary">Browse catalog</a>
+    </div>
+
+    <div class="row g-3">
+        {% for entry in entries %}
+            <div class="col-12 col-md-6 col-xl-4">
+                <div class="card h-100">
+                    {% if entry.content.thumbnail %}
+                        <img src="{{ entry.content.thumbnail }}" class="card-img-top" alt="{{ entry.content.title }}">
+                    {% endif %}
+                    <div class="card-body">
+                        <h5 class="card-title">{{ entry.content.title }}</h5>
+                        <p class="text-muted small mb-2">
+                            {{ entry.content.get_content_type_display }}{% if entry.content.release_year %} · {{ entry.content.release_year }}{% endif %}
+                        </p>
+                        {% if entry.content.description %}<p class="card-text">{{ entry.content.description|truncatechars:180 }}</p>{% endif %}
+                        <a href="{{ entry.content.url }}" target="_blank" rel="noopener noreferrer" class="btn btn-primary btn-sm">Open</a>
+                        <form method="post" action="{% url 'watchlist:remove' entry.content.id %}" class="d-inline">
+                            {% csrf_token %}
+                            <input type="hidden" name="next" value="{% url 'watchlist:list' %}">
+                            <button type="submit" class="btn btn-outline-danger btn-sm">Remove</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        {% empty %}
+            <div class="col-12">
+                <div class="alert alert-secondary">
+                    Your watchlist is empty. Browse the catalog and save something that looks interesting.
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}
