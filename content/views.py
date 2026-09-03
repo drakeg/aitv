@@ -5,12 +5,13 @@ from django.contrib.auth.decorators import login_required
 from django.http import HttpResponseBadRequest, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
-from django.views.decorators.http import require_POST
+from django.views.decorators.http import require_GET, require_POST
 
 from watchlist.models import Watchlist
 
 from .forms import ContentAvailabilityFormSet, ContentItemForm
 from .models import ContentItem
+from .services import fetch_watch_providers
 
 
 @login_required
@@ -73,6 +74,17 @@ def _optional_rating(value):
     except InvalidOperation:
         return None
     return rating if Decimal('0') <= rating <= Decimal('10') else None
+
+
+@require_GET
+def external_watch_options(request):
+    content_type = request.GET.get('type', '').strip()
+    external_id = request.GET.get('id', '').strip()
+    if content_type not in {'movie', 'tv'} or not external_id.isdigit():
+        return HttpResponseBadRequest('Invalid external content.')
+
+    result = fetch_watch_providers(content_type, external_id)
+    return JsonResponse(result)
 
 
 @login_required
