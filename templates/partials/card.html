@@ -1,22 +1,14 @@
-<div class="card">
+<div class="card{% if item.source_type == 'tmdb' and require_region_availability %} region-pending{% endif %}">
 
     {% if item.thumbnail %}
         <img src="{{ item.thumbnail }}" alt="{% if item.title %}{{ item.title }}{% else %}{{ item.name|default:'Content item' }}{% endif %}">
     {% else %}
         {% with first_availability=item.availabilities.all.0 %}
             <div class="card-placeholder" aria-label="{% if item.title %}{{ item.title }}{% else %}{{ item.name|default:'Content item' }}{% endif %}">
-                {% if item.network %}
-                    <span class="card-placeholder-provider">{{ item.network }}</span>
-                    <span class="card-placeholder-kind">TV network</span>
-                {% elif item.provider %}
-                    <span class="card-placeholder-provider">{{ item.provider }}</span>
-                    <span class="card-placeholder-kind">Watch source</span>
-                {% elif first_availability %}
-                    <span class="card-placeholder-provider">{{ first_availability.provider }}</span>
-                    <span class="card-placeholder-kind">Watch source</span>
-                {% else %}
-                    <span class="card-placeholder-provider">No image</span>
-                {% endif %}
+                {% if item.network %}<span class="card-placeholder-provider">{{ item.network }}</span><span class="card-placeholder-kind">TV network</span>
+                {% elif item.provider %}<span class="card-placeholder-provider">{{ item.provider }}</span><span class="card-placeholder-kind">Watch source</span>
+                {% elif first_availability %}<span class="card-placeholder-provider">{{ first_availability.provider }}</span><span class="card-placeholder-kind">Watch source</span>
+                {% else %}<span class="card-placeholder-provider">No image</span>{% endif %}
             </div>
         {% endwith %}
     {% endif %}
@@ -29,25 +21,24 @@
             {% if item.rating %}<span class="badge text-bg-light">★ {{ item.rating }}</span>{% endif %}
         </div>
 
-        <strong class="content-title" title="{% if item.title %}{{ item.title }}{% else %}{{ item.name|default:'Untitled' }}{% endif %}">
-            {% if item.title %}{{ item.title|truncatechars:28 }}{% else %}{{ item.name|default:'Untitled'|truncatechars:28 }}{% endif %}
-        </strong>
-
+        <strong class="content-title" title="{% if item.title %}{{ item.title }}{% else %}{{ item.name|default:'Untitled' }}{% endif %}">{% if item.title %}{{ item.title|truncatechars:28 }}{% else %}{{ item.name|default:'Untitled'|truncatechars:28 }}{% endif %}</strong>
         <div class="small source-genre" title="{{ item.genre|default:'Genre not listed' }}">{{ item.genre|default:'Genre not listed'|truncatechars:34 }}</div>
 
         {% if item.source_type == 'tmdb' and item.external_id %}
-            <div class="tmdb-watch-context small" data-tmdb-context data-content-type="{{ item.content_type }}" data-context-url="{% url 'content:tmdb_watch_context' item.content_type item.external_id %}">
-                <div class="source-meta context-summary" data-context-summary>
-                    {% if item.content_type == 'tv' %}Loading network, episode, runtime…{% else %}Loading runtime…{% endif %}
-                </div>
-                <div class="provider-options" data-context-providers><span class="provider-pill provider-pill-muted">Loading watch sources…</span></div>
+            <div class="tmdb-watch-context small"
+                 data-tmdb-context
+                 data-content-type="{{ item.content_type }}"
+                 data-region="{{ discovery_region|default:'US' }}"
+                 data-require-region="{% if require_region_availability %}1{% else %}0{% endif %}"
+                 data-context-url="{% url 'content:tmdb_watch_context' item.content_type item.external_id %}?region={{ discovery_region|default:'US' }}">
+                <div class="source-meta context-summary" data-context-summary>{% if item.content_type == 'tv' %}Loading network, episode, runtime…{% else %}Loading runtime…{% endif %}</div>
+                <div class="provider-options" data-context-providers><span class="provider-pill provider-pill-muted">Checking regional watch sources…</span></div>
                 <a class="btn btn-sm btn-primary w-100 mt-1 d-none" target="_blank" rel="noopener noreferrer" data-context-watch>See watch options</a>
             </div>
         {% else %}
             <div class="small source-meta">
                 {% if item.content_type == 'tv' %}{{ item.episode_label|default:'Episode not listed' }} · {% endif %}
-                {% if item.runtime %}{{ item.runtime }} min{% else %}Runtime not listed{% endif %}
-                {% if item.airtime %} · {{ item.airtime }}{% endif %}
+                {% if item.runtime %}{{ item.runtime }} min{% else %}Runtime not listed{% endif %}{% if item.airtime %} · {{ item.airtime }}{% endif %}
             </div>
         {% endif %}
 
@@ -57,11 +48,7 @@
         {% elif not item.is_external %}
             {% for availability in item.availabilities.all %}
                 <a href="{{ availability.url }}" target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-primary w-100 mt-1">{{ availability.action_label }}</a>
-            {% empty %}
-                {% if item.source_type != 'tmdb' %}
-                    <a href="{{ item.url }}" target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-primary w-100 mt-1">Open title</a>
-                {% endif %}
-            {% endfor %}
+            {% empty %}{% if item.source_type != 'tmdb' %}<a href="{{ item.url }}" target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-primary w-100 mt-1">Open title</a>{% endif %}{% endfor %}
             {% if item.source_type == 'tmdb' %}<a href="{{ item.url }}" target="_blank" rel="noopener noreferrer" class="source-details-link">TMDB details</a>{% endif %}
         {% else %}
             <a href="{{ item.details_url|default:item.url }}" target="_blank" rel="noopener noreferrer" class="source-details-link">TMDB details</a>
@@ -72,22 +59,13 @@
                 {% if item.saved_content_id %}
                     <form method="post" action="{% url 'watchlist:remove' item.saved_content_id %}" data-watchlist-form data-content-id="{{ item.saved_content_id }}">{% csrf_token %}<button type="submit" class="btn btn-sm btn-danger w-100 mt-1">✓ Saved to Watchlist</button></form>
                 {% else %}
-                    <form method="post" action="{% url 'content:import_external' %}" data-watchlist-form data-external-save="true">
-                        {% csrf_token %}
-                        <input type="hidden" name="title" value="{{ item.title }}"><input type="hidden" name="url" value="{{ item.url }}"><input type="hidden" name="genre" value="{{ item.genre|default:'Movie' }}"><input type="hidden" name="thumbnail" value="{{ item.thumbnail }}"><input type="hidden" name="content_type" value="{{ item.content_type }}"><input type="hidden" name="description" value="{{ item.description }}"><input type="hidden" name="release_year" value="{{ item.release_year|default:'' }}"><input type="hidden" name="rating" value="{{ item.rating|default:'' }}"><input type="hidden" name="external_source" value="{{ item.external_source }}"><input type="hidden" name="external_id" value="{{ item.external_id }}">
-                        <button type="submit" class="btn btn-sm btn-success w-100 mt-1">⭐ Save to Watchlist</button>
-                    </form>
+                    <form method="post" action="{% url 'content:import_external' %}" data-watchlist-form data-external-save="true">{% csrf_token %}<input type="hidden" name="title" value="{{ item.title }}"><input type="hidden" name="url" value="{{ item.url }}"><input type="hidden" name="genre" value="{{ item.genre|default:'Movie' }}"><input type="hidden" name="thumbnail" value="{{ item.thumbnail }}"><input type="hidden" name="content_type" value="{{ item.content_type }}"><input type="hidden" name="description" value="{{ item.description }}"><input type="hidden" name="release_year" value="{{ item.release_year|default:'' }}"><input type="hidden" name="rating" value="{{ item.rating|default:'' }}"><input type="hidden" name="external_source" value="{{ item.external_source }}"><input type="hidden" name="external_id" value="{{ item.external_id }}"><button type="submit" class="btn btn-sm btn-success w-100 mt-1">⭐ Save to Watchlist</button></form>
                 {% endif %}
             {% else %}
-                {% if item.id in watchlist_ids %}
-                    <form method="post" action="{% url 'watchlist:remove' item.id %}" data-watchlist-form data-content-id="{{ item.id }}">{% csrf_token %}<button type="submit" class="btn btn-sm btn-danger w-100 mt-1">✓ Saved to Watchlist</button></form>
-                {% else %}
-                    <form method="post" action="{% url 'watchlist:add' item.id %}" data-watchlist-form data-content-id="{{ item.id }}">{% csrf_token %}<button type="submit" class="btn btn-sm btn-success w-100 mt-1">⭐ Save to Watchlist</button></form>
-                {% endif %}
+                {% if item.id in watchlist_ids %}<form method="post" action="{% url 'watchlist:remove' item.id %}" data-watchlist-form data-content-id="{{ item.id }}">{% csrf_token %}<button type="submit" class="btn btn-sm btn-danger w-100 mt-1">✓ Saved to Watchlist</button></form>{% else %}<form method="post" action="{% url 'watchlist:add' item.id %}" data-watchlist-form data-content-id="{{ item.id }}">{% csrf_token %}<button type="submit" class="btn btn-sm btn-success w-100 mt-1">⭐ Save to Watchlist</button></form>{% endif %}
                 <a href="{% url 'content:edit' item.id %}" class="btn btn-sm btn-outline-secondary w-100 mt-1">Edit</a>
                 <form method="post" action="{% url 'content:delete' item.id %}" onsubmit="return confirm('Delete this content item?');">{% csrf_token %}<button type="submit" class="btn btn-sm btn-outline-danger w-100 mt-1">Delete</button></form>
             {% endif %}
         {% endif %}
     </div>
-
 </div>
