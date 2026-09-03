@@ -34,14 +34,20 @@
             {% empty %}
                 {% if item.source_type == 'tmdb' %}
                     <div class="small text-muted mt-1">No direct watch source yet.</div>
-                    <a href="{{ item.url }}" target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-outline-secondary w-100 mt-1">TMDB details</a>
+                    <a href="{{ item.url }}" target="_blank" rel="noopener noreferrer" class="small text-muted d-block mt-1">TMDB details</a>
                 {% else %}
                     <a href="{{ item.url }}" target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-primary w-100 mt-1">Open title</a>
                 {% endif %}
             {% endfor %}
         {% else %}
-            <div class="small text-muted mt-1">Discovery metadata</div>
-            <a href="{{ item.url }}" target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-outline-secondary w-100 mt-1">TMDB details</a>
+            <button type="button"
+                    class="btn btn-sm btn-primary w-100 mt-1"
+                    data-watch-options
+                    data-watch-options-url="{% url 'content:watch_options' %}?type={{ item.content_type|urlencode }}&id={{ item.external_id|urlencode }}">
+                ▶ Where to watch
+            </button>
+            <div class="watch-options mt-1" data-watch-options-results hidden></div>
+            <a href="{{ item.url }}" target="_blank" rel="noopener noreferrer" class="small text-muted d-block mt-1 text-center">TMDB details</a>
         {% endif %}
 
         {% if user.is_authenticated %}
