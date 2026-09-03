@@ -4,7 +4,7 @@ from django.contrib.auth import get_user_model
 from django.test import TestCase
 from django.urls import reverse
 
-from content.models import ContentItem
+from content.models import ContentAvailability, ContentItem
 from watchlist.models import Watchlist
 
 
@@ -79,3 +79,53 @@ class DiscoverySavedStateTests(TestCase):
 
         self.assertContains(response, '✓ Saved to Watchlist')
         self.assertNotContains(response, '⭐ Save to Watchlist')
+
+
+@patch('core.views.fetch_trending_movies', return_value=[])
+@patch('core.views.fetch_trending_tv', return_value=[])
+class CatalogBrowseTests(TestCase):
+    def setUp(self):
+        self.movie = ContentItem.objects.create(
+            title='Galaxy Movie',
+            url='https://example.com/galaxy',
+            genre='Science Fiction',
+            description='A journey through deep space.',
+            content_type='movie',
+            source_type='manual',
+        )
+        self.tv = ContentItem.objects.create(
+            title='Kitchen Stories',
+            url='https://www.cbs.com/shows/example/',
+            genre='Reality',
+            description='A cooking competition.',
+            content_type='tv',
+            source_type='network',
+        )
+        ContentAvailability.objects.create(
+            content=self.tv,
+            provider='CBS',
+            url=self.tv.url,
+            access_type='other',
+        )
+
+    def test_search_matches_title_genre_and_description(self, _mock_tv, _mock_movies):
+        for query in ['Galaxy', 'Science Fiction', 'deep space']:
+            with self.subTest(query=query):
+                response = self.client.get(reverse('home'), {'q': query})
+                self.assertContains(response, 'Galaxy Movie')
+                self.assertNotContains(response, 'No matching titles found.')
+
+    def test_type_filter_limits_results(self, _mock_tv, _mock_movies):
+        response = self.client.get(reverse('home'), {'type': 'tv'})
+        self.assertContains(response, 'Kitchen Stories')
+        self.assertNotContains(response, 'Galaxy Movie')
+
+    def test_provider_filter_limits_results(self, _mock_tv, _mock_movies):
+        response = self.client.get(reverse('home'), {'provider': 'CBS'})
+        self.assertContains(response, 'Kitchen Stories')
+        self.assertNotContains(response, 'Galaxy Movie')
+
+    def test_empty_search_has_useful_state(self, _mock_tv, _mock_movies):
+        response = self.client.get(reverse('home'), {'q': 'definitely-not-here'})
+        self.assertContains(response, 'No matching titles found.')
+        self.assertContains(response, 'Try a broader search')
