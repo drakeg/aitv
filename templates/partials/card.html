@@ -22,7 +22,7 @@
     {% endif %}
 
     <div class="p-2">
-        <div class="d-flex gap-1 flex-wrap mb-1">
+        <div class="d-flex gap-1 flex-wrap mb-1 card-badges">
             {% if item.content_type %}<span class="badge text-bg-secondary">{{ item.content_type|upper }}</span>{% endif %}
             {% if item.network %}<span class="badge text-bg-info">{{ item.network }}</span>{% elif item.provider %}<span class="badge text-bg-info">{{ item.provider }}</span>{% endif %}
             {% if item.release_year %}<span class="badge text-bg-light">{{ item.release_year }}</span>{% endif %}
@@ -33,20 +33,21 @@
             {% if item.title %}{{ item.title|truncatechars:28 }}{% else %}{{ item.name|default:'Untitled'|truncatechars:28 }}{% endif %}
         </strong>
 
-        {% if item.genre %}<div class="small source-genre" title="{{ item.genre }}">{{ item.genre|truncatechars:34 }}</div>{% endif %}
-        {% if item.episode_label or item.runtime or item.airtime %}
-            <div class="small source-meta">
-                {% if item.episode_label %}{{ item.episode_label }}{% endif %}
-                {% if item.episode_label and item.runtime %} · {% endif %}{% if item.runtime %}{{ item.runtime }} min{% endif %}
-                {% if item.airtime and item.episode_label or item.airtime and item.runtime %} · {% endif %}{% if item.airtime %}{{ item.airtime }}{% endif %}
-            </div>
-        {% endif %}
+        <div class="small source-genre" title="{{ item.genre|default:'Genre not listed' }}">{{ item.genre|default:'Genre not listed'|truncatechars:34 }}</div>
 
         {% if item.source_type == 'tmdb' and item.external_id %}
-            <div class="tmdb-watch-context small" data-tmdb-context data-context-url="{% url 'content:tmdb_watch_context' item.content_type item.external_id %}">
-                <div class="source-meta" data-context-summary>Loading network and watch options…</div>
-                <div class="provider-options" data-context-providers></div>
+            <div class="tmdb-watch-context small" data-tmdb-context data-content-type="{{ item.content_type }}" data-context-url="{% url 'content:tmdb_watch_context' item.content_type item.external_id %}">
+                <div class="source-meta context-summary" data-context-summary>
+                    {% if item.content_type == 'tv' %}Loading network, episode, runtime…{% else %}Loading runtime…{% endif %}
+                </div>
+                <div class="provider-options" data-context-providers><span class="provider-pill provider-pill-muted">Loading watch sources…</span></div>
                 <a class="btn btn-sm btn-primary w-100 mt-1 d-none" target="_blank" rel="noopener noreferrer" data-context-watch>See watch options</a>
+            </div>
+        {% else %}
+            <div class="small source-meta">
+                {% if item.content_type == 'tv' %}{{ item.episode_label|default:'Episode not listed' }} · {% endif %}
+                {% if item.runtime %}{{ item.runtime }} min{% else %}Runtime not listed{% endif %}
+                {% if item.airtime %} · {{ item.airtime }}{% endif %}
             </div>
         {% endif %}
 
