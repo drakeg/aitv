@@ -16,8 +16,11 @@ aitv should prioritize watchable content while allowing each viewer to decide wh
 
 - Profile stores optional first name, last name, and email address on the user's Django account.
 - Regional availability and discovery-category settings remain account-specific.
-- Users can opt in to future email alerts for new episodes/releases associated with titles they save.
-- Release notification opt-in requires a saved email address and defaults off.
-- This sprint stores the delivery preference only; release detection and outbound email delivery are separate implementation work and must not send mail until that workflow exists and is explicitly configured.
+- Users can opt in to release alerts for titles they save. Opt-in requires a saved email address and defaults off.
+- `python manage.py check_release_notifications` checks opted-in watchlists for newly aired episodes on supported sources.
+- The first successful check establishes a baseline and does not generate historical notifications. A later release marker creates one deduplicated in-app notification.
+- The first release detector supports TMDB-backed TV titles. Unsupported sources are skipped rather than guessed.
+- Email delivery is optional and occurs only when SMTP settings are explicitly configured. Without SMTP configuration, the in-app notification workflow still works and no outbound email is attempted.
+- Notification read actions are per-user and POST-only.
 
 Personalization applies to discovery results only. A user's saved catalog is never silently deleted or hidden because of discovery preferences.
