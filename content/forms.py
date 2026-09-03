@@ -3,7 +3,7 @@ from urllib.parse import parse_qs, urlparse
 
 from django import forms
 
-from .models import ContentItem
+from .models import ContentAvailability, ContentItem
 from .providers import detect_provider, ensure_direct_availability
 
 YOUTUBE_HOSTS = {'youtube.com', 'www.youtube.com', 'm.youtube.com', 'youtu.be'}
@@ -39,6 +39,11 @@ class ContentItemForm(forms.ModelForm):
             'genre': forms.TextInput(attrs={'placeholder': 'Genre'}),
         }
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._original_url = self.instance.url if self.instance.pk else ''
+        self._original_source_type = self.instance.source_type if self.instance.pk else ''
+
     def clean_title(self):
         return self.cleaned_data['title'].strip()
 
@@ -46,7 +51,6 @@ class ContentItemForm(forms.ModelForm):
         return self.cleaned_data['genre'].strip()
 
     def save(self, commit=True):
-        previous_source_type = self.instance.source_type if self.instance.pk else ''
         instance = super().save(commit=False)
         video_id = extract_youtube_video_id(instance.url)
         provider = detect_provider(instance.url)
@@ -57,15 +61,20 @@ class ContentItemForm(forms.ModelForm):
             instance.thumbnail = f'https://img.youtube.com/vi/{video_id}/hqdefault.jpg'
         elif provider:
             instance.source_type = provider['source_type']
-            if previous_source_type == 'youtube':
+            if self._original_source_type == 'youtube':
                 instance.thumbnail = None
         elif not instance.external_source:
             instance.source_type = 'manual'
-            if previous_source_type == 'youtube':
+            if self._original_source_type == 'youtube':
                 instance.thumbnail = None
 
         if commit:
             instance.save()
+            if self._original_url and self._original_url != instance.url:
+                ContentAvailability.objects.filter(
+                    content=instance,
+                    url=self._original_url,
+                ).delete()
             ensure_direct_availability(instance)
         return instance
 
