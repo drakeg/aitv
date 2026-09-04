@@ -63,12 +63,18 @@ class ContentAvailability(models.Model):
 
 
 class DiscoveryPreference(models.Model):
+    class ContentMix(models.TextChoices):
+        BALANCED = 'balanced', 'Balanced'
+        TV_FIRST = 'tv_first', 'TV first'
+        MOVIES_FIRST = 'movies_first', 'Movies first'
+
     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='discovery_preference')
     preferred_genres = models.JSONField(default=list, blank=True)
     customized = models.BooleanField(default=False)
     region = models.CharField(max_length=2, default='US')
     require_region_availability = models.BooleanField(default=True)
     notify_new_releases = models.BooleanField(default=False)
+    content_mix = models.CharField(max_length=20, choices=ContentMix.choices, default=ContentMix.BALANCED)
 
     def __str__(self):
         return f'Discovery preferences for {self.user}'
