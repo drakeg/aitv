@@ -35,8 +35,16 @@ REGION_CHOICES = (
 )
 REGION_CODES = {code for code, _label in REGION_CHOICES}
 CATEGORY_ALIASES = {
+    'soap': {'soap opera', 'soap operas'},
     'soap opera': {'soap'},
     'soap operas': {'soap'},
+    'science fiction': {'science-fiction', 'sci-fi & fantasy'},
+    'science-fiction': {'science fiction', 'sci-fi & fantasy'},
+    'sci-fi & fantasy': {'science fiction', 'science-fiction', 'fantasy'},
+    'fantasy': {'sci-fi & fantasy'},
+    'action': {'action & adventure'},
+    'adventure': {'action & adventure'},
+    'action & adventure': {'action', 'adventure'},
 }
 
 
@@ -115,25 +123,47 @@ def _expanded_category(value):
     return {normalized, *CATEGORY_ALIASES.get(normalized, set())}
 
 
-def _filter_discovery(items, preferred_genres, customized=False):
-    if not customized:
-        return items
+def _item_categories(item):
+    categories = set()
+    for value in item.get('genres', []):
+        categories.update(_expanded_category(value))
+    show_type = str(item.get('show_type') or '').strip()
+    if show_type:
+        categories.update(_expanded_category(show_type))
+    if item.get('is_news'):
+        categories.add('news')
+    return categories
+
+
+def _wanted_categories(preferred_genres):
     wanted = set()
     for genre in preferred_genres:
         wanted.update(_expanded_category(genre))
-    filtered = []
-    for item in items:
-        categories = set()
-        for value in item.get('genres', []):
-            categories.update(_expanded_category(value))
-        show_type = str(item.get('show_type') or '').strip()
-        if show_type:
-            categories.update(_expanded_category(show_type))
-        if item.get('is_news'):
-            categories.add('news')
-        if categories & wanted:
-            filtered.append(item)
-    return filtered
+    return wanted
+
+
+def _filter_discovery(items, preferred_genres, customized=False):
+    if not customized:
+        return items
+    wanted = _wanted_categories(preferred_genres)
+    return [item for item in items if _item_categories(item) & wanted]
+
+
+def _rank_discovery(items, preferred_genres, customized=False):
+    """Rank personalized results by preference overlap while preserving source order on ties."""
+    if not customized:
+        return items
+    wanted = _wanted_categories(preferred_genres)
+    return sorted(
+        items,
+        key=lambda item: len(_item_categories(item) & wanted),
+        reverse=True,
+    )
+
+
+def _personalize_tv(items, preferred_genres, customized=False):
+    filtered = _filter_discovery(items, preferred_genres, customized=customized)
+    return _rank_discovery(filtered, preferred_genres, customized=customized)
 
 
 def _dedupe_discovery(items, seen=None):
@@ -182,14 +212,14 @@ def home(request):
     discovery_region = preference.region if preference else 'US'
     require_region_availability = bool(preference and preference.require_region_availability)
 
-    live_tv = _filter_discovery(
+    live_tv = _personalize_tv(
         fetch_live_tv_schedule(limit=100, country=discovery_region),
         preferred_genres,
         customized=customized,
     )
-    trending_tv = _filter_discovery(fetch_trending_tv(), preferred_genres, customized=customized)
-    on_the_air_tv = _filter_discovery(fetch_tv_on_the_air(), preferred_genres, customized=customized)
-    popular_tv = _filter_discovery(fetch_popular_tv(), preferred_genres, customized=customized)
+    trending_tv = _personalize_tv(fetch_trending_tv(), preferred_genres, customized=customized)
+    on_the_air_tv = _personalize_tv(fetch_tv_on_the_air(), preferred_genres, customized=customized)
+    popular_tv = _personalize_tv(fetch_popular_tv(), preferred_genres, customized=customized)
     free_movies = fetch_free_archive_movies()
     trending_movies = _filter_discovery(fetch_trending_movies(), preferred_genres, customized=customized)
 
