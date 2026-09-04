@@ -89,6 +89,9 @@ def profile(request):
             region = request.POST.get('region', 'US').upper()
             if region not in REGION_CODES:
                 region = 'US'
+            content_mix = request.POST.get('content_mix', DiscoveryPreference.ContentMix.BALANCED)
+            if content_mix not in DiscoveryPreference.ContentMix.values:
+                content_mix = DiscoveryPreference.ContentMix.BALANCED
             notify_new_releases = request.POST.get('notify_new_releases') == '1'
             if notify_new_releases and not request.user.email:
                 notify_new_releases = False
@@ -97,9 +100,10 @@ def profile(request):
             preference.region = region
             preference.require_region_availability = request.POST.get('require_region_availability') == '1'
             preference.notify_new_releases = notify_new_releases
+            preference.content_mix = content_mix
             preference.save(update_fields=[
                 'preferred_genres', 'customized', 'region', 'require_region_availability',
-                'notify_new_releases',
+                'notify_new_releases', 'content_mix',
             ])
             return redirect('profile')
 
@@ -113,6 +117,8 @@ def profile(request):
         'discovery_region': preference.region,
         'require_region_availability': preference.require_region_availability,
         'notify_new_releases': preference.notify_new_releases,
+        'content_mix': preference.content_mix,
+        'content_mix_choices': DiscoveryPreference.ContentMix.choices,
     })
 
 
@@ -150,7 +156,6 @@ def _filter_discovery(items, preferred_genres, customized=False):
 
 
 def _rank_discovery(items, preferred_genres, customized=False):
-    """Rank personalized results by preference overlap while preserving source order on ties."""
     if not customized:
         return items
     wanted = _wanted_categories(preferred_genres)
@@ -202,6 +207,54 @@ def _search_live_items(items, query='', content_type=''):
     return results
 
 
+def _dashboard_sections(*, live_tv, trending_tv, on_the_air_tv, popular_tv, free_movies, trending_movies, region, content_mix):
+    sections = {
+        'live_tv': {
+            'title': '📺 On TV Today',
+            'description': f"Today's live {region} schedule with network/service, episode, runtime, airtime, and official destination.",
+            'items': live_tv,
+            'empty': 'No live shows currently match your discovery preferences.',
+        },
+        'trending_tv': {
+            'title': '🔥 Trending TV Today',
+            'description': "TMDB's daily TV trends, enriched with current regional provider, network, episode, and runtime details.",
+            'items': trending_tv[:20],
+            'empty': 'No trending TV currently matches your preferences.',
+        },
+        'on_the_air_tv': {
+            'title': '📡 TV On the Air',
+            'description': 'More currently airing series from TMDB, excluding shows already shown in Trending TV.',
+            'items': on_the_air_tv[:20],
+            'empty': 'No additional currently airing TV matches your preferences.',
+        },
+        'popular_tv': {
+            'title': '⭐ Popular TV',
+            'description': 'Additional popular series, deduplicated from the daily trending and on-air rows.',
+            'items': popular_tv[:20],
+            'empty': 'No additional popular TV currently matches your preferences.',
+        },
+        'free_movies': {
+            'title': '🎞️ Watch Free Now',
+            'description': 'Live playable movie records pulled from the Internet Archive.',
+            'items': free_movies,
+            'empty': 'Internet Archive movie discovery is temporarily unavailable.',
+        },
+        'trending_movies': {
+            'title': '🎬 Trending Movies',
+            'description': 'Live TMDB movie discovery enriched with runtime and current regional watch-provider availability when supplied upstream.',
+            'items': trending_movies[:10],
+            'empty': 'No movie discovery currently matches your preferences.',
+        },
+    }
+    if content_mix == DiscoveryPreference.ContentMix.TV_FIRST:
+        order = ['live_tv', 'trending_tv', 'on_the_air_tv', 'popular_tv', 'free_movies', 'trending_movies']
+    elif content_mix == DiscoveryPreference.ContentMix.MOVIES_FIRST:
+        order = ['free_movies', 'trending_movies', 'live_tv', 'trending_tv', 'on_the_air_tv', 'popular_tv']
+    else:
+        order = ['live_tv', 'trending_tv', 'free_movies', 'trending_movies', 'on_the_air_tv', 'popular_tv']
+    return [sections[key] for key in order]
+
+
 def home(request):
     preference = None
     if request.user.is_authenticated:
@@ -211,6 +264,7 @@ def home(request):
     preferred_genres = preference.preferred_genres if customized else list(DISCOVERY_GENRES)
     discovery_region = preference.region if preference else 'US'
     require_region_availability = bool(preference and preference.require_region_availability)
+    content_mix = preference.content_mix if preference else DiscoveryPreference.ContentMix.BALANCED
 
     live_tv = _personalize_tv(
         fetch_live_tv_schedule(limit=100, country=discovery_region),
@@ -258,12 +312,16 @@ def home(request):
     browse_results = _search_live_items(live_sources, query, content_type) if browse_active else []
 
     context = {
-        'live_tv': live_tv,
-        'trending_tv': trending_tv[:20],
-        'on_the_air_tv': on_the_air_tv[:20],
-        'popular_tv': popular_tv[:20],
-        'free_movies': free_movies,
-        'trending_movies': trending_movies[:10],
+        'home_sections': _dashboard_sections(
+            live_tv=live_tv,
+            trending_tv=trending_tv,
+            on_the_air_tv=on_the_air_tv,
+            popular_tv=popular_tv,
+            free_movies=free_movies,
+            trending_movies=trending_movies,
+            region=discovery_region,
+            content_mix=content_mix,
+        ),
         'browse_active': browse_active,
         'browse_results': browse_results,
         'browse_query': request.GET.get('q', '').strip(),
@@ -271,5 +329,6 @@ def home(request):
         'preferences_customized': customized,
         'discovery_region': discovery_region,
         'require_region_availability': require_region_availability,
+        'content_mix': content_mix,
     }
     return render(request, 'home.html', context)
