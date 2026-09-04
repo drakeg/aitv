@@ -7,6 +7,8 @@ from django.urls import reverse
 from content.models import DiscoveryPreference
 
 
+@patch('core.views.fetch_popular_tv', return_value=[])
+@patch('core.views.fetch_tv_on_the_air', return_value=[])
 @patch('core.views.fetch_free_archive_movies', return_value=[])
 @patch('core.views.fetch_trending_movies', return_value=[])
 @patch('core.views.fetch_trending_tv', return_value=[])
@@ -45,4 +47,4 @@ class RegionPreferenceTests(TestCase):
 
         self.client.get(reverse('home'))
 
-        mock_live.assert_called_once_with(country='CA')
+        mock_live.assert_called_once_with(limit=100, country='CA')

@@ -80,7 +80,15 @@ def fetch_trending_movies():
 
 
 def fetch_trending_tv():
-    return _fetch_tmdb('/trending/tv/week', 'tv')
+    return _fetch_tmdb('/trending/tv/day', 'tv')
+
+
+def fetch_tv_on_the_air():
+    return _fetch_tmdb('/tv/on_the_air', 'tv')
+
+
+def fetch_popular_tv():
+    return _fetch_tmdb('/tv/popular', 'tv')
 
 
 def fetch_tmdb_watch_context(content_type, external_id, region='US'):
@@ -181,7 +189,7 @@ def _strip_html(value):
     return ' '.join(unescape(text).split())
 
 
-def fetch_live_tv_schedule(limit=40, country='US'):
+def fetch_live_tv_schedule(limit=100, country='US'):
     country = str(country or 'US').strip().upper()
     if len(country) != 2 or not country.isalpha():
         country = 'US'

@@ -7,8 +7,10 @@ from content.models import DiscoveryPreference
 from content.services import (
     fetch_free_archive_movies,
     fetch_live_tv_schedule,
+    fetch_popular_tv,
     fetch_trending_movies,
     fetch_trending_tv,
+    fetch_tv_on_the_air,
 )
 from watchlist.models import Watchlist
 
@@ -134,6 +136,22 @@ def _filter_discovery(items, preferred_genres, customized=False):
     return filtered
 
 
+def _dedupe_discovery(items, seen=None):
+    seen = seen if seen is not None else set()
+    unique = []
+    for item in items:
+        key = (
+            item.get('external_source') or item.get('source_type'),
+            item.get('external_id') or item.get('id'),
+            item.get('content_type'),
+        )
+        if key in seen:
+            continue
+        seen.add(key)
+        unique.append(item)
+    return unique
+
+
 def _search_live_items(items, query='', content_type=''):
     query = query.casefold()
     results = []
@@ -164,10 +182,21 @@ def home(request):
     discovery_region = preference.region if preference else 'US'
     require_region_availability = bool(preference and preference.require_region_availability)
 
-    live_tv = _filter_discovery(fetch_live_tv_schedule(country=discovery_region), preferred_genres, customized=customized)
+    live_tv = _filter_discovery(
+        fetch_live_tv_schedule(limit=100, country=discovery_region),
+        preferred_genres,
+        customized=customized,
+    )
+    trending_tv = _filter_discovery(fetch_trending_tv(), preferred_genres, customized=customized)
+    on_the_air_tv = _filter_discovery(fetch_tv_on_the_air(), preferred_genres, customized=customized)
+    popular_tv = _filter_discovery(fetch_popular_tv(), preferred_genres, customized=customized)
     free_movies = fetch_free_archive_movies()
     trending_movies = _filter_discovery(fetch_trending_movies(), preferred_genres, customized=customized)
-    trending_tv = _filter_discovery(fetch_trending_tv(), preferred_genres, customized=customized)
+
+    seen_tmdb_tv = set()
+    trending_tv = _dedupe_discovery(trending_tv, seen_tmdb_tv)
+    on_the_air_tv = _dedupe_discovery(on_the_air_tv, seen_tmdb_tv)
+    popular_tv = _dedupe_discovery(popular_tv, seen_tmdb_tv)
 
     saved_external_ids = {}
     if request.user.is_authenticated:
@@ -178,7 +207,14 @@ def home(request):
             if entry.content.external_source and entry.content.external_id
         }
 
-    live_sources = [*live_tv, *free_movies, *trending_movies, *trending_tv]
+    live_sources = [
+        *live_tv,
+        *trending_tv,
+        *on_the_air_tv,
+        *popular_tv,
+        *free_movies,
+        *trending_movies,
+    ]
     for item in live_sources:
         item['saved_content_id'] = saved_external_ids.get(
             (item.get('external_source'), item.get('external_id'), item.get('content_type'))
@@ -193,9 +229,11 @@ def home(request):
 
     context = {
         'live_tv': live_tv,
+        'trending_tv': trending_tv[:20],
+        'on_the_air_tv': on_the_air_tv[:20],
+        'popular_tv': popular_tv[:20],
         'free_movies': free_movies,
         'trending_movies': trending_movies[:10],
-        'trending_tv': trending_tv[:10],
         'browse_active': browse_active,
         'browse_results': browse_results,
         'browse_query': request.GET.get('q', '').strip(),
