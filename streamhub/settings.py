@@ -64,3 +64,16 @@ LOGOUT_REDIRECT_URL = 'home'
 
 STATIC_URL = '/static/'
 STATICFILES_DIRS = [BASE_DIR / 'static']
+
+EMAIL_HOST = os.getenv('SMTP_HOST', '').strip()
+EMAIL_PORT = int(os.getenv('SMTP_PORT', '587'))
+EMAIL_HOST_USER = os.getenv('SMTP_USERNAME', '').strip()
+EMAIL_HOST_PASSWORD = os.getenv('SMTP_PASSWORD', '').strip()
+EMAIL_USE_TLS = os.getenv('SMTP_USE_TLS', 'true').lower() in {'1', 'true', 'yes', 'on'}
+DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', EMAIL_HOST_USER or 'aitv@localhost')
+RELEASE_EMAIL_CONFIGURED = bool(EMAIL_HOST and DEFAULT_FROM_EMAIL)
+EMAIL_BACKEND = (
+    'django.core.mail.backends.smtp.EmailBackend'
+    if RELEASE_EMAIL_CONFIGURED
+    else 'django.core.mail.backends.locmem.EmailBackend'
+)

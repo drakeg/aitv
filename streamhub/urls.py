@@ -12,5 +12,6 @@ urlpatterns = [
     path('accounts/profile/', profile, name='profile'),
     path('content/', include('content.urls')),
     path('watchlist/', include('watchlist.urls')),
+    path('notifications/', include('notifications.urls')),
     path('', home, name='home'),
 ]
