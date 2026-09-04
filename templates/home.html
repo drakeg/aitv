@@ -31,64 +31,16 @@
 </div>
 {% endif %}
 
-<div class="mb-4">
-    <h4 class="mb-1">📺 On TV Today</h4>
-    <div class="small text-muted mb-2">Today's live {{ discovery_region }} schedule with network/service, episode, runtime, airtime, and official destination.</div>
+{% for section in home_sections %}
+<div class="{% if forloop.last %}mb-5{% else %}mb-4{% endif %}">
+    <h4 class="mb-1">{{ section.title }}</h4>
+    <div class="small text-muted mb-2">{{ section.description }}</div>
     <div class="row-scroll">
-        {% for item in live_tv %}{% include "partials/card.html" %}{% empty %}
-            <div class="text-muted">No live shows currently match your discovery preferences.</div>
+        {% for item in section.items %}{% include "partials/card.html" %}{% empty %}
+            <div class="text-muted">{{ section.empty }}</div>
         {% endfor %}
     </div>
 </div>
-
-<div class="mb-4">
-    <h4 class="mb-1">🔥 Trending TV Today</h4>
-    <div class="small text-muted mb-2">TMDB's daily TV trends, enriched with current regional provider, network, episode, and runtime details.</div>
-    <div class="row-scroll">
-        {% for item in trending_tv %}{% include "partials/card.html" %}{% empty %}
-            <div class="text-muted">No trending TV currently matches your preferences.</div>
-        {% endfor %}
-    </div>
-</div>
-
-<div class="mb-4">
-    <h4 class="mb-1">📡 TV On the Air</h4>
-    <div class="small text-muted mb-2">More currently airing series from TMDB, excluding shows already shown in Trending TV.</div>
-    <div class="row-scroll">
-        {% for item in on_the_air_tv %}{% include "partials/card.html" %}{% empty %}
-            <div class="text-muted">No additional currently airing TV matches your preferences.</div>
-        {% endfor %}
-    </div>
-</div>
-
-<div class="mb-4">
-    <h4 class="mb-1">⭐ Popular TV</h4>
-    <div class="small text-muted mb-2">Additional popular series, deduplicated from the daily trending and on-air rows.</div>
-    <div class="row-scroll">
-        {% for item in popular_tv %}{% include "partials/card.html" %}{% empty %}
-            <div class="text-muted">No additional popular TV currently matches your preferences.</div>
-        {% endfor %}
-    </div>
-</div>
-
-<div class="mb-4">
-    <h4 class="mb-1">🎞️ Watch Free Now</h4>
-    <div class="small text-muted mb-2">Live playable movie records pulled from the Internet Archive.</div>
-    <div class="row-scroll">
-        {% for item in free_movies %}{% include "partials/card.html" %}{% empty %}
-            <div class="text-muted">Internet Archive movie discovery is temporarily unavailable.</div>
-        {% endfor %}
-    </div>
-</div>
-
-<div class="mb-5">
-    <h4 class="mb-1">🎬 Trending Movies</h4>
-    <div class="small text-muted mb-2">Live TMDB movie discovery enriched with runtime and current regional watch-provider availability when supplied upstream.</div>
-    <div class="row-scroll">
-        {% for item in trending_movies %}{% include "partials/card.html" %}{% empty %}
-            <div class="text-muted">No movie discovery currently matches your preferences.</div>
-        {% endfor %}
-    </div>
-</div>
+{% endfor %}
 
 {% endblock %}
