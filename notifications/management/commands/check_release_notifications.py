@@ -7,14 +7,17 @@ from watchlist.models import Watchlist
 
 
 class Command(BaseCommand):
-    help = 'Check opted-in watchlists for newly released episodes.'
+    help = 'Check opted-in favorite watchlist titles for newly released episodes.'
 
     def handle(self, *args, **options):
         created_count = 0
         checked_count = 0
         entries = (
             Watchlist.objects.select_related('user', 'content')
-            .filter(user__discovery_preference__notify_new_releases=True)
+            .filter(
+                is_favorite=True,
+                user__discovery_preference__notify_new_releases=True,
+            )
             .order_by('user_id', 'content_id')
         )
 
@@ -57,6 +60,6 @@ class Command(BaseCommand):
 
         self.stdout.write(
             self.style.SUCCESS(
-                f'Checked {checked_count} saved title(s); created {created_count} notification(s).'
+                f'Checked {checked_count} favorite title(s); created {created_count} notification(s).'
             )
         )
