@@ -12,13 +12,14 @@ aitv should prioritize watchable content while allowing each viewer to decide wh
 - Live-source cards expose genre and network/service information whenever the upstream source provides it.
 - Provider/watch actions remain primary; metadata destinations remain secondary.
 
-## Profile data and notifications
+## Profile data, favorites, and notifications
 
 - Profile stores optional first name, last name, and email address on the user's Django account.
 - Regional availability and discovery-category settings remain account-specific.
-- Users can opt in to release alerts for titles they save. Opt-in requires a saved email address and defaults off.
-- `python manage.py check_release_notifications` checks opted-in watchlists for newly aired episodes on supported sources.
-- The first successful check establishes a baseline and does not generate historical notifications. A later release marker creates one deduplicated in-app notification.
+- Watchlist and Favorite are separate concepts: saving a title means "watch later"; marking it Favorite means the user wants it prioritized and eligible for release alerts.
+- Users can opt in globally to release alerts, but only Favorite saved titles are checked. Opt-in requires a saved email address and defaults off.
+- `python manage.py check_release_notifications` checks opted-in Favorite titles for newly aired episodes on supported sources.
+- The first successful check establishes a baseline and does not generate historical notifications. Removing Favorite status clears that baseline so re-favoriting starts cleanly rather than producing catch-up spam.
 - The first release detector supports TMDB-backed TV titles. Unsupported sources are skipped rather than guessed.
 - Email delivery is optional and occurs only when SMTP settings are explicitly configured. Without SMTP configuration, the in-app notification workflow still works and no outbound email is attempted.
 - Notification read actions are per-user and POST-only.

@@ -31,7 +31,7 @@ class ReleaseNotificationWorkflowTests(TestCase):
             external_source='tmdb',
             external_id='42',
         )
-        Watchlist.objects.create(user=self.user, content=self.content)
+        Watchlist.objects.create(user=self.user, content=self.content, is_favorite=True)
 
     @patch('notifications.management.commands.check_release_notifications.send_release_email')
     @patch('notifications.management.commands.check_release_notifications.fetch_latest_release')
@@ -72,6 +72,15 @@ class ReleaseNotificationWorkflowTests(TestCase):
         notification = ReleaseNotification.objects.get()
         self.assertEqual(notification.event_key, mock_fetch.return_value['event_key'])
         mock_email.assert_called_once_with(self.user, notification)
+
+    @patch('notifications.management.commands.check_release_notifications.fetch_latest_release')
+    def test_nonfavorite_saved_title_is_not_checked(self, mock_fetch):
+        Watchlist.objects.filter(user=self.user, content=self.content).update(is_favorite=False)
+
+        call_command('check_release_notifications', stdout=StringIO())
+
+        mock_fetch.assert_not_called()
+        self.assertFalse(ReleaseWatchState.objects.exists())
 
     @patch('notifications.management.commands.check_release_notifications.fetch_latest_release')
     def test_opted_out_user_is_not_checked(self, mock_fetch):

@@ -22,10 +22,12 @@ class WatchlistFlowTests(TestCase):
         self.assertEqual(response.status_code, 302)
         self.assertIn(reverse('login'), response.url)
 
-    def test_add_and_remove_are_post_only(self):
+    def test_add_remove_and_favorite_are_post_only(self):
         self.client.force_login(self.user)
+        Watchlist.objects.create(user=self.user, content=self.item)
         self.assertEqual(self.client.get(reverse('watchlist:add', args=[self.item.id])).status_code, 405)
         self.assertEqual(self.client.get(reverse('watchlist:remove', args=[self.item.id])).status_code, 405)
+        self.assertEqual(self.client.get(reverse('watchlist:favorite', args=[self.item.id])).status_code, 405)
 
     def test_user_can_add_view_and_remove_watchlist_item(self):
         self.client.force_login(self.user)
@@ -37,6 +39,7 @@ class WatchlistFlowTests(TestCase):
         page = self.client.get(reverse('watchlist:list'))
         self.assertEqual(page.status_code, 200)
         self.assertContains(page, 'Watch Me')
+        self.assertContains(page, 'Mark favorite')
 
         remove_response = self.client.post(
             reverse('watchlist:remove', args=[self.item.id]),
@@ -44,6 +47,26 @@ class WatchlistFlowTests(TestCase):
         )
         self.assertRedirects(remove_response, reverse('watchlist:list'))
         self.assertFalse(Watchlist.objects.filter(user=self.user, content=self.item).exists())
+
+    def test_user_can_mark_and_unmark_favorite(self):
+        self.client.force_login(self.user)
+        entry = Watchlist.objects.create(user=self.user, content=self.item)
+
+        response = self.client.post(
+            reverse('watchlist:favorite', args=[self.item.id]),
+            {'favorite': '1', 'next': reverse('watchlist:list')},
+        )
+        self.assertRedirects(response, reverse('watchlist:list'))
+        entry.refresh_from_db()
+        self.assertTrue(entry.is_favorite)
+        self.assertContains(self.client.get(reverse('watchlist:list')), '★ Favorite')
+
+        self.client.post(
+            reverse('watchlist:favorite', args=[self.item.id]),
+            {'favorite': '0', 'next': reverse('watchlist:list')},
+        )
+        entry.refresh_from_db()
+        self.assertFalse(entry.is_favorite)
 
     def test_watchlist_reuses_dashboard_card_presentation(self):
         self.client.force_login(self.user)
