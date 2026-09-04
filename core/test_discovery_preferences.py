@@ -5,6 +5,7 @@ from django.test import TestCase
 from django.urls import reverse
 
 from content.models import DiscoveryPreference
+from core.views import _expanded_category, _rank_discovery
 
 
 class DiscoveryPreferenceTests(TestCase):
@@ -41,6 +42,8 @@ class DiscoveryPreferenceTests(TestCase):
         self.user = get_user_model().objects.create_user(username='viewer', password='test-password')
         self.news_user = get_user_model().objects.create_user(username='newsviewer', password='test-password')
 
+    @patch('core.views.fetch_popular_tv', return_value=[])
+    @patch('core.views.fetch_tv_on_the_air', return_value=[])
     @patch('core.views.fetch_free_archive_movies', return_value=[])
     @patch('core.views.fetch_trending_movies', return_value=[])
     @patch('core.views.fetch_trending_tv', return_value=[])
@@ -117,6 +120,32 @@ class DiscoveryPreferenceTests(TestCase):
         preference.refresh_from_db()
         self.assertTrue(preference.notify_new_releases)
 
+    def test_category_aliases_bridge_common_tv_source_labels(self):
+        self.assertIn('science fiction', _expanded_category('Science-Fiction'))
+        self.assertIn('sci-fi & fantasy', _expanded_category('Science Fiction'))
+        self.assertIn('action', _expanded_category('Action & Adventure'))
+        self.assertIn('action & adventure', _expanded_category('Adventure'))
+        self.assertIn('soap', _expanded_category('Soap Opera'))
+
+    def test_personalized_tv_ranking_prioritizes_more_preference_matches(self):
+        items = [
+            self._item('Crime Only', ['Crime']),
+            self._item('Crime Drama', ['Crime', 'Drama']),
+            self._item('Drama Only', ['Drama']),
+        ]
+        ranked = _rank_discovery(items, ['Crime', 'Drama'], customized=True)
+        self.assertEqual([item['title'] for item in ranked], ['Crime Drama', 'Crime Only', 'Drama Only'])
+
+    def test_default_tv_ranking_preserves_upstream_order(self):
+        items = [
+            self._item('Drama First', ['Drama']),
+            self._item('Crime Drama Second', ['Crime', 'Drama']),
+        ]
+        ranked = _rank_discovery(items, ['Crime', 'Drama'], customized=False)
+        self.assertEqual([item['title'] for item in ranked], ['Drama First', 'Crime Drama Second'])
+
+    @patch('core.views.fetch_popular_tv', return_value=[])
+    @patch('core.views.fetch_tv_on_the_air', return_value=[])
     @patch('core.views.fetch_free_archive_movies', return_value=[])
     @patch('core.views.fetch_trending_movies', return_value=[])
     @patch('core.views.fetch_trending_tv', return_value=[])
@@ -136,6 +165,8 @@ class DiscoveryPreferenceTests(TestCase):
         self.assertNotContains(response, 'Daytime Story')
         self.assertContains(response, 'Police Drama')
 
+    @patch('core.views.fetch_popular_tv', return_value=[])
+    @patch('core.views.fetch_tv_on_the_air', return_value=[])
     @patch('core.views.fetch_free_archive_movies', return_value=[])
     @patch('core.views.fetch_trending_movies', return_value=[])
     @patch('core.views.fetch_trending_tv', return_value=[])
@@ -162,6 +193,8 @@ class DiscoveryPreferenceTests(TestCase):
         self.assertContains(response, 'Edit preferences')
         self.assertNotContains(response, 'Tune my discovery')
 
+    @patch('core.views.fetch_popular_tv', return_value=[])
+    @patch('core.views.fetch_tv_on_the_air', return_value=[])
     @patch('core.views.fetch_free_archive_movies', return_value=[])
     @patch('core.views.fetch_trending_movies', return_value=[])
     @patch('core.views.fetch_trending_tv', return_value=[])
@@ -184,6 +217,8 @@ class DiscoveryPreferenceTests(TestCase):
         self.assertContains(response, 'Evening News')
         self.assertNotContains(response, 'Police Drama')
 
+    @patch('core.views.fetch_popular_tv', return_value=[])
+    @patch('core.views.fetch_tv_on_the_air', return_value=[])
     @patch('core.views.fetch_free_archive_movies', return_value=[])
     @patch('core.views.fetch_trending_movies', return_value=[])
     @patch('core.views.fetch_trending_tv', return_value=[])

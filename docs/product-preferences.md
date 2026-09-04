@@ -8,7 +8,9 @@ aitv should prioritize watchable content while allowing each viewer to decide wh
 - Signed-in users can save their own preferred discovery categories to their account.
 - Preferences can include or exclude Comedy, Crime, Drama, News, Reality, Science Fiction, Action, Documentary, Soap/Soap Opera, and other supported genres independently.
 - A user's choices affect live and trending discovery rows, not another user's results.
-- Soap/Soap Opera is normalized to the `Soap` preference so upstream wording differences do not bypass a user's category choice.
+- Common upstream category wording is normalized so source differences do not bypass preferences. This includes Soap/Soap Opera, Science Fiction/Science-Fiction/Sci-Fi & Fantasy, and Action/Adventure/Action & Adventure.
+- For customized accounts, TV rows are ranked by how many selected categories each show matches. Upstream order is preserved for ties, and the neutral/default experience keeps the source's original ordering.
+- Personalization applies consistently to On TV Today, Trending TV Today, TV On the Air, and Popular TV.
 - Live-source cards expose genre and network/service information whenever the upstream source provides it.
 - Provider/watch actions remain primary; metadata destinations remain secondary.
 
