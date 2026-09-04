@@ -11,13 +11,15 @@ aitv should prioritize watchable content while allowing each viewer to decide wh
 - Common upstream category wording is normalized so source differences do not bypass preferences. This includes Soap/Soap Opera, Science Fiction/Science-Fiction/Sci-Fi & Fantasy, and Action/Adventure/Action & Adventure.
 - For customized accounts, TV rows are ranked by how many selected categories each show matches. Upstream order is preserved for ties, and the neutral/default experience keeps the source's original ordering.
 - Personalization applies consistently to On TV Today, Trending TV Today, TV On the Air, and Popular TV.
+- Each account can choose a dashboard content mix: Balanced, TV first, or Movies first. Balanced is the neutral default and interleaves movie rows with TV discovery; TV first keeps all TV discovery ahead of movie rows; Movies first does the reverse.
+- Content-mix ordering is account-specific and does not globally change the public/default experience.
 - Live-source cards expose genre and network/service information whenever the upstream source provides it.
 - Provider/watch actions remain primary; metadata destinations remain secondary.
 
 ## Profile data, favorites, and notifications
 
 - Profile stores optional first name, last name, and email address on the user's Django account.
-- Regional availability and discovery-category settings remain account-specific.
+- Regional availability, content-mix, and discovery-category settings remain account-specific.
 - Watchlist and Favorite are separate concepts: saving a title means "watch later"; marking it Favorite means the user wants it prioritized and eligible for release alerts.
 - Users can opt in globally to release alerts, but only Favorite saved titles are checked. Opt-in requires a saved email address and defaults off.
 - `python manage.py check_release_notifications` checks opted-in Favorite titles for newly aired episodes on supported sources.
