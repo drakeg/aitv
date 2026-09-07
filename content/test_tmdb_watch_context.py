@@ -55,6 +55,28 @@ class TmdbWatchContextServiceTests(SimpleTestCase):
         self.assertEqual(context['providers'], [])
         self.assertEqual(context['watch_url'], '')
 
+    @patch.dict(os.environ, {'TMDB_API_KEY': 'test-key'}, clear=True)
+    @patch('content.services.requests.get')
+    def test_generic_watch_link_without_provider_does_not_count_as_availability(self, mock_get):
+        response = Mock()
+        response.raise_for_status.return_value = None
+        response.json.return_value = {
+            'networks': [{'name': 'Example Network'}],
+            'last_episode_to_air': {'season_number': 1, 'episode_number': 4, 'runtime': 44},
+            'watch/providers': {'results': {'US': {
+                'link': 'https://www.themoviedb.org/tv/77/watch',
+            }}},
+        }
+        mock_get.return_value = response
+
+        context = fetch_tmdb_watch_context('tv', '77', region='US')
+
+        self.assertFalse(context['is_available_in_region'])
+        self.assertEqual(context['provider_count'], 0)
+        self.assertEqual(context['providers'], [])
+        self.assertEqual(context['watch_url'], 'https://www.themoviedb.org/tv/77/watch')
+        self.assertTrue(context['has_watch_details'])
+
 
 class TmdbWatchContextViewTests(TestCase):
     def setUp(self):
