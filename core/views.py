@@ -80,8 +80,9 @@ def profile(request):
             notify_new_releases = request.POST.get('notify_new_releases') == '1'
             if notify_new_releases and not request.user.email:
                 notify_new_releases = False
-            preference.preferred_genres = selected
-            preference.customized = True
+            reset_categories = action == 'reset_categories' or not selected
+            preference.preferred_genres = [] if reset_categories else selected
+            preference.customized = not reset_categories
             preference.region = region
             preference.require_region_availability = request.POST.get('require_region_availability') == '1'
             preference.notify_new_releases = notify_new_releases
@@ -137,9 +138,6 @@ def _filter_discovery(items, preferred_genres, customized=False):
 
 def _rank_discovery(items, preferred_genres, customized=False):
     wanted = _wanted_categories(preferred_genres) if customized else set()
-    # Actionable destinations are more useful than metadata-only cards. Within
-    # each group, customized accounts still get their strongest genre matches
-    # first and Python's stable sort preserves upstream order for ties.
     return sorted(
         items,
         key=lambda item: (
