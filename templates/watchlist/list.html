@@ -6,18 +6,18 @@
         <div>
             <h4 class="mb-1">⭐ My Watchlist</h4>
             <div class="small text-muted">Titles you saved to watch later. Mark favorites to prioritize them and use them for release alerts.</div>
-            {% if entries %}<div class="small text-muted">{{ favorite_count }} favorite{{ favorite_count|pluralize }}.</div>{% endif %}
+            {% if entries %}<div class="small text-muted" data-favorite-count>{{ favorite_count }} favorite{{ favorite_count|pluralize }}.</div>{% endif %}
         </div>
         <a href="{% url 'home' %}" class="btn btn-outline-secondary">Browse more</a>
     </div>
 
     <div class="row-scroll">
         {% for entry in entries %}
-            <div style="flex:0 0 180px;width:180px;">
+            <div class="watchlist-card-wrap" style="flex:0 0 180px;width:180px;">
                 {% with item=entry.content %}
                     {% include "partials/card.html" %}
                 {% endwith %}
-                <form method="post" action="{% url 'watchlist:favorite' entry.content_id %}" class="mt-1">
+                <form method="post" action="{% url 'watchlist:favorite' entry.content_id %}" class="mt-1" data-favorite-form data-favorite-state="{% if entry.is_favorite %}1{% else %}0{% endif %}">
                     {% csrf_token %}
                     <input type="hidden" name="next" value="{% url 'watchlist:list' %}">
                     <input type="hidden" name="favorite" value="{% if entry.is_favorite %}0{% else %}1{% endif %}">
