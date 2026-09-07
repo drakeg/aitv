@@ -43,8 +43,13 @@
         {% endif %}
 
         {% if item.is_live_source %}
-            <a href="{{ item.url }}" target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-primary w-100 mt-1">{{ item.action_label|default:'Watch now' }}</a>
-            {% if item.details_url and item.details_url != item.url %}<a href="{{ item.details_url }}" target="_blank" rel="noopener noreferrer" class="source-details-link">Source details</a>{% endif %}
+            {% if item.has_direct_watch == False %}
+                <div class="provider-options mt-1"><span class="provider-pill provider-pill-muted">Direct watch link not listed by source</span></div>
+                {% if item.details_url %}<a href="{{ item.details_url }}" target="_blank" rel="noopener noreferrer" class="source-details-link">Source details</a>{% endif %}
+            {% else %}
+                <a href="{{ item.watch_url|default:item.url }}" target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-primary w-100 mt-1">{{ item.action_label|default:'Watch now' }}</a>
+                {% if item.details_url and item.details_url != item.url %}<a href="{{ item.details_url }}" target="_blank" rel="noopener noreferrer" class="source-details-link">Source details</a>{% endif %}
+            {% endif %}
         {% elif not item.is_external %}
             {% for availability in item.availabilities.all %}
                 <a href="{{ availability.url }}" target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-primary w-100 mt-1">{{ availability.action_label }}</a>
