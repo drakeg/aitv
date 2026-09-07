@@ -11,6 +11,8 @@ aitv should prioritize watchable content while allowing each viewer to decide wh
 - Common upstream category wording is normalized so source differences do not bypass preferences. This includes Soap/Soap Opera, Science Fiction/Science-Fiction/Sci-Fi & Fantasy, and Action/Adventure/Action & Adventure.
 - For customized accounts, TV rows are ranked by how many selected categories each show matches. Upstream order is preserved for ties, and the neutral/default experience keeps the source's original ordering.
 - Personalization applies consistently to On TV Today, Trending TV Today, TV On the Air, and Popular TV.
+- If a viewer saves discovery preferences with no categories selected, aitv treats that as a request to show all categories rather than creating an empty customized catalog. The Profile page also provides an explicit **Show all categories** reset action.
+- Resetting discovery categories changes only the category filter; region, strict regional availability, content-mix ordering, and notification preferences remain intact.
 - Each account can choose a dashboard content mix: Balanced, TV first, or Movies first. Balanced is the neutral default and interleaves movie rows with TV discovery; TV first keeps all TV discovery ahead of movie rows; Movies first does the reverse.
 - Content-mix ordering is account-specific and does not globally change the public/default experience.
 - When strict regional availability is enabled, a TMDB title must have at least one concrete provider row in the selected region. A generic TMDB/JustWatch landing link by itself does not count as regional availability.
