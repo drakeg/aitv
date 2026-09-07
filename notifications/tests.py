@@ -5,6 +5,7 @@ from django.contrib.auth import get_user_model
 from django.core.management import call_command
 from django.test import TestCase
 from django.urls import reverse
+from django.utils import timezone
 
 from content.models import ContentItem, DiscoveryPreference
 from notifications.models import ReleaseNotification, ReleaseWatchState
@@ -42,9 +43,7 @@ class ReleaseNotificationWorkflowTests(TestCase):
             'message': 'Example Series released S1 E2 on 2026-09-01.',
             'target_url': self.content.url,
         }
-
         call_command('check_release_notifications', stdout=StringIO())
-
         state = ReleaseWatchState.objects.get(user=self.user, content=self.content)
         self.assertEqual(state.last_event_key, mock_fetch.return_value['event_key'])
         self.assertFalse(ReleaseNotification.objects.exists())
@@ -64,10 +63,8 @@ class ReleaseNotificationWorkflowTests(TestCase):
             'message': 'Example Series released S1 E2 on 2026-09-01.',
             'target_url': self.content.url,
         }
-
         call_command('check_release_notifications', stdout=StringIO())
         call_command('check_release_notifications', stdout=StringIO())
-
         self.assertEqual(ReleaseNotification.objects.count(), 1)
         notification = ReleaseNotification.objects.get()
         self.assertEqual(notification.event_key, mock_fetch.return_value['event_key'])
@@ -76,9 +73,7 @@ class ReleaseNotificationWorkflowTests(TestCase):
     @patch('notifications.management.commands.check_release_notifications.fetch_latest_release')
     def test_nonfavorite_saved_title_is_not_checked(self, mock_fetch):
         Watchlist.objects.filter(user=self.user, content=self.content).update(is_favorite=False)
-
         call_command('check_release_notifications', stdout=StringIO())
-
         mock_fetch.assert_not_called()
         self.assertFalse(ReleaseWatchState.objects.exists())
 
@@ -87,9 +82,7 @@ class ReleaseNotificationWorkflowTests(TestCase):
         preference = DiscoveryPreference.objects.get(user=self.user)
         preference.notify_new_releases = False
         preference.save(update_fields=['notify_new_releases'])
-
         call_command('check_release_notifications', stdout=StringIO())
-
         mock_fetch.assert_not_called()
         self.assertFalse(ReleaseWatchState.objects.exists())
 
@@ -103,13 +96,39 @@ class ReleaseNotificationWorkflowTests(TestCase):
             target_url=self.content.url,
         )
         self.assertEqual(self.client.get(reverse('notifications:inbox')).status_code, 302)
-
         self.client.force_login(self.user)
         response = self.client.get(reverse('notifications:inbox'))
         self.assertContains(response, 'New episode')
         self.assertContains(response, 'Episode available.')
-
         response = self.client.post(reverse('notifications:mark_read', args=[notification.id]))
         self.assertRedirects(response, reverse('notifications:inbox'))
         notification.refresh_from_db()
         self.assertIsNotNone(notification.read_at)
+
+    @patch('core.views.fetch_free_archive_movies', return_value=[])
+    @patch('core.views.fetch_popular_tv', return_value=[])
+    @patch('core.views.fetch_tv_on_the_air', return_value=[])
+    @patch('core.views.fetch_trending_movies', return_value=[])
+    @patch('core.views.fetch_trending_tv', return_value=[])
+    @patch('core.views.fetch_live_tv_schedule', return_value=[])
+    def test_navigation_shows_only_unread_notification_count(self, *_mocks):
+        ReleaseNotification.objects.create(
+            user=self.user,
+            content=self.content,
+            event_key='unread',
+            title='Unread',
+            message='Unread notification.',
+        )
+        ReleaseNotification.objects.create(
+            user=self.user,
+            content=self.content,
+            event_key='read',
+            title='Read',
+            message='Read notification.',
+            read_at=timezone.now(),
+        )
+        self.client.force_login(self.user)
+        response = self.client.get(reverse('home'))
+        self.assertContains(response, 'Notifications')
+        self.assertContains(response, '>1</span>', html=False)
+        self.assertContains(response, '🎬 aitv')

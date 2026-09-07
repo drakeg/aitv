@@ -31,7 +31,6 @@ class WatchlistFlowTests(TestCase):
 
     def test_user_can_add_view_and_remove_watchlist_item(self):
         self.client.force_login(self.user)
-
         add_response = self.client.post(reverse('watchlist:add', args=[self.item.id]))
         self.assertEqual(add_response.status_code, 302)
         self.assertTrue(Watchlist.objects.filter(user=self.user, content=self.item).exists())
@@ -40,6 +39,7 @@ class WatchlistFlowTests(TestCase):
         self.assertEqual(page.status_code, 200)
         self.assertContains(page, 'Watch Me')
         self.assertContains(page, 'Mark favorite')
+        self.assertContains(page, 'data-favorite-form', html=False)
 
         remove_response = self.client.post(
             reverse('watchlist:remove', args=[self.item.id]),
@@ -68,6 +68,25 @@ class WatchlistFlowTests(TestCase):
         entry.refresh_from_db()
         self.assertFalse(entry.is_favorite)
 
+    def test_async_favorite_returns_state_without_redirect(self):
+        self.client.force_login(self.user)
+        entry = Watchlist.objects.create(user=self.user, content=self.item)
+        headers = {'HTTP_X_REQUESTED_WITH': 'XMLHttpRequest'}
+
+        response = self.client.post(
+            reverse('watchlist:favorite', args=[self.item.id]),
+            {'favorite': '1'},
+            **headers,
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertJSONEqual(response.content, {
+            'content_id': self.item.id,
+            'favorite': True,
+            'label': '★ Favorite',
+        })
+        entry.refresh_from_db()
+        self.assertTrue(entry.is_favorite)
+
     def test_watchlist_reuses_dashboard_card_presentation(self):
         self.client.force_login(self.user)
         Watchlist.objects.create(user=self.user, content=self.item)
@@ -79,7 +98,6 @@ class WatchlistFlowTests(TestCase):
         )
 
         response = self.client.get(reverse('watchlist:list'))
-
         self.assertContains(response, 'row-scroll')
         self.assertContains(response, 'content-title')
         self.assertContains(response, 'Watch on Example Network')
