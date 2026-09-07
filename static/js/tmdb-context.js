@@ -1,6 +1,22 @@
 document.addEventListener('DOMContentLoaded', () => {
   const contexts = document.querySelectorAll('[data-tmdb-context]');
 
+  const updateRowEmptyState = (element) => {
+    const row = element.closest('[data-discovery-row]');
+    if (!row) return;
+
+    const remainingCards = row.querySelectorAll('.card:not(.region-pending)');
+    const pendingCards = row.querySelectorAll('.card.region-pending');
+    const emptyState = row.querySelector('[data-region-empty-state]');
+    if (!emptyState) return;
+
+    if (!remainingCards.length && !pendingCards.length) {
+      emptyState.classList.remove('d-none');
+    } else {
+      emptyState.classList.add('d-none');
+    }
+  };
+
   contexts.forEach(async (element) => {
     const url = element.dataset.contextUrl;
     const summary = element.querySelector('[data-context-summary]');
@@ -21,9 +37,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
       if (requireRegion && !data.is_available_in_region) {
         card?.remove();
+        updateRowEmptyState(element);
         return;
       }
       card?.classList.remove('region-pending');
+      updateRowEmptyState(element);
 
       const meta = [];
       if (contentType === 'tv') {
@@ -61,9 +79,11 @@ document.addEventListener('DOMContentLoaded', () => {
     } catch (_error) {
       if (requireRegion) {
         card?.remove();
+        updateRowEmptyState(element);
         return;
       }
       card?.classList.remove('region-pending');
+      updateRowEmptyState(element);
       summary.textContent = contentType === 'tv'
         ? 'Network unavailable · Episode unavailable · Runtime unavailable'
         : 'Runtime unavailable';
