@@ -23,10 +23,11 @@
 {% if browse_active %}
 <div class="mb-4">
     <h4 class="mb-2">🔎 Live Search Results</h4>
-    <div class="row-scroll">
+    <div class="row-scroll" data-discovery-row>
         {% for item in browse_results %}{% include "partials/card.html" %}{% empty %}
             <div class="empty-state"><strong>No matching live titles found.</strong><div class="text-muted">Try a broader title, genre, or content type.</div></div>
         {% endfor %}
+        <div class="text-muted d-none" data-region-empty-state>No matching titles have a provider listed in {{ discovery_region }}.</div>
     </div>
 </div>
 {% endif %}
@@ -35,10 +36,11 @@
 <div class="{% if forloop.last %}mb-5{% else %}mb-4{% endif %}">
     <h4 class="mb-1">{{ section.title }}</h4>
     <div class="small text-muted mb-2">{{ section.description }}</div>
-    <div class="row-scroll">
+    <div class="row-scroll" data-discovery-row>
         {% for item in section.items %}{% include "partials/card.html" %}{% empty %}
             <div class="text-muted">{{ section.empty }}</div>
         {% endfor %}
+        <div class="text-muted d-none" data-region-empty-state>No matching titles have a provider listed in {{ discovery_region }}.</div>
     </div>
 </div>
 {% endfor %}

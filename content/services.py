@@ -171,7 +171,10 @@ def fetch_tmdb_watch_context(content_type, external_id, region='US'):
         'provider_count': len(provider_rows),
         'additional_provider_count': max(0, len(provider_rows) - len(visible_providers)),
         'watch_url': regional.get('link') or '',
-        'is_available_in_region': bool(provider_rows or regional.get('link')),
+        # A generic TMDB/JustWatch landing link is not evidence that a title is
+        # actually available in the selected region. Require at least one
+        # concrete provider row before strict regional discovery keeps a card.
+        'is_available_in_region': bool(provider_rows),
         'has_watch_details': bool(network_names or runtime or episode_label or provider_rows or regional.get('link')),
     }
 

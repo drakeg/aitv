@@ -13,6 +13,8 @@ aitv should prioritize watchable content while allowing each viewer to decide wh
 - Personalization applies consistently to On TV Today, Trending TV Today, TV On the Air, and Popular TV.
 - Each account can choose a dashboard content mix: Balanced, TV first, or Movies first. Balanced is the neutral default and interleaves movie rows with TV discovery; TV first keeps all TV discovery ahead of movie rows; Movies first does the reverse.
 - Content-mix ordering is account-specific and does not globally change the public/default experience.
+- When strict regional availability is enabled, a TMDB title must have at least one concrete provider row in the selected region. A generic TMDB/JustWatch landing link by itself does not count as regional availability.
+- If regional validation removes every TMDB card from a discovery row, the UI shows an explicit regional empty state instead of leaving a blank row.
 - Live-source cards expose genre and network/service information whenever the upstream source provides it.
 - Provider/watch actions remain primary; metadata destinations remain secondary.
 
