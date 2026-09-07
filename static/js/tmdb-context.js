@@ -1,8 +1,7 @@
 document.addEventListener('DOMContentLoaded', () => {
   const contexts = document.querySelectorAll('[data-tmdb-context]');
 
-  const updateRowEmptyState = (element) => {
-    const row = element.closest('[data-discovery-row]');
+  const updateRowEmptyState = (row) => {
     if (!row) return;
 
     const remainingCards = row.querySelectorAll('.card:not(.region-pending)');
@@ -25,6 +24,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const contentType = element.dataset.contentType;
     const requireRegion = element.dataset.requireRegion === '1';
     const card = element.closest('.card');
+    const row = element.closest('[data-discovery-row]');
 
     if (!url) return;
 
@@ -37,11 +37,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
       if (requireRegion && !data.is_available_in_region) {
         card?.remove();
-        updateRowEmptyState(element);
+        updateRowEmptyState(row);
         return;
       }
       card?.classList.remove('region-pending');
-      updateRowEmptyState(element);
+      updateRowEmptyState(row);
 
       const meta = [];
       if (contentType === 'tv') {
@@ -79,11 +79,11 @@ document.addEventListener('DOMContentLoaded', () => {
     } catch (_error) {
       if (requireRegion) {
         card?.remove();
-        updateRowEmptyState(element);
+        updateRowEmptyState(row);
         return;
       }
       card?.classList.remove('region-pending');
-      updateRowEmptyState(element);
+      updateRowEmptyState(row);
       summary.textContent = contentType === 'tv'
         ? 'Network unavailable · Episode unavailable · Runtime unavailable'
         : 'Runtime unavailable';
