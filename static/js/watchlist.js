@@ -1,4 +1,52 @@
 document.addEventListener('submit', async (event) => {
+    const favoriteForm = event.target.closest('[data-favorite-form]');
+    if (favoriteForm) {
+        event.preventDefault();
+        const button = favoriteForm.querySelector('button[type="submit"]');
+        const input = favoriteForm.querySelector('input[name="favorite"]');
+        if (!button || !input || button.disabled) return;
+
+        const wasFavorite = favoriteForm.dataset.favoriteState === '1';
+        const originalLabel = button.textContent;
+        button.disabled = true;
+        button.textContent = 'Updating…';
+
+        try {
+            const response = await fetch(favoriteForm.action, {
+                method: 'POST',
+                body: new FormData(favoriteForm),
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json',
+                },
+                credentials: 'same-origin',
+            });
+            if (!response.ok) throw new Error(`Favorite update failed: ${response.status}`);
+            const result = await response.json();
+
+            favoriteForm.dataset.favoriteState = result.favorite ? '1' : '0';
+            input.value = result.favorite ? '0' : '1';
+            button.textContent = result.favorite ? '★ Favorite' : '☆ Mark favorite';
+            button.classList.toggle('btn-warning', result.favorite);
+            button.classList.toggle('btn-outline-light', !result.favorite);
+
+            const count = document.querySelector('[data-favorite-count]');
+            if (count) {
+                const current = Number.parseInt(count.textContent, 10) || 0;
+                const next = Math.max(0, current + (result.favorite ? 1 : -1));
+                count.textContent = `${next} favorite${next === 1 ? '' : 's'}.`;
+            }
+        } catch (error) {
+            console.error(error);
+            button.textContent = originalLabel;
+            favoriteForm.dataset.favoriteState = wasFavorite ? '1' : '0';
+            window.alert('Could not update the favorite. Please try again.');
+        } finally {
+            button.disabled = false;
+        }
+        return;
+    }
+
     const form = event.target.closest('[data-watchlist-form]');
     if (!form) return;
 
