@@ -4,7 +4,7 @@ aitv builds the discovery dashboard from live upstream requests each time the ho
 
 ## Source behavior
 
-- **TVmaze — On TV Today:** fetched on each page load for the selected account region. Up to 100 unique scheduled shows are considered before account discovery preferences are applied. Shows are retained even when TVmaze does not publish an `officialSite`, so real network, episode, runtime, airtime, genre, and image data are not discarded. When an official destination is unavailable, aitv labels the card accordingly and exposes TVmaze source details instead of inventing a watch link.
+- **TVmaze — On TV Today:** fetched on each page load for the selected account region. Up to 100 unique scheduled shows are considered before account discovery preferences are applied. Shows are retained even when TVmaze does not publish an `officialSite`, so real network, episode, runtime, airtime, genre, and image data are not discarded. When an official destination is unavailable, aitv labels the card accordingly and exposes TVmaze source details instead of inventing a watch link. Within this row, cards with a real source-supplied watch destination are ranked ahead of metadata-only cards; personalized genre relevance still orders titles within the same actionability group.
 - **TMDB — Trending TV Today:** fetched from TMDB's daily TV trending feed on each page load. The ranking is controlled by TMDB and may remain similar across multiple visits during the same day.
 - **TMDB — TV On the Air:** fetched on each page load to broaden the current-series pool beyond trending titles.
 - **TMDB — Popular TV:** fetched on each page load as an additional discovery pool.
