@@ -212,21 +212,27 @@ def fetch_live_tv_schedule(limit=100, country='US'):
             continue
         show = episode.get('show') or {}
         show_id = show.get('id')
-        official_url = (show.get('officialSite') or '').strip()
-        if not show_id or not official_url or show_id in seen:
+        if not show_id or show_id in seen:
             continue
+
+        official_url = (show.get('officialSite') or '').strip()
+        details_url = (show.get('url') or '').strip()
         network_data = show.get('network') or show.get('webChannel') or {}
         network = (network_data.get('name') or 'TV').strip()
         image = show.get('image') or episode.get('image') or {}
-        provider = detect_provider(official_url)
-        access_type = provider['access_type'] if provider else 'other'
+        provider = detect_provider(official_url) if official_url else None
+        access_type = provider['access_type'] if provider else ('other' if official_url else '')
         provider_name = provider['provider'] if provider else network
-        if access_type == 'auth':
-            action_label = f'{provider_name} · Sign-in required'
-        elif access_type == 'subscription':
-            action_label = f'{provider_name} · Subscription'
-        else:
-            action_label = f'Watch on {provider_name}'
+
+        action_label = ''
+        if official_url:
+            if access_type == 'auth':
+                action_label = f'{provider_name} · Sign-in required'
+            elif access_type == 'subscription':
+                action_label = f'{provider_name} · Subscription'
+            else:
+                action_label = f'Watch on {provider_name}'
+
         season, number = episode.get('season'), episode.get('number')
         episode_label = f'S{season} E{number}' if season is not None and number is not None else ''
         genres = [str(value) for value in (show.get('genres') or [])]
@@ -234,11 +240,19 @@ def fetch_live_tv_schedule(limit=100, country='US'):
         if show_type and show_type not in genres:
             genres.append(show_type)
         is_news = show_type.lower() in NEWS_TERMS or any(str(g).lower() in NEWS_TERMS for g in genres)
+
         items.append({
             'id': f'tvmaze_{show_id}', 'title': show.get('name') or 'Untitled',
             'genre': ', '.join(genres) or 'TV', 'genres': genres,
-            'thumbnail': image.get('medium') or image.get('original') or '', 'url': official_url,
-            'details_url': show.get('url') or '', 'source_type': 'tvmaze', 'content_type': 'tv',
+            'thumbnail': image.get('medium') or image.get('original') or '',
+            # Keep a stable source URL even when TVmaze does not publish an
+            # official watch destination. The card separately tracks whether a
+            # direct watch action is actually available.
+            'url': official_url or details_url,
+            'watch_url': official_url,
+            'has_direct_watch': bool(official_url),
+            'details_url': details_url,
+            'source_type': 'tvmaze', 'content_type': 'tv',
             'description': _strip_html(show.get('summary')),
             'release_year': int(show['premiered'][:4]) if str(show.get('premiered') or '')[:4].isdigit() else None,
             'rating': (show.get('rating') or {}).get('average'), 'external_source': 'tvmaze',
@@ -282,5 +296,5 @@ def fetch_free_archive_movies(limit=10):
         description = doc.get('description') or ''
         if isinstance(description, list):
             description = ' '.join(str(part) for part in description)
-        items.append({'id': f'archive_{identifier}', 'title': title, 'genre': 'Free Movie', 'genres': [], 'thumbnail': f'https://archive.org/services/img/{identifier}', 'url': f'https://archive.org/details/{identifier}', 'details_url': f'https://archive.org/details/{identifier}', 'source_type': 'internet_archive', 'content_type': 'movie', 'description': _strip_html(description), 'release_year': year, 'rating': None, 'external_source': 'internet_archive', 'external_id': identifier, 'is_external': True, 'is_live_source': True, 'provider': 'Internet Archive', 'network': '', 'access_type': 'free', 'action_label': 'Watch free on Internet Archive', 'is_news': False})
+        items.append({'id': f'archive_{identifier}', 'title': title, 'genre': 'Free Movie', 'genres': [], 'thumbnail': f'https://archive.org/services/img/{identifier}', 'url': f'https://archive.org/details/{identifier}', 'watch_url': f'https://archive.org/details/{identifier}', 'has_direct_watch': True, 'details_url': f'https://archive.org/details/{identifier}', 'source_type': 'internet_archive', 'content_type': 'movie', 'description': _strip_html(description), 'release_year': year, 'rating': None, 'external_source': 'internet_archive', 'external_id': identifier, 'is_external': True, 'is_live_source': True, 'provider': 'Internet Archive', 'network': '', 'access_type': 'free', 'action_label': 'Watch free on Internet Archive', 'is_news': False})
     return items
