@@ -179,6 +179,24 @@ def _search_live_items(items, query='', content_type=''):
     return results
 
 
+def _ordered_live_sources(*, live_tv, trending_tv, on_the_air_tv, popular_tv, free_movies, trending_movies, content_mix):
+    groups = {
+        'live_tv': live_tv,
+        'trending_tv': trending_tv,
+        'on_the_air_tv': on_the_air_tv,
+        'popular_tv': popular_tv,
+        'free_movies': free_movies,
+        'trending_movies': trending_movies,
+    }
+    if content_mix == DiscoveryPreference.ContentMix.TV_FIRST:
+        order = ['live_tv', 'trending_tv', 'on_the_air_tv', 'popular_tv', 'free_movies', 'trending_movies']
+    elif content_mix == DiscoveryPreference.ContentMix.MOVIES_FIRST:
+        order = ['free_movies', 'trending_movies', 'live_tv', 'trending_tv', 'on_the_air_tv', 'popular_tv']
+    else:
+        order = ['live_tv', 'trending_tv', 'free_movies', 'trending_movies', 'on_the_air_tv', 'popular_tv']
+    return [item for key in order for item in groups[key]]
+
+
 def _dashboard_sections(*, live_tv, trending_tv, on_the_air_tv, popular_tv, free_movies, trending_movies, region, content_mix):
     sections = {
         'live_tv': {'title': '📺 On TV Today', 'description': f"Today's live {region} schedule with network/service, episode, runtime, airtime, and source-supplied destination when available.", 'items': live_tv, 'empty': 'No live shows currently match your discovery preferences.'},
@@ -224,7 +242,11 @@ def home(request):
         saved_items = list(Watchlist.objects.filter(user=request.user).select_related('content'))
         saved_external_ids = {(entry.content.external_source, entry.content.external_id, entry.content.content_type): entry.content_id for entry in saved_items if entry.content.external_source and entry.content.external_id}
 
-    live_sources = [*live_tv, *trending_tv, *on_the_air_tv, *popular_tv, *free_movies, *trending_movies]
+    live_sources = _ordered_live_sources(
+        live_tv=live_tv, trending_tv=trending_tv, on_the_air_tv=on_the_air_tv,
+        popular_tv=popular_tv, free_movies=free_movies, trending_movies=trending_movies,
+        content_mix=content_mix,
+    )
     for item in live_sources:
         item['saved_content_id'] = saved_external_ids.get((item.get('external_source'), item.get('external_id'), item.get('content_type')))
 
