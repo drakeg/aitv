@@ -3,27 +3,32 @@ from unittest.mock import patch
 from django.test import TestCase
 from django.urls import reverse
 
+from core.views import _rank_discovery
+
 
 class TVDiscoveryDepthTests(TestCase):
     def _tv(self, external_id, title):
         return {
-            'id': f'tmdb_tv_{external_id}',
-            'title': title,
+            'id': f'tmdb_tv_{external_id}', 'title': title,
             'url': f'https://www.themoviedb.org/tv/{external_id}',
             'details_url': f'https://www.themoviedb.org/tv/{external_id}',
-            'genre': 'Drama',
-            'genres': ['Drama'],
-            'thumbnail': '',
-            'content_type': 'tv',
-            'description': '',
-            'release_year': 2026,
-            'rating': 8.0,
-            'source_type': 'tmdb',
-            'external_source': 'tmdb',
-            'external_id': str(external_id),
-            'is_external': True,
+            'genre': 'Drama', 'genres': ['Drama'], 'thumbnail': '', 'content_type': 'tv',
+            'description': '', 'release_year': 2026, 'rating': 8.0, 'source_type': 'tmdb',
+            'external_source': 'tmdb', 'external_id': str(external_id), 'is_external': True,
             'is_news': False,
         }
+
+    def test_actionable_live_tv_is_ranked_before_metadata_only_tv(self):
+        metadata_only = {'title': 'Metadata Only', 'genres': ['Drama'], 'has_direct_watch': False}
+        actionable = {'title': 'Watchable', 'genres': ['Drama'], 'has_direct_watch': True}
+        ranked = _rank_discovery([metadata_only, actionable], ['Drama'])
+        self.assertEqual([item['title'] for item in ranked], ['Watchable', 'Metadata Only'])
+
+    def test_genre_strength_still_ranks_within_same_actionability_group(self):
+        one_match = {'title': 'One Match', 'genres': ['Drama'], 'has_direct_watch': True}
+        two_matches = {'title': 'Two Matches', 'genres': ['Drama', 'Crime'], 'has_direct_watch': True}
+        ranked = _rank_discovery([one_match, two_matches], ['Drama', 'Crime'], customized=True)
+        self.assertEqual([item['title'] for item in ranked], ['Two Matches', 'One Match'])
 
     @patch('core.views.fetch_free_archive_movies', return_value=[])
     @patch('core.views.fetch_trending_movies', return_value=[])
@@ -31,21 +36,12 @@ class TVDiscoveryDepthTests(TestCase):
     @patch('core.views.fetch_tv_on_the_air')
     @patch('core.views.fetch_trending_tv')
     @patch('core.views.fetch_live_tv_schedule', return_value=[])
-    def test_tv_rows_are_deep_and_deduplicated(
-        self,
-        _mock_live,
-        mock_trending,
-        mock_on_air,
-        mock_popular,
-        *_mocks,
-    ):
+    def test_tv_rows_are_deep_and_deduplicated(self, _mock_live, mock_trending, mock_on_air, mock_popular, *_mocks):
         shared = self._tv(1, 'Shared Series')
         mock_trending.return_value = [shared, self._tv(2, 'Daily Trend')]
         mock_on_air.return_value = [shared, self._tv(3, 'On Air Series')]
         mock_popular.return_value = [self._tv(3, 'On Air Series'), self._tv(4, 'Popular Series')]
-
         response = self.client.get(reverse('home'))
-
         self.assertContains(response, 'Trending TV Today')
         self.assertContains(response, 'TV On the Air')
         self.assertContains(response, 'Popular TV')
