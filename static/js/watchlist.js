@@ -84,6 +84,23 @@ document.addEventListener('submit', async (event) => {
         }
         form.dataset.contentId = result.content_id;
         delete form.dataset.externalSave;
+
+        const container = form.parentElement;
+        if (container) {
+            let favorite = container.querySelector('[data-favorite-form]');
+            if (result.saved && result.favorite_url && !favorite) {
+                const csrf = form.querySelector('input[name="csrfmiddlewaretoken"]');
+                favorite = document.createElement('form');
+                favorite.method = 'post';
+                favorite.action = result.favorite_url;
+                favorite.dataset.favoriteForm = '';
+                favorite.dataset.favoriteState = result.favorite ? '1' : '0';
+                favorite.innerHTML = `${csrf ? `<input type="hidden" name="csrfmiddlewaretoken" value="${csrf.value}">` : ''}<input type="hidden" name="favorite" value="${result.favorite ? '0' : '1'}"><button type="submit" class="btn btn-sm ${result.favorite ? 'btn-warning' : 'btn-outline-light'} w-100 mt-1">${result.favorite ? '★ Favorite' : '☆ Mark favorite'}</button>`;
+                form.insertAdjacentElement('afterend', favorite);
+            } else if (!result.saved && favorite) {
+                favorite.remove();
+            }
+        }
     } catch (error) {
         console.error(error);
         button.textContent = originalLabel;
