@@ -26,6 +26,7 @@ aitv should prioritize watchable content while allowing each viewer to decide wh
 - Profile stores optional first name, last name, and email address on the user's Django account.
 - Regional availability, content-mix, and discovery-category settings remain account-specific.
 - Watchlist and Favorite are separate concepts: saving a title means "watch later"; marking it Favorite means the user wants it prioritized and eligible for release alerts.
+- Saved TMDB discovery cards expose Favorite / Unfavorite directly on the discovery page. When a new TMDB title is saved asynchronously, the Favorite control is added immediately without requiring a page reload or a trip to the Watchlist page.
 - Users can opt in globally to release alerts, but only Favorite saved titles are checked. Opt-in requires a saved email address and defaults off.
 - `python manage.py check_release_notifications` checks opted-in Favorite titles for newly aired episodes on supported sources.
 - The first successful check establishes a baseline and does not generate historical notifications. Removing Favorite status clears that baseline so re-favoriting starts cleanly rather than producing catch-up spam.
