@@ -28,6 +28,7 @@ def _watchlist_response(request, *, content, saved):
             'label': '✓ Saved to Watchlist' if saved else '⭐ Save to Watchlist',
             'add_url': reverse('watchlist:add', args=[content.id]),
             'remove_url': reverse('watchlist:remove', args=[content.id]),
+            'favorite_url': reverse('watchlist:favorite', args=[content.id]),
         })
     return redirect(_safe_fallback_url(request))
 

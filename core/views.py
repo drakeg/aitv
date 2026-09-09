@@ -181,12 +181,8 @@ def _search_live_items(items, query='', content_type=''):
 
 def _ordered_live_sources(*, live_tv, trending_tv, on_the_air_tv, popular_tv, free_movies, trending_movies, content_mix):
     groups = {
-        'live_tv': live_tv,
-        'trending_tv': trending_tv,
-        'on_the_air_tv': on_the_air_tv,
-        'popular_tv': popular_tv,
-        'free_movies': free_movies,
-        'trending_movies': trending_movies,
+        'live_tv': live_tv, 'trending_tv': trending_tv, 'on_the_air_tv': on_the_air_tv,
+        'popular_tv': popular_tv, 'free_movies': free_movies, 'trending_movies': trending_movies,
     }
     if content_mix == DiscoveryPreference.ContentMix.TV_FIRST:
         order = ['live_tv', 'trending_tv', 'on_the_air_tv', 'popular_tv', 'free_movies', 'trending_movies']
@@ -237,10 +233,17 @@ def home(request):
     on_the_air_tv = _dedupe_discovery(on_the_air_tv, seen_tmdb_tv)
     popular_tv = _dedupe_discovery(popular_tv, seen_tmdb_tv)
 
-    saved_external_ids = {}
+    saved_external_state = {}
     if request.user.is_authenticated:
         saved_items = list(Watchlist.objects.filter(user=request.user).select_related('content'))
-        saved_external_ids = {(entry.content.external_source, entry.content.external_id, entry.content.content_type): entry.content_id for entry in saved_items if entry.content.external_source and entry.content.external_id}
+        saved_external_state = {
+            (entry.content.external_source, entry.content.external_id, entry.content.content_type): {
+                'content_id': entry.content_id,
+                'is_favorite': entry.is_favorite,
+            }
+            for entry in saved_items
+            if entry.content.external_source and entry.content.external_id
+        }
 
     live_sources = _ordered_live_sources(
         live_tv=live_tv, trending_tv=trending_tv, on_the_air_tv=on_the_air_tv,
@@ -248,7 +251,9 @@ def home(request):
         content_mix=content_mix,
     )
     for item in live_sources:
-        item['saved_content_id'] = saved_external_ids.get((item.get('external_source'), item.get('external_id'), item.get('content_type')))
+        saved = saved_external_state.get((item.get('external_source'), item.get('external_id'), item.get('content_type')))
+        item['saved_content_id'] = saved['content_id'] if saved else None
+        item['saved_is_favorite'] = saved['is_favorite'] if saved else False
 
     query = request.GET.get('q', '').strip()
     content_type = request.GET.get('type', '').strip()
