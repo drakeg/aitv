@@ -195,7 +195,7 @@ def _ordered_live_sources(*, live_tv, trending_tv, on_the_air_tv, popular_tv, fr
 
 def _dashboard_sections(*, live_tv, trending_tv, on_the_air_tv, popular_tv, free_movies, trending_movies, region, content_mix):
     sections = {
-        'live_tv': {'title': '📺 On TV Today', 'description': f"Today's live {region} schedule with network/service, episode, runtime, airtime, and source-supplied destination when available.", 'items': live_tv, 'empty': 'No live shows currently match your discovery preferences.'},
+        'live_tv': {'title': '📺 On TV Today', 'description': f"Today's live {region} schedule with network/service, episode, runtime, airtime, and source-supplied destination when available.", 'items': live_tv, 'empty': 'No live shows currently match your discovery and availability preferences.'},
         'trending_tv': {'title': '🔥 Trending TV Today', 'description': "TMDB's daily TV trends, enriched with current regional provider, network, episode, and runtime details.", 'items': trending_tv[:20], 'empty': 'No trending TV currently matches your preferences.'},
         'on_the_air_tv': {'title': '📡 TV On the Air', 'description': 'More currently airing series from TMDB, excluding shows already shown in Trending TV.', 'items': on_the_air_tv[:20], 'empty': 'No additional currently airing TV matches your preferences.'},
         'popular_tv': {'title': '⭐ Popular TV', 'description': 'Additional popular series, deduplicated from the daily trending and on-air rows.', 'items': popular_tv[:20], 'empty': 'No additional popular TV currently matches your preferences.'},
@@ -222,6 +222,8 @@ def home(request):
     content_mix = preference.content_mix if preference else DiscoveryPreference.ContentMix.BALANCED
 
     live_tv = _personalize_tv(fetch_live_tv_schedule(limit=100, country=discovery_region), preferred_genres, customized=customized)
+    if require_region_availability:
+        live_tv = [item for item in live_tv if item.get('has_direct_watch')]
     trending_tv = _personalize_tv(fetch_trending_tv(), preferred_genres, customized=customized)
     on_the_air_tv = _personalize_tv(fetch_tv_on_the_air(), preferred_genres, customized=customized)
     popular_tv = _personalize_tv(fetch_popular_tv(), preferred_genres, customized=customized)
