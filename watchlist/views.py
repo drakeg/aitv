@@ -21,6 +21,7 @@ def _safe_fallback_url(request):
 
 
 def _watchlist_response(request, *, content, saved):
+    entry = Watchlist.objects.filter(user=request.user, content=content).first() if saved else None
     if request.headers.get('x-requested-with') == 'XMLHttpRequest':
         return JsonResponse({
             'saved': saved,
@@ -28,6 +29,8 @@ def _watchlist_response(request, *, content, saved):
             'label': '✓ Saved to Watchlist' if saved else '⭐ Save to Watchlist',
             'add_url': reverse('watchlist:add', args=[content.id]),
             'remove_url': reverse('watchlist:remove', args=[content.id]),
+            'favorite_url': reverse('watchlist:favorite', args=[content.id]),
+            'favorite': bool(entry and entry.is_favorite),
         })
     return redirect(_safe_fallback_url(request))
 
