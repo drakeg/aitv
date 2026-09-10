@@ -5,7 +5,9 @@ services:
     env_file:
       - .env
     command: >-
-      sh -c "python manage.py migrate --noinput &&
+      sh -c "mkdir -p /data &&
+             if [ ! -f /data/db.sqlite3 ] && [ -f /app/db.sqlite3 ]; then cp /app/db.sqlite3 /data/db.sqlite3; fi &&
+             python manage.py migrate --noinput &&
              python manage.py runserver 0.0.0.0:8000"
     ports:
       - "${APP_PORT:-8000}:8000"
@@ -13,9 +15,15 @@ services:
       DJANGO_SECRET_KEY: "${DJANGO_SECRET_KEY:-dev-docker-key-change-me}"
       DJANGO_DEBUG: "${DJANGO_DEBUG:-true}"
       DJANGO_ALLOWED_HOSTS: "${DJANGO_ALLOWED_HOSTS:-127.0.0.1,localhost,0.0.0.0}"
+      SQLITE_DB_PATH: "${SQLITE_DB_PATH:-/data/db.sqlite3}"
+      SQLITE_TIMEOUT_SECONDS: "${SQLITE_TIMEOUT_SECONDS:-30}"
       TMDB_API_KEY: "${TMDB_API_KEY:-}"
       TMDB_READ_ACCESS_TOKEN: "${TMDB_READ_ACCESS_TOKEN:-}"
       TMDB_TIMEOUT_SECONDS: "${TMDB_TIMEOUT_SECONDS:-5}"
       SOURCE_TIMEOUT_SECONDS: "${SOURCE_TIMEOUT_SECONDS:-5}"
     volumes:
       - .:/app
+      - aitv_data:/data
+
+volumes:
+  aitv_data:
