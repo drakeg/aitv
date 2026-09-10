@@ -14,9 +14,11 @@ aitv should prioritize watchable content while allowing each viewer to decide wh
 - If a viewer saves discovery preferences with no categories selected, aitv treats that as a request to show all categories rather than creating an empty customized catalog. The Profile page also provides an explicit **Show all categories** reset action.
 - Resetting discovery categories changes only the category filter; region, strict regional availability, content-mix ordering, and notification preferences remain intact.
 - Each account can choose a dashboard content mix: Balanced, TV first, or Movies first. Balanced is the neutral default and interleaves movie rows with TV discovery; TV first keeps all TV discovery ahead of movie rows; Movies first does the reverse.
-- The same content-mix ordering now applies to live search/browse results, so a TV-first account does not silently revert to a different source ordering while searching.
+- The same content-mix ordering applies to live search/browse results, so a TV-first account does not silently revert to a different source ordering while searching.
 - Content-mix ordering is account-specific and does not globally change the public/default experience.
 - When strict regional availability is enabled, a TMDB title must have at least one concrete provider row in the selected region. A generic TMDB/JustWatch landing link by itself does not count as regional availability.
+- Strict regional availability also applies to TVmaze schedule results: metadata-only cards without a source-supplied watch destination are filtered out for strict accounts, while they remain visible for viewers who prefer broader schedule discovery.
+- The same strict live-source filtering is applied before search/browse results are built, so unavailable metadata-only shows do not reappear through search.
 - If regional validation removes every TMDB card from a discovery row, the UI shows an explicit regional empty state instead of leaving a blank row.
 - Live-source cards expose genre and network/service information whenever the upstream source provides it.
 - Provider/watch actions remain primary; metadata destinations remain secondary.
