@@ -25,10 +25,10 @@
 
     <div class="profile-section mb-3">
         <h5>Where I watch</h5>
-        <p class="text-muted small">Use regional provider availability so discovery does not recommend titles you cannot actually watch where you live.</p>
+        <p class="text-muted small">Use regional availability so discovery favors titles with a real provider or source-supplied watch destination where you live.</p>
         <div class="d-flex gap-3 align-items-end flex-wrap">
             <div><label for="region" class="form-label small">Region</label><select id="region" name="region" form="discovery-preferences">{% for code, label in region_choices %}<option value="{{ code }}" {% if discovery_region == code %}selected{% endif %}>{{ label }}</option>{% endfor %}</select></div>
-            <label class="genre-choice mb-0"><input type="checkbox" name="require_region_availability" value="1" form="discovery-preferences" {% if require_region_availability %}checked{% endif %}> Only show titles with providers in my region</label>
+            <label class="genre-choice mb-0"><input type="checkbox" name="require_region_availability" value="1" form="discovery-preferences" {% if require_region_availability %}checked{% endif %}> Only show titles with a provider or watch destination in my region</label>
         </div>
     </div>
 
