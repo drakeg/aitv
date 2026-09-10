@@ -180,21 +180,13 @@ def _search_live_items(items, query='', content_type=''):
 
 
 def _ordered_live_sources(*, live_tv, trending_tv, on_the_air_tv, popular_tv, free_movies, trending_movies, content_mix):
-    groups = {
-        'live_tv': live_tv,
-        'trending_tv': trending_tv,
-        'on_the_air_tv': on_the_air_tv,
-        'popular_tv': popular_tv,
-        'free_movies': free_movies,
-        'trending_movies': trending_movies,
-    }
+    tv = [*live_tv, *trending_tv, *on_the_air_tv, *popular_tv]
+    movies = [*free_movies, *trending_movies]
+    if content_mix == DiscoveryPreference.ContentMix.MOVIES_FIRST:
+        return [*movies, *tv]
     if content_mix == DiscoveryPreference.ContentMix.TV_FIRST:
-        order = ['live_tv', 'trending_tv', 'on_the_air_tv', 'popular_tv', 'free_movies', 'trending_movies']
-    elif content_mix == DiscoveryPreference.ContentMix.MOVIES_FIRST:
-        order = ['free_movies', 'trending_movies', 'live_tv', 'trending_tv', 'on_the_air_tv', 'popular_tv']
-    else:
-        order = ['live_tv', 'trending_tv', 'free_movies', 'trending_movies', 'on_the_air_tv', 'popular_tv']
-    return [item for key in order for item in groups[key]]
+        return [*tv, *movies]
+    return [*live_tv, *trending_tv, *free_movies, *trending_movies, *on_the_air_tv, *popular_tv]
 
 
 def _dashboard_sections(*, live_tv, trending_tv, on_the_air_tv, popular_tv, free_movies, trending_movies, region, content_mix):
@@ -238,9 +230,11 @@ def home(request):
     popular_tv = _dedupe_discovery(popular_tv, seen_tmdb_tv)
 
     saved_external_ids = {}
+    favorite_content_ids = set()
     if request.user.is_authenticated:
         saved_items = list(Watchlist.objects.filter(user=request.user).select_related('content'))
         saved_external_ids = {(entry.content.external_source, entry.content.external_id, entry.content.content_type): entry.content_id for entry in saved_items if entry.content.external_source and entry.content.external_id}
+        favorite_content_ids = {entry.content_id for entry in saved_items if entry.is_favorite}
 
     live_sources = _ordered_live_sources(
         live_tv=live_tv, trending_tv=trending_tv, on_the_air_tv=on_the_air_tv,
@@ -249,6 +243,7 @@ def home(request):
     )
     for item in live_sources:
         item['saved_content_id'] = saved_external_ids.get((item.get('external_source'), item.get('external_id'), item.get('content_type')))
+        item['is_favorite'] = bool(item['saved_content_id'] and item['saved_content_id'] in favorite_content_ids)
 
     query = request.GET.get('q', '').strip()
     content_type = request.GET.get('type', '').strip()
