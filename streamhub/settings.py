@@ -50,10 +50,16 @@ TEMPLATES = [{
 
 WSGI_APPLICATION = 'streamhub.wsgi.application'
 
+SQLITE_DB_PATH = Path(os.getenv('SQLITE_DB_PATH', str(BASE_DIR / 'db.sqlite3')))
+SQLITE_TIMEOUT_SECONDS = int(os.getenv('SQLITE_TIMEOUT_SECONDS', '30'))
+
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'NAME': SQLITE_DB_PATH,
+        'OPTIONS': {
+            'timeout': SQLITE_TIMEOUT_SECONDS,
+        },
     }
 }
 
