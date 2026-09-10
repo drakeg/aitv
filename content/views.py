@@ -133,12 +133,14 @@ def import_external_content(request):
     else:
         item = ContentItem.objects.create(url=url, **defaults)
 
-    Watchlist.objects.get_or_create(user=request.user, content=item)
+    entry, _ = Watchlist.objects.get_or_create(user=request.user, content=item)
     if request.headers.get('x-requested-with') == 'XMLHttpRequest':
         return JsonResponse({
             'saved': True,
             'content_id': item.id,
             'remove_url': reverse('watchlist:remove', args=[item.id]),
+            'favorite_url': reverse('watchlist:favorite', args=[item.id]),
+            'favorite': entry.is_favorite,
             'label': '✓ Saved to Watchlist',
         })
     return redirect('/')
