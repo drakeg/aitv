@@ -14,7 +14,7 @@ aitv should prioritize watchable content while allowing each viewer to decide wh
 - If a viewer saves discovery preferences with no categories selected, aitv treats that as a request to show all categories rather than creating an empty customized catalog. The Profile page also provides an explicit **Show all categories** reset action.
 - Resetting discovery categories changes only the category filter; region, strict regional availability, content-mix ordering, and notification preferences remain intact.
 - Each account can choose a dashboard content mix: Balanced, TV first, or Movies first. Balanced is the neutral default and interleaves movie rows with TV discovery; TV first keeps all TV discovery ahead of movie rows; Movies first does the reverse.
-- The same content-mix ordering now applies to live search/browse results, so a TV-first account does not silently revert to a different source ordering while searching.
+- The same content-mix ordering applies to live search/browse results, so a TV-first account does not silently revert to a different source ordering while searching.
 - Content-mix ordering is account-specific and does not globally change the public/default experience.
 - When strict regional availability is enabled, a TMDB title must have at least one concrete provider row in the selected region. A generic TMDB/JustWatch landing link by itself does not count as regional availability.
 - If regional validation removes every TMDB card from a discovery row, the UI shows an explicit regional empty state instead of leaving a blank row.
@@ -26,6 +26,8 @@ aitv should prioritize watchable content while allowing each viewer to decide wh
 - Profile stores optional first name, last name, and email address on the user's Django account.
 - Regional availability, content-mix, and discovery-category settings remain account-specific.
 - Watchlist and Favorite are separate concepts: saving a title means "watch later"; marking it Favorite means the user wants it prioritized and eligible for release alerts.
+- Signed-in viewers can mark an already-saved TMDB discovery title Favorite directly from its discovery card. When an unsaved TMDB card is added to the Watchlist asynchronously, the Favorite control appears immediately without a page reload.
+- Removing a title from the Watchlist removes its discovery-card Favorite control as well; Favorite remains valid only for saved titles.
 - Users can opt in globally to release alerts, but only Favorite saved titles are checked. Opt-in requires a saved email address and defaults off.
 - `python manage.py check_release_notifications` checks opted-in Favorite titles for newly aired episodes on supported sources.
 - The first successful check establishes a baseline and does not generate historical notifications. Removing Favorite status clears that baseline so re-favoriting starts cleanly rather than producing catch-up spam.
