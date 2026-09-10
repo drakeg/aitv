@@ -1,3 +1,38 @@
+function syncDiscoveryFavoriteControl(watchlistForm, result) {
+    const controls = watchlistForm.closest('[data-discovery-save-controls]');
+    const slot = controls?.querySelector('[data-favorite-slot]');
+    if (!slot) return;
+
+    if (!result.saved || !result.favorite_url) {
+        slot.replaceChildren();
+        return;
+    }
+
+    const csrf = watchlistForm.querySelector('input[name="csrfmiddlewaretoken"]');
+    const favorite = Boolean(result.favorite);
+    const form = document.createElement('form');
+    form.method = 'post';
+    form.action = result.favorite_url;
+    form.dataset.favoriteForm = '';
+    form.dataset.favoriteState = favorite ? '1' : '0';
+
+    if (csrf) form.append(csrf.cloneNode(true));
+
+    const input = document.createElement('input');
+    input.type = 'hidden';
+    input.name = 'favorite';
+    input.value = favorite ? '0' : '1';
+    form.append(input);
+
+    const button = document.createElement('button');
+    button.type = 'submit';
+    button.className = `btn btn-sm ${favorite ? 'btn-warning' : 'btn-outline-light'} w-100 mt-1`;
+    button.textContent = favorite ? '★ Favorite' : '☆ Mark favorite';
+    form.append(button);
+    slot.replaceChildren(form);
+}
+
+
 document.addEventListener('submit', async (event) => {
     const favoriteForm = event.target.closest('[data-favorite-form]');
     if (favoriteForm) {
@@ -84,6 +119,7 @@ document.addEventListener('submit', async (event) => {
         }
         form.dataset.contentId = result.content_id;
         delete form.dataset.externalSave;
+        syncDiscoveryFavoriteControl(form, result);
     } catch (error) {
         console.error(error);
         button.textContent = originalLabel;
