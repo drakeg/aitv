@@ -12,7 +12,7 @@ from watchlist.models import Watchlist
 
 from .forms import ContentAvailabilityFormSet, ContentItemForm
 from .models import ContentItem
-from .services import fetch_tmdb_watch_context
+from .services import fetch_tmdb_watch_context, fetch_tv_watch_options_by_title
 
 
 @login_required
@@ -26,9 +26,7 @@ def edit_content(request, content_id):
             instance=item,
             prefix='availability',
         )
-        availability_valid = (
-            availability_formset.is_valid() if has_availability_formset else True
-        )
+        availability_valid = availability_formset.is_valid() if has_availability_formset else True
         if form.is_valid() and availability_valid:
             item = form.save()
             if has_availability_formset:
@@ -38,12 +36,7 @@ def edit_content(request, content_id):
     else:
         form = ContentItemForm(instance=item)
         availability_formset = ContentAvailabilityFormSet(instance=item, prefix='availability')
-
-    return render(request, 'content/edit.html', {
-        'form': form,
-        'availability_formset': availability_formset,
-        'item': item,
-    })
+    return render(request, 'content/edit.html', {'form': form, 'availability_formset': availability_formset, 'item': item})
 
 
 @login_required
@@ -54,17 +47,36 @@ def delete_content(request, content_id):
     return redirect('/')
 
 
+def _clean_region(value):
+    region = str(value or 'US').strip().upper()
+    return region if len(region) == 2 and region.isalpha() else 'US'
+
+
 @require_GET
 def tmdb_watch_context(request, content_type, external_id):
     if content_type not in {'movie', 'tv'}:
         return HttpResponseBadRequest('Invalid content type.')
-    region = request.GET.get('region', 'US').strip().upper()
-    if len(region) != 2 or not region.isalpha():
-        region = 'US'
+    region = _clean_region(request.GET.get('region'))
     cache_key = f'tmdb-watch-context:{region}:{content_type}:{external_id}'
     context = cache.get(cache_key)
     if context is None:
         context = fetch_tmdb_watch_context(content_type, external_id, region=region)
+        cache.set(cache_key, context, 1800)
+    return JsonResponse(context)
+
+
+@require_GET
+def tvmaze_watch_options(request):
+    title = request.GET.get('title', '').strip()
+    if not title or len(title) > 200:
+        return HttpResponseBadRequest('Invalid title.')
+    region = _clean_region(request.GET.get('region'))
+    year_value = request.GET.get('year', '').strip()
+    release_year = int(year_value) if year_value.isdigit() else None
+    cache_key = f'tvmaze-watch-options:{region}:{release_year or "na"}:{title.casefold()}'
+    context = cache.get(cache_key)
+    if context is None:
+        context = fetch_tv_watch_options_by_title(title, region=region, release_year=release_year)
         cache.set(cache_key, context, 1800)
     return JsonResponse(context)
 
@@ -94,19 +106,14 @@ def import_external_content(request):
     content_type = request.POST.get('content_type', 'movie').strip()
     external_source = request.POST.get('external_source', '').strip()
     external_id = request.POST.get('external_id', '').strip()
-
     parsed = urlparse(url)
     valid_tmdb_host = parsed.hostname in {'themoviedb.org', 'www.themoviedb.org'}
     if (
-        not title
-        or parsed.scheme not in {'http', 'https'}
-        or not valid_tmdb_host
+        not title or parsed.scheme not in {'http', 'https'} or not valid_tmdb_host
         or content_type not in {ContentItem.ContentType.MOVIE, ContentItem.ContentType.TV}
-        or external_source != 'tmdb'
-        or not external_id.isdigit()
+        or external_source != 'tmdb' or not external_id.isdigit()
     ):
         return HttpResponseBadRequest('Invalid external content.')
-
     defaults = {
         'title': title,
         'genre': request.POST.get('genre', '').strip() or ('TV' if content_type == 'tv' else 'Movie'),
@@ -119,12 +126,7 @@ def import_external_content(request):
         'external_source': 'tmdb',
         'external_id': external_id,
     }
-
-    item = ContentItem.objects.filter(
-        external_source='tmdb',
-        external_id=external_id,
-        content_type=content_type,
-    ).first()
+    item = ContentItem.objects.filter(external_source='tmdb', external_id=external_id, content_type=content_type).first()
     if item:
         for field, value in defaults.items():
             setattr(item, field, value)
@@ -132,15 +134,12 @@ def import_external_content(request):
         item.save()
     else:
         item = ContentItem.objects.create(url=url, **defaults)
-
     entry, _ = Watchlist.objects.get_or_create(user=request.user, content=item)
     if request.headers.get('x-requested-with') == 'XMLHttpRequest':
         return JsonResponse({
-            'saved': True,
-            'content_id': item.id,
+            'saved': True, 'content_id': item.id,
             'remove_url': reverse('watchlist:remove', args=[item.id]),
             'favorite_url': reverse('watchlist:favorite', args=[item.id]),
-            'favorite': entry.is_favorite,
-            'label': '✓ Saved to Watchlist',
+            'favorite': entry.is_favorite, 'label': '✓ Saved to Watchlist',
         })
     return redirect('/')
