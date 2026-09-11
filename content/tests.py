@@ -34,6 +34,7 @@ class TrendingContentServiceTests(SimpleTestCase):
         mock_get.assert_called_once_with(
             'https://api.themoviedb.org/3/trending/movie/week',
             headers={'Authorization': 'Bearer read-token', 'accept': 'application/json'},
+            params={},
             timeout=5.0,
         )
 
@@ -56,6 +57,7 @@ class TrendingContentServiceTests(SimpleTestCase):
         self.assertTrue(movies[0]['is_external'])
         mock_get.assert_called_once_with(
             'https://api.themoviedb.org/3/trending/movie/week',
+            headers=None,
             params={'api_key': 'test-key'},
             timeout=3.0,
         )
