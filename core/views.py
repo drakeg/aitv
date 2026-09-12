@@ -222,8 +222,6 @@ def home(request):
     content_mix = preference.content_mix if preference else DiscoveryPreference.ContentMix.BALANCED
 
     live_tv = _personalize_tv(fetch_live_tv_schedule(limit=100, country=discovery_region), preferred_genres, customized=customized)
-    if require_region_availability:
-        live_tv = [item for item in live_tv if item.get('has_direct_watch')]
     trending_tv = _personalize_tv(fetch_trending_tv(), preferred_genres, customized=customized)
     on_the_air_tv = _personalize_tv(fetch_tv_on_the_air(), preferred_genres, customized=customized)
     popular_tv = _personalize_tv(fetch_popular_tv(), preferred_genres, customized=customized)
