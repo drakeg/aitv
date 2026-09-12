@@ -9,4 +9,5 @@ urlpatterns = [
     path('<int:content_id>/delete/', views.delete_content, name='delete'),
     path('import/', views.import_external_content, name='import_external'),
     path('tmdb/<str:content_type>/<int:external_id>/watch-context/', views.tmdb_watch_context, name='tmdb_watch_context'),
+    path('tvmaze/watch-options/', views.tvmaze_watch_options, name='tvmaze_watch_options'),
 ]

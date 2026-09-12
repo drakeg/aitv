@@ -29,18 +29,22 @@ def _timeout():
         return 5.0
 
 
-def _tmdb_request(path):
+def _tmdb_auth():
     read_token = os.getenv('TMDB_READ_ACCESS_TOKEN', '').strip()
     api_key = os.getenv('TMDB_API_KEY', '').strip()
     if not read_token and not api_key:
+        return None, None
+    headers = {'Authorization': f'Bearer {read_token}', 'accept': 'application/json'} if read_token else None
+    params = {} if read_token else {'api_key': api_key}
+    return headers, params
+
+
+def _tmdb_request(path):
+    headers, params = _tmdb_auth()
+    if headers is None and params is None:
         return []
     try:
-        request_kwargs = {'timeout': _timeout()}
-        if read_token:
-            request_kwargs['headers'] = {'Authorization': f'Bearer {read_token}', 'accept': 'application/json'}
-        else:
-            request_kwargs['params'] = {'api_key': api_key}
-        response = requests.get(f'{TMDB_API_ROOT}{path}', **request_kwargs)
+        response = requests.get(f'{TMDB_API_ROOT}{path}', headers=headers, params=params, timeout=_timeout())
         response.raise_for_status()
         return response.json().get('results', [])
     except (requests.RequestException, ValueError):
@@ -99,17 +103,11 @@ def fetch_tmdb_watch_context(content_type, external_id, region='US'):
     if len(region) != 2 or not region.isalpha():
         region = 'US'
 
-    read_token = os.getenv('TMDB_READ_ACCESS_TOKEN', '').strip()
-    api_key = os.getenv('TMDB_API_KEY', '').strip()
-    if not read_token and not api_key:
+    headers, params = _tmdb_auth()
+    if headers is None and params is None:
         return {}
-
-    params = {'append_to_response': 'watch/providers'}
-    headers = None
-    if read_token:
-        headers = {'Authorization': f'Bearer {read_token}', 'accept': 'application/json'}
-    else:
-        params['api_key'] = api_key
+    params = dict(params)
+    params['append_to_response'] = 'watch/providers'
 
     try:
         response = requests.get(
@@ -127,11 +125,8 @@ def fetch_tmdb_watch_context(content_type, external_id, region='US'):
     provider_rows = []
     seen = set()
     access_groups = (
-        ('free', 'Free'),
-        ('ads', 'Free with ads'),
-        ('flatrate', 'Subscription'),
-        ('rent', 'Rent'),
-        ('buy', 'Buy'),
+        ('free', 'Free'), ('ads', 'Free with ads'), ('flatrate', 'Subscription'),
+        ('rent', 'Rent'), ('buy', 'Buy'),
     )
     for key, access_label in access_groups:
         for provider in regional.get(key, []) or []:
@@ -141,12 +136,7 @@ def fetch_tmdb_watch_context(content_type, external_id, region='US'):
             provider_rows.append({'name': name, 'access': access_label})
             seen.add(name)
 
-    network_names = [
-        str(network.get('name')).strip()
-        for network in (data.get('networks') or [])
-        if network.get('name')
-    ]
-
+    network_names = [str(network.get('name')).strip() for network in (data.get('networks') or []) if network.get('name')]
     runtime = data.get('runtime') if content_type == 'movie' else None
     episode_label = ''
     if content_type == 'tv':
@@ -171,11 +161,54 @@ def fetch_tmdb_watch_context(content_type, external_id, region='US'):
         'provider_count': len(provider_rows),
         'additional_provider_count': max(0, len(provider_rows) - len(visible_providers)),
         'watch_url': regional.get('link') or '',
-        # A generic TMDB/JustWatch landing link is not evidence that a title is
-        # actually available in the selected region. Require at least one
-        # concrete provider row before strict regional discovery keeps a card.
         'is_available_in_region': bool(provider_rows),
         'has_watch_details': bool(network_names or runtime or episode_label or provider_rows or regional.get('link')),
+    }
+
+
+def fetch_tv_watch_options_by_title(title, region='US', release_year=None):
+    """Resolve a TVmaze title to an exact TMDB TV match and return regional watch options."""
+    title = str(title or '').strip()
+    if not title:
+        return {}
+    region = str(region or 'US').strip().upper()
+    if len(region) != 2 or not region.isalpha():
+        region = 'US'
+    headers, params = _tmdb_auth()
+    if headers is None and params is None:
+        return {}
+    search_params = dict(params)
+    search_params['query'] = title
+    try:
+        response = requests.get(f'{TMDB_API_ROOT}/search/tv', headers=headers, params=search_params, timeout=_timeout())
+        response.raise_for_status()
+        results = response.json().get('results', [])
+    except (requests.RequestException, ValueError):
+        return {}
+
+    normalized_title = ' '.join(title.casefold().split())
+    candidates = []
+    for candidate in results if isinstance(results, list) else []:
+        name = ' '.join(str(candidate.get('name') or '').casefold().split())
+        if name != normalized_title or not candidate.get('id'):
+            continue
+        first_air = str(candidate.get('first_air_date') or '')
+        candidate_year = int(first_air[:4]) if first_air[:4].isdigit() else None
+        year_distance = abs(candidate_year - int(release_year)) if release_year and candidate_year else 9999
+        candidates.append((year_distance, candidate))
+    if not candidates:
+        return {}
+    candidates.sort(key=lambda pair: pair[0])
+    matched = candidates[0][1]
+    context = fetch_tmdb_watch_context('tv', matched['id'], region=region)
+    if not context:
+        return {}
+    return {
+        **context,
+        'matched': True,
+        'tmdb_id': str(matched['id']),
+        'tmdb_title': matched.get('name') or title,
+        'tmdb_details_url': f"https://www.themoviedb.org/tv/{matched['id']}",
     }
 
 
@@ -214,7 +247,6 @@ def fetch_live_tv_schedule(limit=100, country='US'):
         show_id = show.get('id')
         if not show_id or show_id in seen:
             continue
-
         official_url = (show.get('officialSite') or '').strip()
         details_url = (show.get('url') or '').strip()
         network_data = show.get('network') or show.get('webChannel') or {}
@@ -223,7 +255,6 @@ def fetch_live_tv_schedule(limit=100, country='US'):
         provider = detect_provider(official_url) if official_url else None
         access_type = provider['access_type'] if provider else ('other' if official_url else '')
         provider_name = provider['provider'] if provider else network
-
         action_label = ''
         if official_url:
             if access_type == 'auth':
@@ -232,7 +263,6 @@ def fetch_live_tv_schedule(limit=100, country='US'):
                 action_label = f'{provider_name} · Subscription'
             else:
                 action_label = f'Watch on {provider_name}'
-
         season, number = episode.get('season'), episode.get('number')
         episode_label = f'S{season} E{number}' if season is not None and number is not None else ''
         genres = [str(value) for value in (show.get('genres') or [])]
@@ -240,20 +270,13 @@ def fetch_live_tv_schedule(limit=100, country='US'):
         if show_type and show_type not in genres:
             genres.append(show_type)
         is_news = show_type.lower() in NEWS_TERMS or any(str(g).lower() in NEWS_TERMS for g in genres)
-
         items.append({
             'id': f'tvmaze_{show_id}', 'title': show.get('name') or 'Untitled',
             'genre': ', '.join(genres) or 'TV', 'genres': genres,
             'thumbnail': image.get('medium') or image.get('original') or '',
-            # Keep a stable source URL even when TVmaze does not publish an
-            # official watch destination. The card separately tracks whether a
-            # direct watch action is actually available.
-            'url': official_url or details_url,
-            'watch_url': official_url,
-            'has_direct_watch': bool(official_url),
-            'details_url': details_url,
-            'source_type': 'tvmaze', 'content_type': 'tv',
-            'description': _strip_html(show.get('summary')),
+            'url': official_url or details_url, 'watch_url': official_url,
+            'has_direct_watch': bool(official_url), 'details_url': details_url,
+            'source_type': 'tvmaze', 'content_type': 'tv', 'description': _strip_html(show.get('summary')),
             'release_year': int(show['premiered'][:4]) if str(show.get('premiered') or '')[:4].isdigit() else None,
             'rating': (show.get('rating') or {}).get('average'), 'external_source': 'tvmaze',
             'external_id': str(show_id), 'is_external': True, 'is_live_source': True,
