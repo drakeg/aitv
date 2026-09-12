@@ -47,7 +47,7 @@ class StrictLiveAvailabilityTests(TestCase):
         }
 
     @patch('core.views.fetch_live_tv_schedule')
-    def test_strict_region_hides_live_tv_without_watch_destination(self, mock_live, *_mocks):
+    def test_strict_region_defers_metadata_only_tv_to_provider_validation(self, mock_live, *_mocks):
         mock_live.return_value = [
             self._live_item('Watchable Show', has_direct_watch=True),
             self._live_item('Metadata Only Show', has_direct_watch=False),
@@ -62,10 +62,15 @@ class StrictLiveAvailabilityTests(TestCase):
         response = self.client.get(reverse('home'))
 
         self.assertContains(response, 'Watchable Show')
-        self.assertNotContains(response, 'Metadata Only Show')
+        self.assertContains(response, 'Metadata Only Show')
+        self.assertContains(response, 'data-source-type="tvmaze"')
+        self.assertContains(response, 'data-release-year="2026"')
+        self.assertContains(response, 'region-pending')
+        self.assertContains(response, 'data-require-region="1"')
+        self.assertContains(response, 'data-region="US"')
 
     @patch('core.views.fetch_live_tv_schedule')
-    def test_non_strict_discovery_keeps_metadata_only_live_tv(self, mock_live, *_mocks):
+    def test_non_strict_discovery_keeps_metadata_only_live_tv_visible(self, mock_live, *_mocks):
         mock_live.return_value = [self._live_item('Metadata Only Show', has_direct_watch=False)]
         DiscoveryPreference.objects.create(
             user=self.user,
@@ -78,9 +83,11 @@ class StrictLiveAvailabilityTests(TestCase):
 
         self.assertContains(response, 'Metadata Only Show')
         self.assertContains(response, 'Direct watch link not listed by source')
+        self.assertNotContains(response, 'card region-pending')
+        self.assertContains(response, 'data-require-region="0"')
 
     @patch('core.views.fetch_live_tv_schedule')
-    def test_strict_filter_also_applies_to_search_results(self, mock_live, *_mocks):
+    def test_strict_search_defers_metadata_only_tv_to_same_validation(self, mock_live, *_mocks):
         mock_live.return_value = [
             self._live_item('Watchable Drama', has_direct_watch=True),
             self._live_item('Metadata Drama', has_direct_watch=False),
@@ -95,4 +102,5 @@ class StrictLiveAvailabilityTests(TestCase):
         response = self.client.get(reverse('home'), {'q': 'Drama', 'type': 'tv'})
 
         self.assertContains(response, 'Watchable Drama')
-        self.assertNotContains(response, 'Metadata Drama')
+        self.assertContains(response, 'Metadata Drama')
+        self.assertContains(response, 'region-pending')
