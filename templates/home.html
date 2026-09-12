@@ -2,6 +2,7 @@
 
 {% block content %}
 
+<div data-discovery-settings data-region="{{ discovery_region|default:'US' }}" data-require-region="{% if require_region_availability %}1{% else %}0{% endif %}">
 <div class="browse-bar mb-3">
     <form method="get" class="d-flex gap-2 align-items-center flex-wrap">
         <input type="search" name="q" value="{{ browse_query }}" placeholder="Search live titles, genres, networks" aria-label="Search live discovery">
@@ -44,5 +45,6 @@
     </div>
 </div>
 {% endfor %}
+</div>
 
 {% endblock %}

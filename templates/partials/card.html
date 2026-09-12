@@ -1,4 +1,4 @@
-<div class="card{% if item.source_type == 'tmdb' and require_region_availability %} region-pending{% endif %}">
+<div class="card{% if require_region_availability %}{% if item.source_type == 'tmdb' %} region-pending{% elif item.source_type == 'tvmaze' and item.has_direct_watch == False %} region-pending{% endif %}{% endif %}" data-source-type="{{ item.source_type|default:'' }}" data-release-year="{{ item.release_year|default:'' }}" data-has-direct-watch="{% if item.has_direct_watch %}1{% else %}0{% endif %}">
 
     {% if item.thumbnail %}
         <img src="{{ item.thumbnail }}" alt="{% if item.title %}{{ item.title }}{% else %}{{ item.name|default:'Content item' }}{% endif %}">
