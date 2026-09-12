@@ -1,4 +1,8 @@
 document.addEventListener('DOMContentLoaded', () => {
+  const settings = document.querySelector('[data-discovery-settings]');
+  const discoveryRegion = settings?.dataset.region || 'US';
+  const requireRegionalAvailability = settings?.dataset.requireRegion === '1';
+
   const updateRowEmptyState = (row) => {
     if (!row) return;
     const remainingCards = row.querySelectorAll('.card:not(.region-pending)');
@@ -60,12 +64,9 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  const metadataOnlyTvmazeCards = Array.from(document.querySelectorAll('.card')).filter((card) => {
-    const details = card.querySelector('a.source-details-link[href*="tvmaze.com"]');
-    const missingDirect = Array.from(card.querySelectorAll('.provider-pill-muted'))
-      .some((pill) => pill.textContent.includes('Direct watch link not listed by source'));
-    return Boolean(details && missingDirect);
-  });
+  const metadataOnlyTvmazeCards = Array.from(
+    document.querySelectorAll('.card[data-source-type="tvmaze"][data-has-direct-watch="0"]'),
+  );
 
   const enrichTvmazeCard = async (card) => {
     if (card.dataset.tvmazeEnriched === '1') return;
@@ -73,17 +74,33 @@ document.addEventListener('DOMContentLoaded', () => {
     const title = card.querySelector('.content-title')?.getAttribute('title')?.trim();
     const providerBox = card.querySelector('.provider-options');
     const detailsLink = card.querySelector('a.source-details-link[href*="tvmaze.com"]');
-    if (!title || !providerBox || !detailsLink) return;
+    const row = card.closest('[data-discovery-row]');
+    if (!title || !providerBox || !detailsLink) {
+      if (requireRegionalAvailability) {
+        card.remove();
+        updateRowEmptyState(row);
+      }
+      return;
+    }
 
-    const region = document.querySelector('[data-tmdb-context]')?.dataset.region || 'US';
-    const params = new URLSearchParams({title, region});
+    const params = new URLSearchParams({title, region: discoveryRegion});
+    if (card.dataset.releaseYear) params.set('year', card.dataset.releaseYear);
+
     try {
       const response = await fetch(`/content/tvmaze/watch-options/?${params.toString()}`, {
         headers: {'X-Requested-With': 'XMLHttpRequest'},
       });
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
       const data = await response.json();
-      if (!data.matched || !data.is_available_in_region) return;
+      if (!data.matched || !data.is_available_in_region) {
+        if (requireRegionalAvailability) {
+          card.remove();
+          updateRowEmptyState(row);
+        } else {
+          card.classList.remove('region-pending');
+        }
+        return;
+      }
 
       providerBox.replaceChildren();
       renderProviders(providerBox, data);
@@ -105,8 +122,15 @@ document.addEventListener('DOMContentLoaded', () => {
         tmdb.textContent = 'TMDB match';
         detailsLink.after(tmdb);
       }
+      card.classList.remove('region-pending');
+      updateRowEmptyState(row);
     } catch (_error) {
-      // Keep the truthful TVmaze metadata-only state if enrichment is unavailable.
+      if (requireRegionalAvailability) {
+        card.remove();
+        updateRowEmptyState(row);
+      } else {
+        card.classList.remove('region-pending');
+      }
     }
   };
 
