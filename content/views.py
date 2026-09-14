@@ -1,3 +1,4 @@
+import hashlib
 from decimal import Decimal, InvalidOperation
 from urllib.parse import urlparse
 
@@ -52,6 +53,12 @@ def _clean_region(value):
     return region if len(region) == 2 and region.isalpha() else 'US'
 
 
+def _cache_safe_title_key(title):
+    """Return a fixed, backend-safe cache fragment for free-form title text."""
+    normalized = str(title or '').strip().casefold()
+    return hashlib.sha256(normalized.encode('utf-8')).hexdigest()
+
+
 @require_GET
 def tmdb_watch_context(request, content_type, external_id):
     if content_type not in {'movie', 'tv'}:
@@ -99,7 +106,8 @@ def tvmaze_watch_options(request):
     region = _clean_region(request.GET.get('region'))
     year_value = request.GET.get('year', '').strip()
     release_year = int(year_value) if year_value.isdigit() else None
-    cache_key = f'tvmaze-watch-options:{region}:{release_year or "na"}:{title.casefold()}'
+    title_key = _cache_safe_title_key(title)
+    cache_key = f'tvmaze-watch-options:{region}:{release_year or "na"}:{title_key}'
     context = cache.get(cache_key)
     if context is None:
         context = fetch_tv_watch_options_by_title(title, region=region, release_year=release_year)
