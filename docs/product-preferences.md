@@ -17,8 +17,8 @@ aitv should prioritize watchable content while allowing each viewer to decide wh
 - The same content-mix ordering applies to live search/browse results, so a TV-first account does not silently revert to a different source ordering while searching.
 - Content-mix ordering is account-specific and does not globally change the public/default experience.
 - When strict regional availability is enabled, a TMDB title must have at least one concrete provider row in the selected region. A generic TMDB/JustWatch landing link by itself does not count as regional availability.
-- Strict regional availability also applies to TVmaze schedule results: metadata-only cards without a source-supplied watch destination are filtered out for strict accounts, while they remain visible for viewers who prefer broader schedule discovery.
-- The same strict live-source filtering is applied before search/browse results are built, so unavailable metadata-only shows do not reappear through search.
+- Strict regional availability also applies to TVmaze schedule results: metadata-only cards without a source-supplied watch destination are validated through the safe TVmaze-to-TMDB enrichment path, while broader schedule discovery remains available to non-strict accounts.
+- The same strict live-source filtering is applied to search/browse results, so unavailable metadata-only shows do not reappear through search.
 - If regional validation removes every TMDB card from a discovery row, the UI shows an explicit regional empty state instead of leaving a blank row.
 - Live-source cards expose genre and network/service information whenever the upstream source provides it.
 - Provider/watch actions remain primary; metadata destinations remain secondary.
@@ -28,7 +28,10 @@ aitv should prioritize watchable content while allowing each viewer to decide wh
 - Profile stores optional first name, last name, and email address on the user's Django account.
 - Regional availability, content-mix, and discovery-category settings remain account-specific.
 - Watchlist and Favorite are separate concepts: saving a title means "watch later"; marking it Favorite means the user wants it prioritized and eligible for release alerts.
+- Signed-in viewers see known Favorite titles first within each discovery row. This is a stable promotion: non-favorite titles retain their existing source/personalization order, saved-but-not-favorite titles are not promoted, and the public/anonymous experience is unchanged.
+- Because live search/browse uses the same already-ranked source groups, Favorite promotion is preserved there without overriding the viewer's TV-first/Movies-first content-mix choice.
 - Saved TMDB discovery cards expose Favorite / Unfavorite directly on the discovery page. When a new TMDB title is saved asynchronously, the Favorite control is added immediately without requiring a page reload or a trip to the Watchlist page.
+- TVmaze **On TV Today** cards can also expose Save / Favorite controls after aitv safely resolves a canonical TMDB identity; the source-supplied network Watch action remains primary.
 - Users can opt in globally to release alerts, but only Favorite saved titles are checked. Opt-in requires a saved email address and defaults off.
 - `python manage.py check_release_notifications` checks opted-in Favorite titles for newly aired episodes on supported sources.
 - The first successful check establishes a baseline and does not generate historical notifications. Removing Favorite status clears that baseline so re-favoriting starts cleanly rather than producing catch-up spam.
