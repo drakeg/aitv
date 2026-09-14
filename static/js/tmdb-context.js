@@ -12,7 +12,10 @@ document.addEventListener('DOMContentLoaded', () => {
     emptyState.classList.toggle('d-none', Boolean(remainingCards.length || pendingCards.length));
   };
 
-  document.querySelectorAll('[data-tmdb-context]').forEach(async (element) => {
+  const enrichTmdbContext = async (element) => {
+    if (element.dataset.contextLoaded === '1') return;
+    element.dataset.contextLoaded = '1';
+
     const url = element.dataset.contextUrl;
     const summary = element.querySelector('[data-context-summary]');
     const providers = element.querySelector('[data-context-providers]');
@@ -62,7 +65,10 @@ document.addEventListener('DOMContentLoaded', () => {
       providers.replaceChildren();
       addMutedPill(providers, 'Watch details temporarily unavailable');
     }
-  });
+  };
+
+  const tmdbContexts = Array.from(document.querySelectorAll('[data-tmdb-context]'));
+  observeNearViewport(tmdbContexts, (element) => enrichTmdbContext(element));
 
   const metadataOnlyTvmazeCards = Array.from(
     document.querySelectorAll('.card[data-source-type="tvmaze"][data-has-direct-watch="0"]'),
@@ -134,17 +140,23 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   };
 
-  if ('IntersectionObserver' in window) {
+  observeNearViewport(metadataOnlyTvmazeCards, (card) => enrichTvmazeCard(card));
+
+  function observeNearViewport(elements, callback) {
+    if (!elements.length) return;
+    if (!('IntersectionObserver' in window)) {
+      elements.forEach(callback);
+      return;
+    }
+
     const observer = new IntersectionObserver((entries) => {
       entries.forEach((entry) => {
         if (!entry.isIntersecting) return;
         observer.unobserve(entry.target);
-        enrichTvmazeCard(entry.target);
+        callback(entry.target);
       });
-    }, {rootMargin: '300px'});
-    metadataOnlyTvmazeCards.forEach((card) => observer.observe(card));
-  } else {
-    metadataOnlyTvmazeCards.forEach(enrichTvmazeCard);
+    }, {rootMargin: '500px'});
+    elements.forEach((element) => observer.observe(element));
   }
 
   function renderProviders(container, data) {
