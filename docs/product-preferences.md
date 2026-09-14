@@ -29,6 +29,7 @@ aitv should prioritize watchable content while allowing each viewer to decide wh
 - Regional availability, content-mix, and discovery-category settings remain account-specific.
 - Watchlist and Favorite are separate concepts: saving a title means "watch later"; marking it Favorite means the user wants it prioritized and eligible for release alerts.
 - Signed-in viewers see known Favorite titles first within each discovery row. This is a stable promotion: non-favorite titles retain their existing source/personalization order, saved-but-not-favorite titles are not promoted, and the public/anonymous experience is unchanged.
+- Favorite / Unfavorite changes made from discovery update the current page immediately: every visible card for the same saved title is synchronized, affected rows are regrouped with Favorites first, and Watchlist removal demotes a formerly Favorite card without requiring a reload.
 - Because live search/browse uses the same already-ranked source groups, Favorite promotion is preserved there without overriding the viewer's TV-first/Movies-first content-mix choice.
 - Saved TMDB discovery cards expose Favorite / Unfavorite directly on the discovery page. When a new TMDB title is saved asynchronously, the Favorite control is added immediately without requiring a page reload or a trip to the Watchlist page.
 - TVmaze **On TV Today** cards can also expose Save / Favorite controls after aitv safely resolves a canonical TMDB identity; the source-supplied network Watch action remains primary.
