@@ -2,6 +2,9 @@ document.addEventListener('DOMContentLoaded', () => {
   const settings = document.querySelector('[data-discovery-settings]');
   const discoveryRegion = settings?.dataset.region || 'US';
   const requireRegionalAvailability = settings?.dataset.requireRegion === '1';
+  const isAuthenticated = settings?.dataset.authenticated === '1';
+  const importUrl = settings?.dataset.importUrl || '';
+  const csrfToken = document.querySelector('input[name="csrfmiddlewaretoken"]')?.value || '';
 
   const updateRowEmptyState = (row) => {
     if (!row) return;
@@ -70,19 +73,18 @@ document.addEventListener('DOMContentLoaded', () => {
   const tmdbContexts = Array.from(document.querySelectorAll('[data-tmdb-context]'));
   observeNearViewport(tmdbContexts, (element) => enrichTmdbContext(element));
 
-  const metadataOnlyTvmazeCards = Array.from(
-    document.querySelectorAll('.card[data-source-type="tvmaze"][data-has-direct-watch="0"]'),
-  );
+  const tvmazeCards = Array.from(document.querySelectorAll('.card[data-source-type="tvmaze"]'));
 
   const enrichTvmazeCard = async (card) => {
     if (card.dataset.tvmazeEnriched === '1') return;
     card.dataset.tvmazeEnriched = '1';
     const title = card.querySelector('.content-title')?.getAttribute('title')?.trim();
+    const metadataOnly = card.dataset.hasDirectWatch === '0';
     const providerBox = card.querySelector('.provider-options');
     const detailsLink = card.querySelector('a.source-details-link[href*="tvmaze.com"]');
     const row = card.closest('[data-discovery-row]');
-    if (!title || !providerBox || !detailsLink) {
-      if (requireRegionalAvailability) {
+    if (!title || !detailsLink) {
+      if (requireRegionalAvailability && metadataOnly) {
         card.remove();
         updateRowEmptyState(row);
       }
@@ -95,11 +97,13 @@ document.addEventListener('DOMContentLoaded', () => {
     try {
       const response = await fetch(`/content/tvmaze/watch-options/?${params.toString()}`, {
         headers: {'X-Requested-With': 'XMLHttpRequest'},
+        credentials: 'same-origin',
       });
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
       const data = await response.json();
-      if (!data.matched || !data.is_available_in_region) {
-        if (requireRegionalAvailability) {
+
+      if (!data.matched) {
+        if (requireRegionalAvailability && metadataOnly) {
           card.remove();
           updateRowEmptyState(row);
         } else {
@@ -108,30 +112,43 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
       }
 
-      providerBox.replaceChildren();
-      renderProviders(providerBox, data);
-      if (data.watch_url) {
-        const action = document.createElement('a');
-        action.className = 'btn btn-sm btn-primary w-100 mt-1';
-        action.target = '_blank';
-        action.rel = 'noopener noreferrer';
-        action.href = data.watch_url;
-        action.textContent = 'See regional watch options';
-        detailsLink.before(action);
+      if (metadataOnly && !data.is_available_in_region && requireRegionalAvailability) {
+        card.remove();
+        updateRowEmptyState(row);
+        return;
       }
-      if (data.tmdb_details_url) {
+
+      if (metadataOnly && data.is_available_in_region && providerBox) {
+        providerBox.replaceChildren();
+        renderProviders(providerBox, data);
+        if (data.watch_url && !card.querySelector('[data-tvmaze-regional-watch]')) {
+          const action = document.createElement('a');
+          action.className = 'btn btn-sm btn-primary w-100 mt-1';
+          action.target = '_blank';
+          action.rel = 'noopener noreferrer';
+          action.href = data.watch_url;
+          action.textContent = 'See regional watch options';
+          action.dataset.tvmazeRegionalWatch = '';
+          detailsLink.before(action);
+        }
+      }
+
+      if (data.tmdb_details_url && !card.querySelector('[data-tvmaze-tmdb-match]')) {
         const tmdb = document.createElement('a');
         tmdb.className = 'source-details-link';
         tmdb.target = '_blank';
         tmdb.rel = 'noopener noreferrer';
         tmdb.href = data.tmdb_details_url;
         tmdb.textContent = 'TMDB match';
+        tmdb.dataset.tvmazeTmdbMatch = '';
         detailsLink.after(tmdb);
       }
+
+      renderTvmazeSaveControls(card, data);
       card.classList.remove('region-pending');
       updateRowEmptyState(row);
     } catch (_error) {
-      if (requireRegionalAvailability) {
+      if (requireRegionalAvailability && metadataOnly) {
         card.remove();
         updateRowEmptyState(row);
       } else {
@@ -140,7 +157,78 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   };
 
-  observeNearViewport(metadataOnlyTvmazeCards, (card) => enrichTvmazeCard(card));
+  observeNearViewport(tvmazeCards, (card) => enrichTvmazeCard(card));
+
+  function renderTvmazeSaveControls(card, data) {
+    if (!isAuthenticated || !importUrl || !data.tmdb_id || !data.tmdb_details_url) return;
+    if (card.querySelector('[data-tvmaze-watchlist-control]')) return;
+
+    const container = card.querySelector('.p-2');
+    if (!container) return;
+
+    const form = document.createElement('form');
+    form.method = 'post';
+    form.dataset.watchlistForm = '';
+    form.dataset.tvmazeWatchlistControl = '';
+
+    if (data.saved && data.remove_url) {
+      form.action = data.remove_url;
+      form.dataset.contentId = data.content_id || '';
+      appendCsrf(form);
+      const button = makeButton('✓ Saved to Watchlist', 'btn-danger');
+      form.appendChild(button);
+      container.appendChild(form);
+
+      if (data.favorite_url) {
+        const favorite = document.createElement('form');
+        favorite.method = 'post';
+        favorite.action = data.favorite_url;
+        favorite.dataset.favoriteForm = '';
+        favorite.dataset.favoriteState = data.favorite ? '1' : '0';
+        appendCsrf(favorite);
+        appendHidden(favorite, 'favorite', data.favorite ? '0' : '1');
+        favorite.appendChild(makeButton(data.favorite ? '★ Favorite' : '☆ Mark favorite', data.favorite ? 'btn-warning' : 'btn-outline-light'));
+        container.appendChild(favorite);
+      }
+      return;
+    }
+
+    form.action = importUrl;
+    form.dataset.externalSave = 'true';
+    appendCsrf(form);
+    appendHidden(form, 'title', data.tmdb_title || card.querySelector('.content-title')?.getAttribute('title') || 'TV Show');
+    appendHidden(form, 'url', data.tmdb_details_url);
+    appendHidden(form, 'genre', card.querySelector('.source-genre')?.getAttribute('title') || 'TV');
+    appendHidden(form, 'thumbnail', card.querySelector('img')?.src || '');
+    appendHidden(form, 'content_type', 'tv');
+    appendHidden(form, 'description', '');
+    appendHidden(form, 'release_year', card.dataset.releaseYear || '');
+    appendHidden(form, 'rating', '');
+    appendHidden(form, 'external_source', 'tmdb');
+    appendHidden(form, 'external_id', data.tmdb_id);
+    form.appendChild(makeButton('⭐ Save to Watchlist', 'btn-success'));
+    container.appendChild(form);
+  }
+
+  function appendCsrf(form) {
+    if (csrfToken) appendHidden(form, 'csrfmiddlewaretoken', csrfToken);
+  }
+
+  function appendHidden(form, name, value) {
+    const input = document.createElement('input');
+    input.type = 'hidden';
+    input.name = name;
+    input.value = value || '';
+    form.appendChild(input);
+  }
+
+  function makeButton(label, className) {
+    const button = document.createElement('button');
+    button.type = 'submit';
+    button.className = `btn btn-sm ${className} w-100 mt-1`;
+    button.textContent = label;
+    return button;
+  }
 
   function observeNearViewport(elements, callback) {
     if (!elements.length) return;
