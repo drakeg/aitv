@@ -13,4 +13,6 @@ aitv builds the discovery dashboard from live upstream requests each time the ho
 
 TMDB TV rows are deduplicated across Trending TV, TV On the Air, and Popular TV so the same TMDB series is not repeated in multiple TV discovery rows. Each of those rows can display up to 20 titles before regional provider validation in the browser removes titles that are not available in the user's selected region.
 
+TMDB per-title watch-provider enrichment is loaded lazily as cards approach the viewport instead of requesting watch context for every TMDB card immediately on page load. A generous viewport margin begins enrichment shortly before a card becomes visible, and browsers without `IntersectionObserver` fall back to eager loading. Strict regional cards remain pending until that lookup confirms availability, preserving the existing filtering semantics while reducing initial network traffic and TMDB API pressure.
+
 TMDB per-title watch-provider enrichment is cached separately for 30 minutes by region. TVmaze-to-TMDB exact-title provider resolution uses the same 30-minute cache window. These caches affect provider/network/runtime enrichment, not which discovery lists are requested.
