@@ -63,12 +63,41 @@ class ReleaseNotificationWorkflowTests(TestCase):
             'message': 'Example Series released S1 E2 on 2026-09-01.',
             'target_url': self.content.url,
         }
+        mock_email.return_value = True
         call_command('check_release_notifications', stdout=StringIO())
         call_command('check_release_notifications', stdout=StringIO())
         self.assertEqual(ReleaseNotification.objects.count(), 1)
         notification = ReleaseNotification.objects.get()
         self.assertEqual(notification.event_key, mock_fetch.return_value['event_key'])
+        self.assertIsNotNone(notification.email_sent_at)
         mock_email.assert_called_once_with(self.user, notification)
+
+    @patch('notifications.management.commands.check_release_notifications.send_release_email')
+    @patch('notifications.management.commands.check_release_notifications.fetch_latest_release')
+    def test_failed_release_email_is_retried_without_duplicate_notification(self, mock_fetch, mock_email):
+        ReleaseWatchState.objects.create(
+            user=self.user,
+            content=self.content,
+            last_event_key='tmdb-tv:42:S1 E1:2026-08-25',
+        )
+        mock_fetch.return_value = {
+            'event_key': 'tmdb-tv:42:S1 E2:2026-09-01',
+            'title': 'New episode: Example Series',
+            'message': 'Example Series released S1 E2 on 2026-09-01.',
+            'target_url': self.content.url,
+        }
+        mock_email.side_effect = [RuntimeError('smtp temporarily unavailable'), True]
+
+        call_command('check_release_notifications', stdout=StringIO())
+        notification = ReleaseNotification.objects.get()
+        self.assertIsNone(notification.email_sent_at)
+
+        call_command('check_release_notifications', stdout=StringIO())
+        notification.refresh_from_db()
+
+        self.assertEqual(ReleaseNotification.objects.count(), 1)
+        self.assertIsNotNone(notification.email_sent_at)
+        self.assertEqual(mock_email.call_count, 2)
 
     @patch('notifications.management.commands.check_release_notifications.fetch_latest_release')
     def test_nonfavorite_saved_title_is_not_checked(self, mock_fetch):

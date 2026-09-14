@@ -38,6 +38,7 @@ aitv should prioritize watchable content while allowing each viewer to decide wh
 - The first successful check establishes a baseline and does not generate historical notifications. Removing Favorite status clears that baseline so re-favoriting starts cleanly rather than producing catch-up spam.
 - The first release detector supports TMDB-backed TV titles. Unsupported sources are skipped rather than guessed.
 - Email delivery is optional and occurs only when SMTP settings are explicitly configured. Without SMTP configuration, the in-app notification workflow still works and no outbound email is attempted.
+- Release notifications persist a successful email-delivery timestamp independently from the release baseline. If SMTP raises a transient error, the in-app notification remains available and a later `check_release_notifications` run retries that same unsent email without creating a duplicate notification.
 - Notification read actions are per-user and POST-only.
 
 Personalization applies to discovery results only. A user's saved catalog is never silently deleted or hidden because of discovery preferences.
