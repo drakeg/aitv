@@ -1,3 +1,40 @@
+function cardIsFavorite(card) {
+    return Boolean(card?.querySelector('[data-favorite-form][data-favorite-state="1"]'));
+}
+
+function reorderFavoriteRow(row) {
+    if (!row) return;
+    const cards = Array.from(row.children).filter((child) => child.classList.contains('card'));
+    if (cards.length < 2) return;
+
+    cards.sort((left, right) => Number(cardIsFavorite(right)) - Number(cardIsFavorite(left)));
+    const anchor = row.querySelector('[data-region-empty-state]');
+    cards.forEach((card) => row.insertBefore(card, anchor));
+}
+
+function matchingFavoriteForms(action) {
+    return Array.from(document.querySelectorAll('[data-favorite-form]')).filter((form) => form.action === action);
+}
+
+function applyFavoriteState(form, favorite) {
+    const input = form.querySelector('input[name="favorite"]');
+    const button = form.querySelector('button[type="submit"]');
+    if (!input || !button) return;
+
+    form.dataset.favoriteState = favorite ? '1' : '0';
+    input.value = favorite ? '0' : '1';
+    button.textContent = favorite ? '★ Favorite' : '☆ Mark favorite';
+    button.classList.toggle('btn-warning', favorite);
+    button.classList.toggle('btn-outline-light', !favorite);
+}
+
+function synchronizeFavoriteState(action, favorite) {
+    const forms = matchingFavoriteForms(action);
+    forms.forEach((form) => applyFavoriteState(form, favorite));
+    const rows = new Set(forms.map((form) => form.closest('[data-discovery-row]')).filter(Boolean));
+    rows.forEach((row) => reorderFavoriteRow(row));
+}
+
 document.addEventListener('submit', async (event) => {
     const favoriteForm = event.target.closest('[data-favorite-form]');
     if (favoriteForm) {
@@ -24,11 +61,7 @@ document.addEventListener('submit', async (event) => {
             if (!response.ok) throw new Error(`Favorite update failed: ${response.status}`);
             const result = await response.json();
 
-            favoriteForm.dataset.favoriteState = result.favorite ? '1' : '0';
-            input.value = result.favorite ? '0' : '1';
-            button.textContent = result.favorite ? '★ Favorite' : '☆ Mark favorite';
-            button.classList.toggle('btn-warning', result.favorite);
-            button.classList.toggle('btn-outline-light', !result.favorite);
+            synchronizeFavoriteState(favoriteForm.action, result.favorite);
 
             const count = document.querySelector('[data-favorite-count]');
             if (count) {
@@ -100,6 +133,7 @@ document.addEventListener('submit', async (event) => {
             } else if (!result.saved && favorite) {
                 favorite.remove();
             }
+            reorderFavoriteRow(container.closest('[data-discovery-row]'));
         }
     } catch (error) {
         console.error(error);
