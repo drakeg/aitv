@@ -15,6 +15,16 @@ document.addEventListener('DOMContentLoaded', () => {
     emptyState.classList.toggle('d-none', Boolean(remainingCards.length || pendingCards.length));
   };
 
+  const watchActionLabel = (data) => {
+    const bestAccess = data.providers?.[0]?.access || '';
+    if (bestAccess === 'Free') return 'Watch free options';
+    if (bestAccess === 'Free with ads') return 'Watch free with ads';
+    if (bestAccess === 'Subscription') return 'See subscription options';
+    if (bestAccess === 'Rent') return 'See rental options';
+    if (bestAccess === 'Buy') return 'See purchase options';
+    return 'See regional watch options';
+  };
+
   const enrichTmdbContext = async (element) => {
     if (element.dataset.contextLoaded === '1') return;
     element.dataset.contextLoaded = '1';
@@ -52,6 +62,7 @@ document.addEventListener('DOMContentLoaded', () => {
       renderProviders(providers, data);
       if (data.watch_url) {
         watch.href = data.watch_url;
+        watch.textContent = watchActionLabel(data);
         watch.classList.remove('d-none');
       }
     } catch (_error) {
@@ -127,7 +138,7 @@ document.addEventListener('DOMContentLoaded', () => {
           action.target = '_blank';
           action.rel = 'noopener noreferrer';
           action.href = data.watch_url;
-          action.textContent = 'See regional watch options';
+          action.textContent = watchActionLabel(data);
           action.dataset.tvmazeRegionalWatch = '';
           detailsLink.before(action);
         }
