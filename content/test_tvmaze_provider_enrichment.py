@@ -1,7 +1,8 @@
+import warnings
 from unittest.mock import Mock, patch
 
 from django.contrib.auth import get_user_model
-from django.core.cache import cache
+from django.core.cache import CacheKeyWarning, cache
 from django.test import TestCase
 from django.urls import reverse
 
@@ -76,6 +77,28 @@ class TVMazeProviderEnrichmentViewTests(TestCase):
         self.assertEqual(first.json()['providers'][0]['name'], 'Example+')
         self.assertFalse(first.json()['saved'])
         mock_fetch.assert_called_once_with('Example Show', region='US', release_year=2025)
+
+    @patch('content.views.fetch_tv_watch_options_by_title')
+    def test_watch_options_cache_key_is_safe_for_spaces_and_special_characters(self, mock_fetch):
+        mock_fetch.return_value = {
+            'matched': True,
+            'tmdb_id': '21',
+            'region': 'US',
+            'providers': [],
+            'is_available_in_region': False,
+        }
+        url = reverse('content:tvmaze_watch_options')
+        title = 'Law & Order: Special Victims Unit / 2026?'
+
+        with warnings.catch_warnings(record=True) as caught:
+            warnings.simplefilter('always', CacheKeyWarning)
+            first = self.client.get(url, {'title': title, 'region': 'US', 'year': '2026'})
+            second = self.client.get(url, {'title': title, 'region': 'US', 'year': '2026'})
+
+        self.assertEqual(first.status_code, 200)
+        self.assertEqual(second.status_code, 200)
+        self.assertFalse(any(issubclass(warning.category, CacheKeyWarning) for warning in caught))
+        mock_fetch.assert_called_once_with(title, region='US', release_year=2026)
 
     @patch('content.views.fetch_tv_watch_options_by_title')
     def test_watch_options_adds_current_users_saved_favorite_state_after_cache_lookup(self, mock_fetch):
