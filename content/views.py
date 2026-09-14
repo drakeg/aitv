@@ -65,6 +65,32 @@ def tmdb_watch_context(request, content_type, external_id):
     return JsonResponse(context)
 
 
+def _watchlist_state_for_tmdb(request, external_id):
+    state = {'saved': False, 'favorite': False}
+    if not request.user.is_authenticated or not str(external_id or '').isdigit():
+        return state
+
+    item = ContentItem.objects.filter(
+        external_source='tmdb',
+        external_id=str(external_id),
+        content_type=ContentItem.ContentType.TV,
+    ).first()
+    if not item:
+        return state
+
+    entry = Watchlist.objects.filter(user=request.user, content=item).first()
+    if not entry:
+        return state
+
+    return {
+        'saved': True,
+        'favorite': entry.is_favorite,
+        'content_id': item.id,
+        'remove_url': reverse('watchlist:remove', args=[item.id]),
+        'favorite_url': reverse('watchlist:favorite', args=[item.id]),
+    }
+
+
 @require_GET
 def tvmaze_watch_options(request):
     title = request.GET.get('title', '').strip()
@@ -78,7 +104,11 @@ def tvmaze_watch_options(request):
     if context is None:
         context = fetch_tv_watch_options_by_title(title, region=region, release_year=release_year)
         cache.set(cache_key, context, 1800)
-    return JsonResponse(context)
+
+    response_context = dict(context)
+    if response_context.get('matched'):
+        response_context.update(_watchlist_state_for_tmdb(request, response_context.get('tmdb_id')))
+    return JsonResponse(response_context)
 
 
 def _optional_int(value):
