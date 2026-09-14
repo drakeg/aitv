@@ -1,10 +1,13 @@
 from unittest.mock import Mock, patch
 
+from django.contrib.auth import get_user_model
 from django.core.cache import cache
 from django.test import TestCase
 from django.urls import reverse
 
+from content.models import ContentItem
 from content.services import fetch_tv_watch_options_by_title
+from watchlist.models import Watchlist
 
 
 class TVMazeProviderEnrichmentServiceTests(TestCase):
@@ -58,6 +61,7 @@ class TVMazeProviderEnrichmentViewTests(TestCase):
     def test_watch_options_endpoint_caches_result(self, mock_fetch):
         mock_fetch.return_value = {
             'matched': True,
+            'tmdb_id': '20',
             'region': 'US',
             'providers': [{'name': 'Example+', 'access': 'Subscription'}],
             'is_available_in_region': True,
@@ -70,6 +74,45 @@ class TVMazeProviderEnrichmentViewTests(TestCase):
         self.assertEqual(first.status_code, 200)
         self.assertEqual(second.status_code, 200)
         self.assertEqual(first.json()['providers'][0]['name'], 'Example+')
+        self.assertFalse(first.json()['saved'])
+        mock_fetch.assert_called_once_with('Example Show', region='US', release_year=2025)
+
+    @patch('content.views.fetch_tv_watch_options_by_title')
+    def test_watch_options_adds_current_users_saved_favorite_state_after_cache_lookup(self, mock_fetch):
+        mock_fetch.return_value = {
+            'matched': True,
+            'tmdb_id': '20',
+            'tmdb_title': 'Example Show',
+            'tmdb_details_url': 'https://www.themoviedb.org/tv/20',
+            'region': 'US',
+            'providers': [{'name': 'Example+', 'access': 'Subscription'}],
+            'is_available_in_region': True,
+        }
+        user = get_user_model().objects.create_user(username='tvmaze-saver', password='test-password')
+        item = ContentItem.objects.create(
+            title='Example Show',
+            url='https://www.themoviedb.org/tv/20',
+            genre='Drama',
+            source_type='tmdb',
+            content_type='tv',
+            external_source='tmdb',
+            external_id='20',
+        )
+        Watchlist.objects.create(user=user, content=item, is_favorite=True)
+        url = reverse('content:tvmaze_watch_options')
+
+        self.client.force_login(user)
+        saved = self.client.get(url, {'title': 'Example Show', 'region': 'US', 'year': '2025'})
+        self.client.logout()
+        anonymous = self.client.get(url, {'title': 'Example Show', 'region': 'US', 'year': '2025'})
+
+        self.assertTrue(saved.json()['saved'])
+        self.assertTrue(saved.json()['favorite'])
+        self.assertEqual(saved.json()['content_id'], item.id)
+        self.assertEqual(saved.json()['remove_url'], reverse('watchlist:remove', args=[item.id]))
+        self.assertEqual(saved.json()['favorite_url'], reverse('watchlist:favorite', args=[item.id]))
+        self.assertFalse(anonymous.json()['saved'])
+        self.assertFalse(anonymous.json()['favorite'])
         mock_fetch.assert_called_once_with('Example Show', region='US', release_year=2025)
 
     def test_watch_options_endpoint_rejects_blank_title(self):
