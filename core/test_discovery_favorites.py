@@ -65,3 +65,35 @@ class DiscoveryFavoriteTests(TestCase):
 
         self.assertNotContains(response, 'data-favorite-form', html=False)
         self.assertContains(response, '⭐ Save to Watchlist')
+
+    @patch('core.views.fetch_trending_tv')
+    def test_favorite_title_is_promoted_within_its_discovery_row(self, mock_trending, *_mocks):
+        favorite = {**self.tmdb, 'id': 'tmdb_tv_8', 'title': 'Favorite Series', 'external_id': '8', 'url': 'https://www.themoviedb.org/tv/8', 'details_url': 'https://www.themoviedb.org/tv/8'}
+        mock_trending.return_value = [self.tmdb, favorite]
+        item = ContentItem.objects.create(
+            title='Favorite Series', url='https://www.themoviedb.org/tv/8', genre='Drama',
+            source_type='tmdb', content_type='tv', external_source='tmdb', external_id='8',
+        )
+        Watchlist.objects.create(user=self.user, content=item, is_favorite=True)
+        self.client.force_login(self.user)
+
+        response = self.client.get(reverse('home'))
+        titles = [item['title'] for item in response.context['home_sections'][1]['items']]
+
+        self.assertEqual(titles, ['Favorite Series', 'Example Series'])
+
+    @patch('core.views.fetch_trending_tv')
+    def test_saved_nonfavorite_does_not_change_upstream_order(self, mock_trending, *_mocks):
+        second = {**self.tmdb, 'id': 'tmdb_tv_8', 'title': 'Saved Series', 'external_id': '8', 'url': 'https://www.themoviedb.org/tv/8', 'details_url': 'https://www.themoviedb.org/tv/8'}
+        mock_trending.return_value = [self.tmdb, second]
+        item = ContentItem.objects.create(
+            title='Saved Series', url='https://www.themoviedb.org/tv/8', genre='Drama',
+            source_type='tmdb', content_type='tv', external_source='tmdb', external_id='8',
+        )
+        Watchlist.objects.create(user=self.user, content=item, is_favorite=False)
+        self.client.force_login(self.user)
+
+        response = self.client.get(reverse('home'))
+        titles = [item['title'] for item in response.context['home_sections'][1]['items']]
+
+        self.assertEqual(titles, ['Example Series', 'Saved Series'])

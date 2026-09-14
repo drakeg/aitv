@@ -153,6 +153,11 @@ def _personalize_tv(items, preferred_genres, customized=False):
     return _rank_discovery(filtered, preferred_genres, customized=customized)
 
 
+def _prioritize_favorites(items):
+    """Move the signed-in viewer's favorites first without disturbing upstream order otherwise."""
+    return sorted(items, key=lambda item: bool(item.get('saved_is_favorite')), reverse=True)
+
+
 def _dedupe_discovery(items, seen=None):
     seen = seen if seen is not None else set()
     unique = []
@@ -245,15 +250,25 @@ def home(request):
             if entry.content.external_source and entry.content.external_id
         }
 
+    discovery_groups = [live_tv, trending_tv, on_the_air_tv, popular_tv, free_movies, trending_movies]
+    for item in (item for group in discovery_groups for item in group):
+        saved = saved_external_state.get((item.get('external_source'), item.get('external_id'), item.get('content_type')))
+        item['saved_content_id'] = saved['content_id'] if saved else None
+        item['saved_is_favorite'] = saved['is_favorite'] if saved else False
+
+    if request.user.is_authenticated:
+        live_tv = _prioritize_favorites(live_tv)
+        trending_tv = _prioritize_favorites(trending_tv)
+        on_the_air_tv = _prioritize_favorites(on_the_air_tv)
+        popular_tv = _prioritize_favorites(popular_tv)
+        free_movies = _prioritize_favorites(free_movies)
+        trending_movies = _prioritize_favorites(trending_movies)
+
     live_sources = _ordered_live_sources(
         live_tv=live_tv, trending_tv=trending_tv, on_the_air_tv=on_the_air_tv,
         popular_tv=popular_tv, free_movies=free_movies, trending_movies=trending_movies,
         content_mix=content_mix,
     )
-    for item in live_sources:
-        saved = saved_external_state.get((item.get('external_source'), item.get('external_id'), item.get('content_type')))
-        item['saved_content_id'] = saved['content_id'] if saved else None
-        item['saved_is_favorite'] = saved['is_favorite'] if saved else False
 
     query = request.GET.get('q', '').strip()
     content_type = request.GET.get('type', '').strip()
