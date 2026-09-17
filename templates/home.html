@@ -2,48 +2,31 @@
 
 {% block content %}
 
-<div data-discovery-settings data-region="{{ discovery_region|default:'US' }}" data-require-region="{% if require_region_availability %}1{% else %}0{% endif %}" data-authenticated="{% if user.is_authenticated %}1{% else %}0{% endif %}" data-import-url="{% url 'content:import_external' %}">
+<div data-discovery-settings data-region="{{ discovery_region|default:'US' }}" data-require-region="{% if require_region_availability %}1{% else %}0{% endif %}" data-authenticated="{% if user.is_authenticated %}1{% else %}0{% endif %}" data-import-url="{% url 'content:import_external' %}" data-preferred-providers="{{ preferred_providers|join:'|' }}">
 <div class="browse-bar mb-3">
     <form method="get" class="d-flex gap-2 align-items-center flex-wrap">
         <input type="search" name="q" value="{{ browse_query }}" placeholder="Search live titles, genres, networks" aria-label="Search live discovery">
-        <select name="type" aria-label="Content type">
-            <option value="">All types</option>
-            <option value="movie" {% if browse_type == 'movie' %}selected{% endif %}>Movies</option>
-            <option value="tv" {% if browse_type == 'tv' %}selected{% endif %}>TV Shows</option>
-        </select>
+        <select name="type" aria-label="Content type"><option value="">All types</option><option value="movie" {% if browse_type == 'movie' %}selected{% endif %}>Movies</option><option value="tv" {% if browse_type == 'tv' %}selected{% endif %}>TV Shows</option></select>
         <button class="btn btn-primary" type="submit">Search</button>
         {% if browse_active %}<a class="btn btn-secondary" href="{% url 'home' %}">Clear</a>{% endif %}
         <span class="small text-muted">Dashboard results come only from live upstream sources.</span>
     </form>
 </div>
 
-{% if user.is_authenticated and preferences_customized %}
-<div class="small text-muted mb-3">Discovery is personalized for your account. <a href="{% url 'profile' %}">Edit preferences</a></div>
-{% endif %}
+{% if user.is_authenticated and preferences_customized %}<div class="small text-muted mb-3">Discovery is personalized for your account. <a href="{% url 'profile' %}">Edit preferences</a></div>{% endif %}
 
 {% if browse_active %}
-<div class="mb-4">
-    <h4 class="mb-2">🔎 Live Search Results</h4>
-    <div class="row-scroll" data-discovery-row>
-        {% for item in browse_results %}{% include "partials/card.html" %}{% empty %}
-            <div class="empty-state"><strong>No matching live titles found.</strong><div class="text-muted">Try a broader title, genre, or content type.</div></div>
-        {% endfor %}
-        <div class="text-muted d-none" data-region-empty-state>No matching titles have a provider listed in {{ discovery_region }}.</div>
-    </div>
-</div>
+<div class="mb-4"><h4 class="mb-2">🔎 Live Search Results</h4><div class="row-scroll" data-discovery-row>
+    {% for item in browse_results %}{% include "partials/card.html" %}{% empty %}<div class="empty-state"><strong>No matching live titles found.</strong><div class="text-muted">Try a broader title, genre, or content type.</div></div>{% endfor %}
+    <div class="text-muted d-none" data-region-empty-state>No matching titles have a provider listed in {{ discovery_region }}.</div>
+</div></div>
 {% endif %}
 
 {% for section in home_sections %}
-<div class="{% if forloop.last %}mb-5{% else %}mb-4{% endif %}">
-    <h4 class="mb-1">{{ section.title }}</h4>
-    <div class="small text-muted mb-2">{{ section.description }}</div>
-    <div class="row-scroll" data-discovery-row>
-        {% for item in section.items %}{% include "partials/card.html" %}{% empty %}
-            <div class="text-muted">{{ section.empty }}</div>
-        {% endfor %}
-        <div class="text-muted d-none" data-region-empty-state>No matching titles have a provider listed in {{ discovery_region }}.</div>
-    </div>
-</div>
+<div class="{% if forloop.last %}mb-5{% else %}mb-4{% endif %}"><h4 class="mb-1">{{ section.title }}</h4><div class="small text-muted mb-2">{{ section.description }}</div><div class="row-scroll" data-discovery-row>
+    {% for item in section.items %}{% include "partials/card.html" %}{% empty %}<div class="text-muted">{{ section.empty }}</div>{% endfor %}
+    <div class="text-muted d-none" data-region-empty-state>No matching titles have a provider listed in {{ discovery_region }}.</div>
+</div></div>
 {% endfor %}
 </div>
 
