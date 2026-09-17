@@ -12,13 +12,15 @@ aitv should prioritize watchable content while allowing each viewer to decide wh
 - For customized accounts, TV rows are ranked by how many selected categories each show matches. Upstream order is preserved for ties, and the neutral/default experience keeps the source's original ordering.
 - Personalization applies consistently to On TV Today, Trending TV Today, TV On the Air, and Popular TV.
 - If a viewer saves discovery preferences with no categories selected, aitv treats that as a request to show all categories rather than creating an empty customized catalog. The Profile page also provides an explicit **Show all categories** reset action.
-- Resetting discovery categories changes only the category filter; region, strict regional availability, content-mix ordering, and notification preferences remain intact.
+- Resetting discovery categories changes only the category filter; region, strict regional availability, provider preferences, content-mix ordering, and notification preferences remain intact.
 - Each account can choose a dashboard content mix: Balanced, TV first, or Movies first. Balanced is the neutral default and interleaves movie rows with TV discovery; TV first keeps all TV discovery ahead of movie rows; Movies first does the reverse.
-- The same content-mix ordering applies to live search/browse results, so a TV-first account does not silently revert to a different source ordering while searching.
+- The same content-mix ordering applies to live search/browse results.
 - Content-mix ordering is account-specific and does not globally change the public/default experience.
+- Each signed-in account can optionally select streaming services it uses. When TMDB supplies several legitimate regional provider choices, aitv presents the selected services first while preserving the upstream order among equally preferred/unpreferred providers.
+- Provider preferences do not hide titles, fabricate deep links, change regional availability truth, or alter another account. With no selected services, provider ordering remains neutral/upstream-driven.
 - When strict regional availability is enabled, a TMDB title must have at least one concrete provider row in the selected region. A generic TMDB/JustWatch landing link by itself does not count as regional availability.
 - Strict regional availability also applies to TVmaze schedule results: metadata-only cards without a source-supplied watch destination are validated through the safe TVmaze-to-TMDB enrichment path, while broader schedule discovery remains available to non-strict accounts.
-- The same strict live-source filtering is applied to search/browse results, so unavailable metadata-only shows do not reappear through search.
+- The same strict live-source filtering is applied to search/browse results.
 - If regional validation removes every TMDB card from a discovery row, the UI shows an explicit regional empty state instead of leaving a blank row.
 - Live-source cards expose genre and network/service information whenever the upstream source provides it.
 - Provider/watch actions remain primary; metadata destinations remain secondary.
@@ -26,7 +28,7 @@ aitv should prioritize watchable content while allowing each viewer to decide wh
 ## Profile data, favorites, and notifications
 
 - Profile stores optional first name, last name, and email address on the user's Django account.
-- Regional availability, content-mix, and discovery-category settings remain account-specific.
+- Regional availability, provider preferences, content-mix, and discovery-category settings remain account-specific.
 - Watchlist and Favorite are separate concepts: saving a title means "watch later"; marking it Favorite means the user wants it prioritized and eligible for release alerts.
 - Signed-in viewers see known Favorite titles first within each discovery row. This is a stable promotion: non-favorite titles retain their existing source/personalization order, saved-but-not-favorite titles are not promoted, and the public/anonymous experience is unchanged.
 - Favorite / Unfavorite changes made from discovery update the current page immediately: every visible card for the same saved title is synchronized, affected rows are regrouped with Favorites first, and Watchlist removal demotes a formerly Favorite card without requiring a reload.
