@@ -22,6 +22,11 @@ DISCOVERY_GENRES = (
     'Reality', 'Romance', 'Sci-Fi & Fantasy', 'Science Fiction', 'Soap', 'Sports',
     'Talk', 'Thriller', 'War & Politics', 'Western',
 )
+PROVIDER_CHOICES = (
+    'Netflix', 'Amazon Prime Video', 'Disney Plus', 'Hulu', 'Max', 'Apple TV',
+    'Paramount Plus', 'Peacock Premium', 'Tubi TV', 'The Roku Channel', 'Pluto TV',
+    'Plex', 'YouTube',
+)
 REGION_CHOICES = (
     ('US', 'United States'), ('CA', 'Canada'), ('GB', 'United Kingdom'),
     ('AU', 'Australia'), ('DE', 'Germany'), ('FR', 'France'), ('ES', 'Spain'),
@@ -71,6 +76,7 @@ def profile(request):
                 return redirect('profile')
         else:
             selected = [genre for genre in request.POST.getlist('preferred_genres') if genre in DISCOVERY_GENRES]
+            preferred_providers = [provider for provider in request.POST.getlist('preferred_providers') if provider in PROVIDER_CHOICES]
             region = request.POST.get('region', 'US').upper()
             if region not in REGION_CODES:
                 region = 'US'
@@ -82,13 +88,14 @@ def profile(request):
                 notify_new_releases = False
             reset_categories = action == 'reset_categories' or not selected
             preference.preferred_genres = [] if reset_categories else selected
+            preference.preferred_providers = preferred_providers
             preference.customized = not reset_categories
             preference.region = region
             preference.require_region_availability = request.POST.get('require_region_availability') == '1'
             preference.notify_new_releases = notify_new_releases
             preference.content_mix = content_mix
             preference.save(update_fields=[
-                'preferred_genres', 'customized', 'region', 'require_region_availability',
+                'preferred_genres', 'preferred_providers', 'customized', 'region', 'require_region_availability',
                 'notify_new_releases', 'content_mix',
             ])
             return redirect('profile')
@@ -96,6 +103,7 @@ def profile(request):
     return render(request, 'accounts/profile.html', {
         'account_form': account_form, 'discovery_genres': DISCOVERY_GENRES,
         'preferred_genres': selected, 'preferences_customized': preference.customized,
+        'provider_choices': PROVIDER_CHOICES, 'preferred_providers': preference.preferred_providers,
         'region_choices': REGION_CHOICES, 'discovery_region': preference.region,
         'require_region_availability': preference.require_region_availability,
         'notify_new_releases': preference.notify_new_releases, 'content_mix': preference.content_mix,
@@ -138,23 +146,14 @@ def _filter_discovery(items, preferred_genres, customized=False):
 
 def _rank_discovery(items, preferred_genres, customized=False):
     wanted = _wanted_categories(preferred_genres) if customized else set()
-    return sorted(
-        items,
-        key=lambda item: (
-            1 if item.get('has_direct_watch') else 0,
-            len(_item_categories(item) & wanted) if customized else 0,
-        ),
-        reverse=True,
-    )
+    return sorted(items, key=lambda item: (1 if item.get('has_direct_watch') else 0, len(_item_categories(item) & wanted) if customized else 0), reverse=True)
 
 
 def _personalize_tv(items, preferred_genres, customized=False):
-    filtered = _filter_discovery(items, preferred_genres, customized=customized)
-    return _rank_discovery(filtered, preferred_genres, customized=customized)
+    return _rank_discovery(_filter_discovery(items, preferred_genres, customized=customized), preferred_genres, customized=customized)
 
 
 def _prioritize_favorites(items):
-    """Move the signed-in viewer's favorites first without disturbing upstream order otherwise."""
     return sorted(items, key=lambda item: bool(item.get('saved_is_favorite')), reverse=True)
 
 
@@ -185,10 +184,7 @@ def _search_live_items(items, query='', content_type=''):
 
 
 def _ordered_live_sources(*, live_tv, trending_tv, on_the_air_tv, popular_tv, free_movies, trending_movies, content_mix):
-    groups = {
-        'live_tv': live_tv, 'trending_tv': trending_tv, 'on_the_air_tv': on_the_air_tv,
-        'popular_tv': popular_tv, 'free_movies': free_movies, 'trending_movies': trending_movies,
-    }
+    groups = {'live_tv': live_tv, 'trending_tv': trending_tv, 'on_the_air_tv': on_the_air_tv, 'popular_tv': popular_tv, 'free_movies': free_movies, 'trending_movies': trending_movies}
     if content_mix == DiscoveryPreference.ContentMix.TV_FIRST:
         order = ['live_tv', 'trending_tv', 'on_the_air_tv', 'popular_tv', 'free_movies', 'trending_movies']
     elif content_mix == DiscoveryPreference.ContentMix.MOVIES_FIRST:
@@ -222,6 +218,7 @@ def home(request):
         preference, _ = DiscoveryPreference.objects.get_or_create(user=request.user)
     customized = bool(preference and preference.customized)
     preferred_genres = preference.preferred_genres if customized else list(DISCOVERY_GENRES)
+    preferred_providers = preference.preferred_providers if preference else []
     discovery_region = preference.region if preference else 'US'
     require_region_availability = bool(preference and preference.require_region_availability)
     content_mix = preference.content_mix if preference else DiscoveryPreference.ContentMix.BALANCED
@@ -241,14 +238,7 @@ def home(request):
     saved_external_state = {}
     if request.user.is_authenticated:
         saved_items = list(Watchlist.objects.filter(user=request.user).select_related('content'))
-        saved_external_state = {
-            (entry.content.external_source, entry.content.external_id, entry.content.content_type): {
-                'content_id': entry.content_id,
-                'is_favorite': entry.is_favorite,
-            }
-            for entry in saved_items
-            if entry.content.external_source and entry.content.external_id
-        }
+        saved_external_state = {(entry.content.external_source, entry.content.external_id, entry.content.content_type): {'content_id': entry.content_id, 'is_favorite': entry.is_favorite} for entry in saved_items if entry.content.external_source and entry.content.external_id}
 
     discovery_groups = [live_tv, trending_tv, on_the_air_tv, popular_tv, free_movies, trending_movies]
     for item in (item for group in discovery_groups for item in group):
@@ -264,12 +254,7 @@ def home(request):
         free_movies = _prioritize_favorites(free_movies)
         trending_movies = _prioritize_favorites(trending_movies)
 
-    live_sources = _ordered_live_sources(
-        live_tv=live_tv, trending_tv=trending_tv, on_the_air_tv=on_the_air_tv,
-        popular_tv=popular_tv, free_movies=free_movies, trending_movies=trending_movies,
-        content_mix=content_mix,
-    )
-
+    live_sources = _ordered_live_sources(live_tv=live_tv, trending_tv=trending_tv, on_the_air_tv=on_the_air_tv, popular_tv=popular_tv, free_movies=free_movies, trending_movies=trending_movies, content_mix=content_mix)
     query = request.GET.get('q', '').strip()
     content_type = request.GET.get('type', '').strip()
     if content_type not in {'movie', 'tv'}:
@@ -279,9 +264,8 @@ def home(request):
 
     context = {
         'home_sections': _dashboard_sections(live_tv=live_tv, trending_tv=trending_tv, on_the_air_tv=on_the_air_tv, popular_tv=popular_tv, free_movies=free_movies, trending_movies=trending_movies, region=discovery_region, content_mix=content_mix),
-        'browse_active': browse_active, 'browse_results': browse_results,
-        'browse_query': request.GET.get('q', '').strip(), 'browse_type': content_type,
-        'preferences_customized': customized, 'discovery_region': discovery_region,
+        'browse_active': browse_active, 'browse_results': browse_results, 'browse_query': request.GET.get('q', '').strip(), 'browse_type': content_type,
+        'preferences_customized': customized, 'discovery_region': discovery_region, 'preferred_providers': preferred_providers,
         'require_region_availability': require_region_availability, 'content_mix': content_mix,
     }
     return render(request, 'home.html', context)
