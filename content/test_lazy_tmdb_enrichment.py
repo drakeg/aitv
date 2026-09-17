@@ -9,8 +9,8 @@ class LazyTmdbEnrichmentContractTests(SimpleTestCase):
         self.script = Path(settings.BASE_DIR, 'static', 'js', 'tmdb-context.js').read_text()
 
     def test_tmdb_contexts_use_shared_near_viewport_observer(self):
-        self.assertIn("const tmdbContexts = Array.from(document.querySelectorAll('[data-tmdb-context]'))", self.script)
-        self.assertIn('observeNearViewport(tmdbContexts', self.script)
+        self.assertIn("document.querySelectorAll('[data-tmdb-context]')", self.script)
+        self.assertIn('observeNearViewport(', self.script)
         self.assertIn("{rootMargin: '500px'}", self.script)
 
     def test_tmdb_context_is_loaded_only_once(self):

@@ -158,6 +158,7 @@ def fetch_tmdb_watch_context(content_type, external_id, region='US'):
         'runtime': runtime,
         'episode_label': episode_label,
         'providers': visible_providers,
+        'all_providers': provider_rows,
         'provider_count': len(provider_rows),
         'additional_provider_count': max(0, len(provider_rows) - len(visible_providers)),
         'watch_url': regional.get('link') or '',
