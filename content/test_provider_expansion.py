@@ -35,7 +35,8 @@ class ProviderExpansionTests(SimpleTestCase):
     def test_client_expands_additional_provider_names_in_place(self):
         script = Path('static/js/tmdb-context.js').read_text()
 
-        self.assertIn('data.all_providers || rows', script)
+        self.assertIn('data.all_providers || data.providers || []', script)
+        self.assertIn('const allRows = providerRows(data)', script)
         self.assertIn("more.setAttribute('aria-expanded'", script)
         self.assertIn("container.querySelectorAll('[data-additional-provider]')", script)
         self.assertIn("more.textContent = expanded ? `+${additionalRows.length} more` : 'Show fewer'", script)
