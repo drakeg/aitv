@@ -34,12 +34,22 @@ services:
       - .env
     depends_on:
       - web
+    restart: unless-stopped
     command: >-
-      sh -c "until [ -f /data/db.sqlite3 ]; do sleep 2; done;
-             while true; do
-               python manage.py check_release_notifications;
-               sleep $${RELEASE_CHECK_INTERVAL_SECONDS:-3600};
-             done"
+      sh -c '
+        interval="$${RELEASE_CHECK_INTERVAL_SECONDS:-3600}";
+        case "$$interval" in
+          ""|*[!0-9]*) echo "RELEASE_CHECK_INTERVAL_SECONDS must be a positive integer; using 3600." >&2; interval=3600 ;;
+          0) echo "RELEASE_CHECK_INTERVAL_SECONDS must be greater than zero; using 3600." >&2; interval=3600 ;;
+        esac;
+        until [ -f /data/db.sqlite3 ]; do sleep 2; done;
+        while true; do
+          if ! python manage.py check_release_notifications; then
+            echo "Favorite release check failed; retrying after $$interval seconds." >&2;
+          fi;
+          sleep "$$interval";
+        done
+      '
     environment:
       DJANGO_SECRET_KEY: "${DJANGO_SECRET_KEY:-dev-docker-key-change-me}"
       DJANGO_DEBUG: "${DJANGO_DEBUG:-true}"
