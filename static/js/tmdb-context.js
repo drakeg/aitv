@@ -97,7 +97,9 @@ document.addEventListener('DOMContentLoaded', () => {
         tmdb.textContent = 'TMDB match'; tmdb.dataset.tvmazeTmdbMatch = ''; detailsLink.after(tmdb);
       }
       renderTvmazeSaveControls(card, data);
-      card.classList.remove('region-pending'); updateRowEmptyState(row);
+      card.classList.remove('region-pending');
+      if (data.favorite) window.aitvReorderFavoriteRow?.(row);
+      updateRowEmptyState(row);
     } catch (_error) {
       if (requireRegionalAvailability && metadataOnly) { card.remove(); updateRowEmptyState(row); } else card.classList.remove('region-pending');
     }

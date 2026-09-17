@@ -25,4 +25,4 @@ class LiveFavoriteReorderContractTests(SimpleTestCase):
 
     def test_asset_version_is_refreshed(self):
         base = Path(settings.BASE_DIR, 'templates', 'base.html').read_text()
-        self.assertIn("watchlist.js' %}?v=4", base)
+        self.assertIn("watchlist.js' %}?v=5", base)
