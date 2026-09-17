@@ -70,6 +70,7 @@ class DiscoveryPreference(models.Model):
 
     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='discovery_preference')
     preferred_genres = models.JSONField(default=list, blank=True)
+    preferred_providers = models.JSONField(default=list, blank=True)
     customized = models.BooleanField(default=False)
     region = models.CharField(max_length=2, default='US')
     require_region_availability = models.BooleanField(default=True)
