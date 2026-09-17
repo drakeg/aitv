@@ -12,6 +12,8 @@ function reorderFavoriteRow(row) {
     cards.forEach((card) => row.insertBefore(card, anchor));
 }
 
+window.aitvReorderFavoriteRow = reorderFavoriteRow;
+
 function matchingFavoriteForms(action) {
     return Array.from(document.querySelectorAll('[data-favorite-form]')).filter((form) => form.action === action);
 }
