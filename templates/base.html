@@ -18,10 +18,7 @@
                 <a href="{% url 'notifications:inbox' %}" class="btn btn-sm btn-outline-light">Notifications{% if unread_notification_count %} <span class="badge text-bg-warning">{{ unread_notification_count }}</span>{% endif %}</a>
                 <a href="{% url 'profile' %}" class="btn btn-sm btn-outline-light">Profile</a>
                 <span>Hi, {{ user.username }}</span>
-                <form method="post" action="{% url 'logout' %}" class="m-0">
-                    {% csrf_token %}
-                    <button type="submit" class="btn btn-sm btn-outline-light">Logout</button>
-                </form>
+                <form method="post" action="{% url 'logout' %}" class="m-0">{% csrf_token %}<button type="submit" class="btn btn-sm btn-outline-light">Logout</button></form>
             {% else %}
                 <a href="{% url 'login' %}" class="btn btn-sm btn-outline-light">Login</a>
                 <a href="{% url 'register' %}" class="btn btn-sm btn-light">Register</a>
@@ -29,10 +26,8 @@
         </div>
     </div>
 </nav>
-<div class="container-fluid px-3 py-2">
-    {% block content %}{% endblock %}
-</div>
+<div class="container-fluid px-3 py-2">{% block content %}{% endblock %}</div>
 <script src="{% static 'js/watchlist.js' %}?v=5" defer></script>
-<script src="{% static 'js/tmdb-context.js' %}?v=10" defer></script>
+<script src="{% static 'js/tmdb-context.js' %}?v=11" defer></script>
 </body>
 </html>
