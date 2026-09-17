@@ -17,5 +17,5 @@ class TvmazeFavoritePromotionContractTests(SimpleTestCase):
         self.assertIn('renderTvmazeSaveControls(card, data)', self.context_script)
         self.assertIn('if (data.favorite) window.aitvReorderFavoriteRow?.(row)', self.context_script)
 
-    def test_nonfavorite_resolution_does_not_force_reordering(self):
-        self.assertNotIn('window.aitvReorderFavoriteRow?.(row);\n      updateRowEmptyState(row);', self.context_script)
+    def test_promotion_is_conditioned_on_returned_favorite_state(self):
+        self.assertNotIn('\n      window.aitvReorderFavoriteRow?.(row);', self.context_script)
