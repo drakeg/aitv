@@ -120,7 +120,7 @@ TMDB failures or missing credentials do not prevent other live sources from load
 
 ## Favorite release notifications
 
-Favorites are distinct from ordinary Watchlist saves. The release checker looks for newly reported TV release state for eligible saved TMDB TV Favorites, creates in-app notifications, and can optionally send email. The authenticated notification inbox displays 25 newest-first notifications per page while the navigation badge continues to reflect the account's total unread count.
+Favorites are distinct from ordinary Watchlist saves. The release checker looks for newly reported TV release state for eligible saved TMDB TV Favorites, creates in-app notifications, and can optionally send email. The authenticated notification inbox displays 25 newest-first notifications per page while the navigation badge continues to reflect the account's total unread count. Marking one notification read keeps the viewer on the current inbox page; the return target is validated as a same-site URL before redirecting.
 
 Run a one-time check manually with:
 
