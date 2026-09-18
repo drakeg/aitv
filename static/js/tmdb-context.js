@@ -32,6 +32,33 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const providerRows = (data) => orderedProviders(data.all_providers || data.providers || []);
 
+  const hasPreferredProvider = (data) => {
+    if (!preferredProviderOrder.size) return false;
+    return (data.all_providers || data.providers || []).some((provider) =>
+      preferredProviderOrder.has((provider.name || '').toLocaleLowerCase()));
+  };
+
+  const rankProviderMatches = (row) => {
+    if (!row || !preferredProviderOrder.size) return;
+    const cards = Array.from(row.querySelectorAll('.card'));
+    cards.forEach((card, index) => { if (!card.dataset.discoveryOrder) card.dataset.discoveryOrder = String(index); });
+    cards.sort((left, right) => {
+      const favoriteDelta = Number(Boolean(right.querySelector('[data-favorite-form][data-favorite-state="1"]'))) - Number(Boolean(left.querySelector('[data-favorite-form][data-favorite-state="1"]')));
+      if (favoriteDelta) return favoriteDelta;
+      const providerDelta = Number(right.dataset.preferredProviderMatch === '1') - Number(left.dataset.preferredProviderMatch === '1');
+      if (providerDelta) return providerDelta;
+      return Number(left.dataset.discoveryOrder) - Number(right.dataset.discoveryOrder);
+    });
+    const anchor = row.querySelector('[data-region-empty-state]');
+    cards.forEach((card) => row.insertBefore(card, anchor));
+  };
+
+  const applyPreferredProviderRank = (card, row, data) => {
+    if (!card || !preferredProviderOrder.size) return;
+    card.dataset.preferredProviderMatch = hasPreferredProvider(data) ? '1' : '0';
+    rankProviderMatches(row);
+  };
+
   const watchActionLabel = (data) => {
     const bestAccess = providerRows(data)[0]?.access || '';
     if (bestAccess === 'Free') return 'Watch free options';
@@ -63,7 +90,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const meta = [];
       if (contentType === 'tv') { meta.push(data.network || 'Network not listed'); meta.push(data.episode_label || 'Episode not listed'); }
       meta.push(data.runtime ? `${data.runtime} min` : 'Runtime not listed'); summary.textContent = meta.join(' · ');
-      providers.replaceChildren(); renderProviders(providers, data);
+      providers.replaceChildren(); renderProviders(providers, data); applyPreferredProviderRank(card, row, data);
       if (data.watch_url) { watch.href = data.watch_url; watch.textContent = watchActionLabel(data); watch.classList.remove('d-none'); }
     } catch (_error) {
       if (requireRegion) { card?.remove(); updateRowEmptyState(row); return; }
@@ -104,7 +131,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const tmdb = document.createElement('a'); tmdb.className = 'source-details-link'; tmdb.target = '_blank'; tmdb.rel = 'noopener noreferrer'; tmdb.href = data.tmdb_details_url;
         tmdb.textContent = 'TMDB match'; tmdb.dataset.tvmazeTmdbMatch = ''; detailsLink.after(tmdb);
       }
-      renderTvmazeSaveControls(card, data); card.classList.remove('region-pending');
+      renderTvmazeSaveControls(card, data); card.classList.remove('region-pending'); applyPreferredProviderRank(card, row, data);
       if (data.favorite) window.aitvReorderFavoriteRow?.(row); updateRowEmptyState(row);
     } catch (_error) {
       if (requireRegionalAvailability && metadataOnly) { card.remove(); updateRowEmptyState(row); } else card.classList.remove('region-pending');
