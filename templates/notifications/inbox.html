@@ -7,7 +7,7 @@
             <h4 class="mb-1">🔔 Notifications</h4>
             <div class="small text-muted">New episode notices for titles you saved.</div>
         </div>
-        {% if unread_count %}
+        {% if unread_notification_count %}
         <form method="post" action="{% url 'notifications:mark_all_read' %}">
             {% csrf_token %}
             <button class="btn btn-outline-secondary" type="submit">Mark all read</button>
