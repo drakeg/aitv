@@ -14,7 +14,7 @@ The goal is fewer clicks to legitimate content. Direct network/service destinati
 - Compact provider pills with expandable `+N more` choices instead of stretching card rows
 - Per-user US/region availability behavior, category preferences, TV-first/Balanced/Movies-first content mix, and preferred streaming-service ordering/ranking with live `On <provider>` match feedback
 - Independent per-user Watchlist and Favorite state; Favorites are prioritized in discovery and can drive release notifications
-- In-app Favorite release notifications plus optional SMTP email delivery
+- Paginated in-app Favorite release notifications plus optional SMTP email delivery
 - Optional Docker notification worker for recurring Favorite release checks
 - Live-source-only home discovery: no seeded/sample catalog fallback
 - Configurable Docker host port and persistent SQLite data volume
@@ -120,7 +120,7 @@ TMDB failures or missing credentials do not prevent other live sources from load
 
 ## Favorite release notifications
 
-Favorites are distinct from ordinary Watchlist saves. The release checker looks for newly reported TV release state for eligible saved TMDB TV Favorites, creates in-app notifications, and can optionally send email.
+Favorites are distinct from ordinary Watchlist saves. The release checker looks for newly reported TV release state for eligible saved TMDB TV Favorites, creates in-app notifications, and can optionally send email. The authenticated notification inbox displays 25 newest-first notifications per page while the navigation badge continues to reflect the account's total unread count.
 
 Run a one-time check manually with:
 
