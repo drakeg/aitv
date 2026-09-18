@@ -194,7 +194,7 @@ GitHub Actions runs Django checks and the test suite for pull requests and pushe
 
 ### Definition of done
 
-Feature and maintenance work is expected to keep implementation, tests, and documentation synchronized. Behavior changes should include regression coverage at the most appropriate layer and update README/product/operations documentation when user-visible behavior, configuration, architecture, or operating procedures change. CI must pass before a sprint PR is treated as ready.
+Feature and maintenance work is expected to keep implementation, tests, and documentation synchronized. Behavior changes should include regression coverage at the most appropriate layer and update README/product/operations documentation when user-visible behavior, configuration, architecture, or operating procedures change. CI must pass before a sprint PR is treated as ready. The full sprint workflow and maintenance-review checklist live in `docs/agile.md`.
 
 ## Architecture notes
 
