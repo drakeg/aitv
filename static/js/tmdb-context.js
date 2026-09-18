@@ -55,7 +55,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const applyPreferredProviderRank = (card, row, data) => {
     if (!card || !preferredProviderOrder.size) return;
-    card.dataset.preferredProviderMatch = hasPreferredProvider(data) ? '1' : '0';
+    const matchedProviders = (data.all_providers || data.providers || []).map((provider) => provider.name || '').filter((name) => preferredProviderOrder.has(name.toLocaleLowerCase()));
+    card.dataset.preferredProviderMatch = matchedProviders.length ? '1' : '0';
+    const badge = card.querySelector('[data-preferred-provider-badge]');
+    if (badge) {
+      badge.textContent = matchedProviders.length ? `On ${matchedProviders[0]}` : '';
+      badge.classList.toggle('d-none', !matchedProviders.length);
+    }
     rankProviderMatches(row);
   };
 
