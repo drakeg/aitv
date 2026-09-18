@@ -12,7 +12,7 @@ The goal is fewer clicks to legitimate content. Direct network/service destinati
 - Provider-first cards that distinguish direct-watch destinations from metadata/source-detail links
 - Regional TMDB provider availability with access types such as Free, Free with ads, Subscription, Rent, and Buy
 - Compact provider pills with expandable `+N more` choices instead of stretching card rows
-- Per-user US/region availability behavior, category preferences, TV-first/Balanced/Movies-first content mix, and preferred streaming-service ordering
+- Per-user US/region availability behavior, category preferences, TV-first/Balanced/Movies-first content mix, and preferred streaming-service ordering/ranking with live `On <provider>` match feedback
 - Independent per-user Watchlist and Favorite state; Favorites are prioritized in discovery and can drive release notifications
 - In-app Favorite release notifications plus optional SMTP email delivery
 - Optional Docker notification worker for recurring Favorite release checks
@@ -92,7 +92,7 @@ Registration signs a new user in immediately. Existing users have login/logout, 
 
 Discovery tuning is account-specific. The public/default experience remains neutral: one user's category, content-mix, region, or provider choices never change another account. News and Soap/Soap Opera are ordinary selectable categories rather than globally suppressed categories.
 
-Preferred streaming services affect ordering only. If TMDB reports several legitimate regional providers, a signed-in viewer's selected services are moved ahead while the remaining providers stay available.
+Preferred streaming services affect ordering only. If TMDB reports legitimate regional providers, a signed-in viewer's selected services are moved ahead in each title's provider choices. As live provider context loads, matching non-favorite titles are also promoted ahead of other non-favorites and show an `On <provider>` badge. Favorites remain the highest-priority account signal, and all nonmatching titles remain available.
 
 ## Live source workflow
 
@@ -191,6 +191,10 @@ docker compose run --rm web python manage.py test
 ```
 
 GitHub Actions runs Django checks and the test suite for pull requests and pushes to `main`.
+
+### Definition of done
+
+Feature and maintenance work is expected to keep implementation, tests, and documentation synchronized. Behavior changes should include regression coverage at the most appropriate layer and update README/product/operations documentation when user-visible behavior, configuration, architecture, or operating procedures change. CI must pass before a sprint PR is treated as ready. The full sprint workflow and maintenance-review checklist live in `docs/agile.md`.
 
 ## Architecture notes
 

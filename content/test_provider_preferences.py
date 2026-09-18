@@ -46,6 +46,8 @@ class ProviderPreferenceTests(TestCase):
         self.assertIn('const hasPreferredProvider = (data)', script)
         self.assertIn("card.dataset.preferredProviderMatch = matchedProviders.length ? '1' : '0'", script)
         self.assertIn("badge.textContent = matchedProviders.length ? `On ${matchedProviders[0]}` : ''", script)
+        self.assertIn("badge.classList.toggle('d-none', !matchedProviders.length)", script)
+        self.assertIn("if (!card || !preferredProviderOrder.size) return", script)
         self.assertIn("[data-favorite-form][data-favorite-state=\"1\"]", script)
         self.assertIn("row.insertBefore(card, anchor)", script)
 
@@ -53,3 +55,13 @@ class ProviderPreferenceTests(TestCase):
         template = Path(settings.BASE_DIR, 'templates', 'partials', 'card.html').read_text()
         self.assertIn('data-preferred-provider-match="0"', template)
         self.assertIn('data-preferred-provider-badge', template)
+
+
+    def test_provider_personalization_documentation_tracks_current_behavior(self):
+        readme = Path(settings.BASE_DIR, 'README.md').read_text()
+        product_doc = Path(settings.BASE_DIR, 'docs', 'product-preferences.md').read_text()
+        refresh_doc = Path(settings.BASE_DIR, 'docs', 'content-refresh.md').read_text()
+        for document in (readme, product_doc, refresh_doc):
+            self.assertIn('On <provider>', document)
+        self.assertIn('Definition of done', readme)
+        self.assertIn('implementation, tests, and documentation synchronized', readme)
