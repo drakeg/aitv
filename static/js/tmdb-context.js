@@ -43,12 +43,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const cards = Array.from(row.querySelectorAll('.card'));
     cards.forEach((card, index) => { if (!card.dataset.discoveryOrder) card.dataset.discoveryOrder = String(index); });
     cards.sort((left, right) => {
-      const favoriteDelta = Number(right.dataset.favorite === '1') - Number(left.dataset.favorite === '1');
+      const favoriteDelta = Number(Boolean(right.querySelector('[data-favorite-form][data-favorite-state="1"]'))) - Number(Boolean(left.querySelector('[data-favorite-form][data-favorite-state="1"]')));
       if (favoriteDelta) return favoriteDelta;
       const providerDelta = Number(right.dataset.preferredProviderMatch === '1') - Number(left.dataset.preferredProviderMatch === '1');
       if (providerDelta) return providerDelta;
       return Number(left.dataset.discoveryOrder) - Number(right.dataset.discoveryOrder);
-    }).forEach((card) => row.appendChild(card));
+    });
+    const anchor = row.querySelector('[data-region-empty-state]');
+    cards.forEach((card) => row.insertBefore(card, anchor));
   };
 
   const applyPreferredProviderRank = (card, row, data) => {
