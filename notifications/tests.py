@@ -157,6 +157,35 @@ class ReleaseNotificationWorkflowTests(TestCase):
         self.assertContains(response, 'Mark all read')
         self.assertContains(response, '>1</span>', html=False)
 
+    def test_inbox_paginates_notifications_and_handles_invalid_page(self):
+        for index in range(30):
+            ReleaseNotification.objects.create(
+                user=self.user,
+                content=self.content,
+                event_key=f'page-{index}',
+                title=f'Notification {index}',
+                message=f'Page notification {index}.',
+            )
+        self.client.force_login(self.user)
+
+        first_page = self.client.get(reverse('notifications:inbox'))
+        self.assertEqual(len(first_page.context['notifications']), 25)
+        self.assertEqual(first_page.context['page_obj'].number, 1)
+        self.assertEqual(first_page.context['page_obj'].paginator.count, 30)
+        self.assertContains(first_page, 'Page 1 of 2')
+        self.assertContains(first_page, '?page=2')
+
+        second_page = self.client.get(reverse('notifications:inbox'), {'page': 2})
+        self.assertEqual(len(second_page.context['notifications']), 5)
+        self.assertEqual(second_page.context['page_obj'].number, 2)
+        self.assertContains(second_page, 'Page 2 of 2')
+
+        invalid_page = self.client.get(reverse('notifications:inbox'), {'page': 'not-a-number'})
+        self.assertEqual(invalid_page.context['page_obj'].number, 1)
+
+        past_end = self.client.get(reverse('notifications:inbox'), {'page': 999})
+        self.assertEqual(past_end.context['page_obj'].number, 2)
+
     @patch('core.views.fetch_free_archive_movies', return_value=[])
     @patch('core.views.fetch_popular_tv', return_value=[])
     @patch('core.views.fetch_tv_on_the_air', return_value=[])
