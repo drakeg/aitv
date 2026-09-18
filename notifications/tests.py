@@ -134,6 +134,29 @@ class ReleaseNotificationWorkflowTests(TestCase):
         notification.refresh_from_db()
         self.assertIsNotNone(notification.read_at)
 
+    def test_inbox_reuses_navigation_unread_count(self):
+        ReleaseNotification.objects.create(
+            user=self.user,
+            content=self.content,
+            event_key='unread-inbox',
+            title='Unread inbox notification',
+            message='Unread notification.',
+        )
+        ReleaseNotification.objects.create(
+            user=self.user,
+            content=self.content,
+            event_key='read-inbox',
+            title='Read inbox notification',
+            message='Read notification.',
+            read_at=timezone.now(),
+        )
+        self.client.force_login(self.user)
+        response = self.client.get(reverse('notifications:inbox'))
+        self.assertEqual(response.context['unread_notification_count'], 1)
+        self.assertNotIn('unread_count', response.context)
+        self.assertContains(response, 'Mark all read')
+        self.assertContains(response, '>1</span>', html=False)
+
     @patch('core.views.fetch_free_archive_movies', return_value=[])
     @patch('core.views.fetch_popular_tv', return_value=[])
     @patch('core.views.fetch_tv_on_the_air', return_value=[])

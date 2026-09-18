@@ -9,10 +9,8 @@ from .models import ReleaseNotification
 @login_required
 def inbox(request):
     notifications = ReleaseNotification.objects.filter(user=request.user).select_related('content')[:100]
-    unread_count = ReleaseNotification.objects.filter(user=request.user, read_at__isnull=True).count()
     return render(request, 'notifications/inbox.html', {
         'notifications': notifications,
-        'unread_count': unread_count,
     })
 
 
