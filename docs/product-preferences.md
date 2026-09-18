@@ -16,8 +16,8 @@ aitv should prioritize watchable content while allowing each viewer to decide wh
 - Each account can choose a dashboard content mix: Balanced, TV first, or Movies first. Balanced is the neutral default and interleaves movie rows with TV discovery; TV first keeps all TV discovery ahead of movie rows; Movies first does the reverse.
 - The same content-mix ordering applies to live search/browse results.
 - Content-mix ordering is account-specific and does not globally change the public/default experience.
-- Each signed-in account can optionally select streaming services it uses. When TMDB supplies several legitimate regional provider choices, aitv presents the selected services first while preserving the upstream order among equally preferred/unpreferred providers.
-- Provider preferences do not hide titles, fabricate deep links, change regional availability truth, or alter another account. With no selected services, provider ordering remains neutral/upstream-driven.
+- Each signed-in account can optionally select streaming services it uses. When TMDB supplies legitimate regional provider choices, aitv presents selected services first and progressively moves titles available on those services ahead of other non-favorite titles as live provider context loads. Favorites remain the highest-priority account signal.
+- Provider preferences do not hide titles, fabricate deep links, change regional availability truth, or alter another account. With no selected services, title and provider ordering remain neutral/upstream-driven.
 - When strict regional availability is enabled, a TMDB title must have at least one concrete provider row in the selected region. A generic TMDB/JustWatch landing link by itself does not count as regional availability.
 - Strict regional availability also applies to TVmaze schedule results: metadata-only cards without a source-supplied watch destination are validated through the safe TVmaze-to-TMDB enrichment path, while broader schedule discovery remains available to non-strict accounts.
 - The same strict live-source filtering is applied to search/browse results.
