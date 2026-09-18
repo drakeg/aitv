@@ -1,51 +1,51 @@
-# AI TV / StreamHub
+# aitv
 
-AI TV is a Django-based personal streaming dashboard for discovering movies and TV from live upstream sources, tracking where titles are actually available, and keeping a separate watchlist for each user.
+aitv is a Django-based personal streaming dashboard for discovering movies and TV from live upstream sources, seeing where titles are actually available, and keeping account-specific Watchlist and Favorite state.
 
-The goal is fewer clicks to legitimate content. TMDB is treated as metadata/discovery rather than the final destination whenever a direct network or streaming-provider URL is available.
+The goal is fewer clicks to legitimate content. Direct network/service destinations are preferred when a source actually supplies them; TMDB is used for discovery, metadata, canonical identity, and regional provider context rather than treated as the viewing destination.
 
 ## Current capabilities
 
-- Live US TV schedule discovery from TVmaze
+- Live US TV schedule discovery from TVmaze, including network/web-channel and episode context when supplied
 - Live free-movie discovery from the Internet Archive
-- Live TMDB trending movie and TV discovery
-- TMDB trending cards enriched with runtime, TV network/episode context, and current US provider availability when supplied upstream
-- Compact provider presentation: two watch-source badges are shown on-card, with additional sources summarized instead of stretching card height
-- Provider-first card actions and direct network/service destinations where a legitimate source exposes them
-- Per-user discovery preferences from the Profile page, including Comedy, Crime, Drama, News, Reality, and other supported categories
-- Per-user watchlists using the same shared card presentation as the main dashboard
-- Automatic provider recognition for ABC, CBS, NBC, FOX, PBS, The CW, YouTube, Internet Archive, Tubi, Pluto TV, Paramount+, Peacock, Hulu, Disney+, Max, Netflix, Prime Video, Apple TV, and Plex URLs
-- Account registration, login, logout, Profile, and watchlist flows
-- SQLite development database
-- Fast Docker Compose local workflow with configurable host port
+- Live TMDB TV and movie discovery, including daily TV trending plus on-the-air/popular TV pools
+- Provider-first cards that distinguish direct-watch destinations from metadata/source-detail links
+- Regional TMDB provider availability with access types such as Free, Free with ads, Subscription, Rent, and Buy
+- Compact provider pills with expandable `+N more` choices instead of stretching card rows
+- Per-user US/region availability behavior, category preferences, TV-first/Balanced/Movies-first content mix, and preferred streaming-service ordering
+- Independent per-user Watchlist and Favorite state; Favorites are prioritized in discovery and can drive release notifications
+- In-app Favorite release notifications plus optional SMTP email delivery
+- Optional Docker notification worker for recurring Favorite release checks
+- Live-source-only home discovery: no seeded/sample catalog fallback
+- Configurable Docker host port and persistent SQLite data volume
 - Automated Django checks and tests in GitHub Actions
 
-## Live-data policy
+## Live-data and provider policy
 
-The main dashboard is **live-source only**. It does not render seeded examples, manually seeded demo rows, or local sample catalog sections. Search on the dashboard searches the currently fetched live discovery results rather than the local database.
+The dashboard is **live-source only**. It does not render seeded examples or local sample catalog rows when upstream discovery is unavailable. Persisted `ContentItem`/`ContentAvailability` data supports saved titles and provider-aware user state; it is not substituted for live home-page discovery.
 
-Older development versions created nine sample rows at container startup. The current migration removes those known legacy demo rows, the demo seeder has been removed, and Docker no longer has a demo-data startup path.
+aitv does not invent provider URLs. A provider-specific/direct button is shown only when an upstream source supplies a legitimate destination. TMDB regional watch context can identify services and access types, but its regional watch-options URL is kept as a regional options destination rather than guessed into provider deep links.
 
-The local `ContentItem`/`ContentAvailability` models remain because they are used to persist watchlist/imported metadata and support provider-aware saved items. Persisted user data is not used as a substitute for live discovery on the home page.
-
-When an upstream source does not provide a field, the UI says that the value is not listed rather than inventing it. Provider availability can vary by title and region.
+Missing upstream fields stay visibly unavailable instead of being fabricated. Availability varies by title and region.
 
 ## Project structure
 
 ```text
 aitv/
-├── content/         # Catalog persistence, provider detection, and live source adapters
+├── content/         # Catalog persistence, provider detection, and live-source adapters
 ├── core/            # Dashboard, profile/preferences, registration, and tests
-├── notifications/   # Notification application foundation
-├── streamhub/       # Django project settings, URLs, and WSGI entry point
-├── watchlist/       # Per-user watchlist page and controls
+├── notifications/   # Favorite release detection, inbox, email state, and worker tests
+├── streamhub/       # Django project package (settings, URLs, WSGI)
+├── watchlist/       # Per-user Watchlist/Favorite page and controls
 ├── static/          # Site CSS and JavaScript
-├── templates/       # Shared, account, content, and watchlist templates
+├── templates/       # Shared, account, content, notification, and watchlist templates
 ├── Dockerfile
 ├── docker-compose.yml
 ├── manage.py
 └── requirements.txt
 ```
+
+`streamhub/` is the historical Django project-package name; the application/product is **aitv**.
 
 ## Quick local testing with Docker
 
@@ -53,50 +53,60 @@ aitv/
 git clone https://github.com/drakeg/aitv.git
 cd aitv
 cp .env.example .env
-docker compose up --build
+docker compose up -d --build
+docker compose logs -f web
 ```
 
-The container automatically runs migrations and starts Django. It does **not** load sample/demo content. The default site is `http://127.0.0.1:8000/`.
+The web container runs migrations and starts Django. It does **not** load demo content. The default site is `http://127.0.0.1:8000/`.
 
-To use another host port, set `APP_PORT` in `.env`, for example:
+To use another host port, set for example:
 
 ```dotenv
 APP_PORT=8007
 ```
 
-The source tree is bind-mounted, so normal Python/template/static changes are picked up by Django's development reloader without rebuilding the image. Rebuild when dependencies or the Dockerfile change.
+The source tree is bind-mounted, so normal Python/template/static edits are picked up by Django's development reloader. Rebuild when dependencies or the Dockerfile change.
 
 Useful commands:
 
 ```bash
 docker compose up -d --build
 docker compose logs -f web
+docker compose run --rm web python manage.py check
 docker compose run --rm web python manage.py test
 docker compose run --rm web python manage.py createsuperuser
 docker compose down
 ```
 
-## Accounts, watchlists, and discovery preferences
+### Persistent SQLite data
 
-Use **Register** in the navigation bar to create an account. Registration signs the new user in immediately. Existing users can use the dedicated login page; logout is a CSRF-protected POST action.
+Compose stores the development database in the named `aitv_data` volume at `/data/db.sqlite3`. This avoids the common SQLite locking problems caused by using the bind-mounted source tree as the active database location.
 
-Each signed-in user has an independent watchlist at `/watchlist/`. The watchlist reuses the same shared provider-first card partial as the main dashboard.
+**Do not use `docker compose down -v` unless you intentionally want to delete the persisted local database volume.** Normal `docker compose down` keeps it.
 
-Discovery tuning is per-user and lives under **Profile**. The public/default experience does not globally suppress News or any other category. One user's selections never affect another account.
+`SQLITE_DB_PATH` and `SQLITE_TIMEOUT_SECONDS` can override the defaults when needed.
+
+## Accounts and personalization
+
+Registration signs a new user in immediately. Existing users have login/logout, Profile, Watchlist, Favorites, and notifications.
+
+Discovery tuning is account-specific. The public/default experience remains neutral: one user's category, content-mix, region, or provider choices never change another account. News and Soap/Soap Opera are ordinary selectable categories rather than globally suppressed categories.
+
+Preferred streaming services affect ordering only. If TMDB reports several legitimate regional providers, a signed-in viewer's selected services are moved ahead while the remaining providers stay available.
 
 ## Live source workflow
 
 ### TVmaze
 
-TVmaze supplies today's US schedule plus show/network/service, episode, runtime, airtime, genres, and official show destinations where available. Cards prefer the official network/service destination instead of another metadata hop.
+TVmaze supplies scheduled TV plus show/network or web-channel, episode, runtime, airtime, genres, and official destinations where available. A card can remain useful as schedule metadata even when TVmaze does not publish a direct show URL. aitv can lazily resolve an exact TVmaze title to a canonical TMDB title for regional provider context and saved/Favorite state.
 
 ### Internet Archive
 
-The Internet Archive adapter pulls current public movie records from its search endpoint and links directly to playable item pages.
+The Internet Archive adapter pulls current public movie records from its search endpoint and links to playable item pages supplied by the source.
 
 ### TMDB
 
-TMDB supplies trending movie/TV discovery and metadata. Configure either credential below; both are not required:
+TMDB supplies movie/TV discovery, metadata, canonical IDs, and regional watch-provider context. Configure either credential; both are not required:
 
 ```dotenv
 TMDB_API_KEY=your_key_here
@@ -104,11 +114,55 @@ TMDB_API_KEY=your_key_here
 TMDB_READ_ACCESS_TOKEN=your_read_token_here
 ```
 
-Trending cards request additional current watch context so they can show runtime, TV network/episode information, and US provider availability. Provider rows are intentionally compact: at most two are shown directly on a card, with a `+N more` summary and a **See watch options** action when TMDB provides a watch URL.
+Provider context is ordered Free → Free with ads → Subscription → Rent → Buy, then adjusted within that legitimate result set for a signed-in viewer's preferred services. Cards show the first two providers compactly and allow the remaining provider names/access types to be expanded in place.
 
-TMDB failures or missing credentials do not prevent the dashboard from loading; affected live rows remain empty or show an unavailable state.
+TMDB failures or missing credentials do not prevent other live sources from loading.
 
-## Standard local setup
+## Favorite release notifications
+
+Favorites are distinct from ordinary Watchlist saves. The release checker looks for newly reported TV release state for eligible saved TMDB TV Favorites, creates in-app notifications, and can optionally send email.
+
+Run a one-time check manually with:
+
+```bash
+docker compose run --rm web python manage.py check_release_notifications
+```
+
+For recurring checks in Docker, enable the opt-in profile:
+
+```bash
+docker compose --profile notifications up -d --build
+```
+
+The worker uses the same image, `.env`, and `aitv_data` SQLite volume. It runs a check, waits `RELEASE_CHECK_INTERVAL_SECONDS`, and repeats. The default is 3600 seconds. Empty, non-numeric, or zero interval values fall back to 3600. A failed individual check is logged and retried on the next interval; the worker also uses `restart: unless-stopped`.
+
+The worker is **not** started by ordinary `docker compose up` unless the `notifications` profile is selected.
+
+SMTP is optional. Without SMTP, recurring checks can still create in-app notifications.
+
+## Configuration
+
+| Variable | Default | Purpose |
+| --- | --- | --- |
+| `APP_PORT` | `8000` | Host port exposed by Docker Compose. |
+| `DJANGO_SECRET_KEY` | development fallback in Compose | Django signing secret; set a real secret outside local development. |
+| `DJANGO_DEBUG` | `true` | Enables/disables Django debug mode. |
+| `DJANGO_ALLOWED_HOSTS` | local hosts in Compose | Comma-separated accepted hostnames. |
+| `SQLITE_DB_PATH` | `/data/db.sqlite3` in Compose | Active SQLite database path. |
+| `SQLITE_TIMEOUT_SECONDS` | `30` | SQLite busy timeout. |
+| `TMDB_API_KEY` | empty | Optional TMDB v3 API-key authentication. |
+| `TMDB_READ_ACCESS_TOKEN` | empty | Optional TMDB Bearer-token authentication; preferred when set. |
+| `TMDB_TIMEOUT_SECONDS` | `5` | TMDB request timeout fallback. |
+| `SOURCE_TIMEOUT_SECONDS` | `5` | Shared upstream-source timeout. |
+| `RELEASE_CHECK_INTERVAL_SECONDS` | `3600` | Positive whole-number interval for the opt-in notification worker. |
+| `SMTP_HOST` | empty | SMTP server; empty disables release-notification email. |
+| `SMTP_PORT` | `587` | SMTP port. |
+| `SMTP_USERNAME` | empty | Optional SMTP username. |
+| `SMTP_PASSWORD` | empty | Optional SMTP password. |
+| `SMTP_USE_TLS` | `true` | Enable SMTP TLS. |
+| `DEFAULT_FROM_EMAIL` | empty | Sender address for notification email. |
+
+## Standard local setup without Docker
 
 ```bash
 git clone https://github.com/drakeg/aitv.git
@@ -122,19 +176,6 @@ python manage.py runserver
 ```
 
 On Windows PowerShell use `.venv\Scripts\Activate.ps1` to activate the environment. Django admin is available at `/admin/`; create an admin with `python manage.py createsuperuser` when needed.
-
-## Configuration
-
-| Variable | Default | Purpose |
-| --- | --- | --- |
-| `APP_PORT` | `8000` | Host port exposed by Docker Compose. |
-| `DJANGO_SECRET_KEY` | development-only fallback | Django signing secret. |
-| `DJANGO_DEBUG` | `true` | Enables/disables Django debug mode. |
-| `DJANGO_ALLOWED_HOSTS` | empty outside Compose | Comma-separated accepted hostnames. |
-| `TMDB_API_KEY` | empty | Optional TMDB v3 API-key authentication. |
-| `TMDB_READ_ACCESS_TOKEN` | empty | Optional TMDB Bearer-token authentication; preferred when set. |
-| `TMDB_TIMEOUT_SECONDS` | `5` | TMDB request timeout fallback. |
-| `SOURCE_TIMEOUT_SECONDS` | `5` | Shared upstream-source timeout. |
 
 ## Testing
 
@@ -153,52 +194,16 @@ GitHub Actions runs Django checks and the test suite for pull requests and pushe
 
 ## Architecture notes
 
-`core.views.home` assembles only live discovery arrays from TVmaze, Internet Archive, and TMDB. `ContentItem` persists imported/saved title metadata. `ContentAvailability` persists provider destinations for saved items. `content.providers` recognizes supported provider URLs.
+`core.views.home` assembles live discovery from TVmaze, Internet Archive, and TMDB. Server-side ranking accounts for direct-watch usefulness, user content mix, categories, and known Favorite state. Browser-side enrichment adds TMDB context to eligible TVmaze cards near the viewport and can immediately synchronize Watchlist/Favorite state and provider choices without a page refresh.
 
-The dashboard does not fall back to seeded/local catalog rows when live data is unavailable. That keeps the UI truthful about what came from an actual upstream source.
+The Docker path remains development-focused: Django's development server, bind-mounted source, persistent SQLite, and an optional lightweight notification worker. Production server/database/static serving/security/health-check deployment remains separate work.
 
-The Docker path remains development-focused: Django's development server, bind-mounted source, and SQLite. Production container/server, database, static serving, security headers, and health checks remain deployment work.
+## Security and provider authentication
 
-## Development roadmap
+Do not commit real API keys, SMTP passwords, or production secrets. `.env` is ignored by Git; use appropriate secret storage for deployed environments. State-changing account/catalog/Watchlist/Favorite actions use POST requests with Django CSRF protection.
 
-### Sprint 1 — Foundation and reliability
-
-- [x] Environment-driven runtime configuration
-- [x] Resilient optional TMDB integration
-- [x] Baseline automated tests and CI
-- [x] Installation/configuration/architecture documentation
-- [x] Fast Docker Compose local workflow
-
-### Sprint 2 — Content ingestion and metadata
-
-- [x] Hardened URL parsing and YouTube extraction
-- [x] Rich content metadata and explicit movie/TV/video types
-- [x] Separate provider availability model
-- [x] Edit/delete flows for managed content
-- [x] Movie and TV discovery-to-library ingestion
-
-### Sprint 3 — User experience and direct sources
-
-- [x] Complete login/logout/registration flows
-- [x] Dedicated watchlist page and safer watchlist controls
-- [x] Provider-first card/watchlist actions
-- [x] Initial broadcast-network and streaming-provider URL adapters
-- [x] Per-user discovery preferences and Profile
-- [x] Live-source-only dashboard
-- [x] Compact enriched trending cards
-- [ ] Expand legal live-source adapters and direct provider availability ingestion
-
-### Sprint 4 — Deployment readiness
-
-- [ ] Production-oriented container/settings path
-- [ ] Production database configuration path
-- [ ] Static-file and security-header configuration
-- [ ] Deployment documentation and health checks
-
-## Security
-
-Do not commit real API keys or production secrets. `.env` is ignored by Git; use environment variables or a secrets manager in deployed environments. State-changing catalog and watchlist actions use POST requests with Django CSRF protection.
+aitv does not bypass provider authentication or DRM and does not store/replay raw streaming-provider passwords. Future provider-account connections should use provider-supported OAuth/token/session mechanisms where available.
 
 ## Status
 
-The project now uses live upstream discovery on the home page, keeps metadata links secondary, and focuses on consistent provider-aware cards with per-user tuning.
+aitv now centers live TV/movie discovery, truthful provider/network visibility, direct source-supplied watch destinations, compact regional provider choices, account-specific personalization, Watchlist/Favorites, and optional recurring Favorite release notifications.
