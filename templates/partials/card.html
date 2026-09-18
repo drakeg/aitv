@@ -19,6 +19,7 @@
             {% if item.network %}<span class="badge text-bg-info">{{ item.network }}</span>{% elif item.provider %}<span class="badge text-bg-info">{{ item.provider }}</span>{% endif %}
             {% if item.release_year %}<span class="badge text-bg-light">{{ item.release_year }}</span>{% endif %}
             {% if item.rating %}<span class="badge text-bg-light">★ {{ item.rating }}</span>{% endif %}
+            <span class="badge text-bg-success d-none" data-preferred-provider-badge></span>
         </div>
 
         <strong class="content-title" title="{% if item.title %}{{ item.title }}{% else %}{{ item.name|default:'Untitled' }}{% endif %}">{% if item.title %}{{ item.title|truncatechars:28 }}{% else %}{{ item.name|default:'Untitled'|truncatechars:28 }}{% endif %}</strong>
