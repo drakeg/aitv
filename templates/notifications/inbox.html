@@ -28,6 +28,7 @@
                     {% if not notification.is_read %}
                     <form method="post" action="{% url 'notifications:mark_read' notification.id %}">
                         {% csrf_token %}
+                        <input type="hidden" name="next" value="{% url 'notifications:inbox' %}?page={{ page_obj.number }}">
                         <button class="btn btn-sm btn-outline-secondary" type="submit">Mark read</button>
                     </form>
                     {% endif %}
