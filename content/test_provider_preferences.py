@@ -43,3 +43,11 @@ class ProviderPreferenceTests(TestCase):
         self.assertIn('if (leftPreferred !== rightPreferred) return leftPreferred ? -1 : 1', script)
         self.assertIn('return left.index - right.index', script)
         self.assertIn('const allRows = providerRows(data)', script)
+        self.assertIn('const hasPreferredProvider = (data)', script)
+        self.assertIn("card.dataset.preferredProviderMatch = hasPreferredProvider(data) ? '1' : '0'", script)
+        self.assertIn("[data-favorite-form][data-favorite-state=\"1\"]", script)
+        self.assertIn("row.insertBefore(card, anchor)", script)
+
+    def test_cards_expose_neutral_provider_match_state(self):
+        template = Path(settings.BASE_DIR, 'templates', 'partials', 'card.html').read_text()
+        self.assertIn('data-preferred-provider-match="0"', template)
