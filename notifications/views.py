@@ -1,6 +1,8 @@
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
 from django.shortcuts import get_object_or_404, redirect, render
+from django.urls import reverse
+from django.utils.http import url_has_allowed_host_and_scheme
 from django.utils import timezone
 from django.views.decorators.http import require_POST
 
@@ -24,7 +26,14 @@ def mark_read(request, notification_id):
     if notification.read_at is None:
         notification.read_at = timezone.now()
         notification.save(update_fields=['read_at'])
-    return redirect('notifications:inbox')
+    next_url = request.POST.get('next', '')
+    if next_url and url_has_allowed_host_and_scheme(
+        url=next_url,
+        allowed_hosts={request.get_host()},
+        require_https=request.is_secure(),
+    ):
+        return redirect(next_url)
+    return redirect(reverse('notifications:inbox'))
 
 
 @login_required
