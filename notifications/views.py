@@ -9,6 +9,17 @@ from django.views.decorators.http import require_POST
 from .models import ReleaseNotification
 
 
+def _safe_inbox_return(request):
+    next_url = request.POST.get('next', '')
+    if next_url and url_has_allowed_host_and_scheme(
+        url=next_url,
+        allowed_hosts={request.get_host()},
+        require_https=request.is_secure(),
+    ):
+        return next_url
+    return reverse('notifications:inbox')
+
+
 @login_required
 def inbox(request):
     notification_list = ReleaseNotification.objects.filter(user=request.user).select_related('content')
@@ -26,18 +37,11 @@ def mark_read(request, notification_id):
     if notification.read_at is None:
         notification.read_at = timezone.now()
         notification.save(update_fields=['read_at'])
-    next_url = request.POST.get('next', '')
-    if next_url and url_has_allowed_host_and_scheme(
-        url=next_url,
-        allowed_hosts={request.get_host()},
-        require_https=request.is_secure(),
-    ):
-        return redirect(next_url)
-    return redirect(reverse('notifications:inbox'))
+    return redirect(_safe_inbox_return(request))
 
 
 @login_required
 @require_POST
 def mark_all_read(request):
     ReleaseNotification.objects.filter(user=request.user, read_at__isnull=True).update(read_at=timezone.now())
-    return redirect('notifications:inbox')
+    return redirect(_safe_inbox_return(request))
