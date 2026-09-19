@@ -42,6 +42,6 @@ aitv should prioritize watchable content while allowing each viewer to decide wh
 - Email delivery is optional and occurs only when SMTP settings are explicitly configured. Without SMTP configuration, the in-app notification workflow still works and no outbound email is attempted.
 - Release notifications persist a successful email-delivery timestamp independently from the release baseline. If SMTP raises a transient error, the in-app notification remains available and a later `check_release_notifications` run retries that same unsent email without creating a duplicate notification.
 - The authenticated notification inbox is newest-first and paginated at 25 notifications per page; the navigation badge remains the total unread count across pages.
-- Notification read actions are per-user and POST-only.
+- Notification read actions are per-user and POST-only. Marking an individual notification read returns to the current inbox page when the submitted return URL is same-site; unsafe/external return targets fall back to the inbox.
 
 Personalization applies to discovery results only. A user's saved catalog is never silently deleted or hidden because of discovery preferences.

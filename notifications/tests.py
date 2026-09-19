@@ -134,6 +134,36 @@ class ReleaseNotificationWorkflowTests(TestCase):
         notification.refresh_from_db()
         self.assertIsNotNone(notification.read_at)
 
+    def test_mark_read_preserves_safe_inbox_page_and_rejects_external_redirect(self):
+        notification = ReleaseNotification.objects.create(
+            user=self.user,
+            content=self.content,
+            event_key='page-preserve',
+            title='Page-preserved notification',
+            message='Keep the current page.',
+        )
+        self.client.force_login(self.user)
+
+        response = self.client.post(
+            reverse('notifications:mark_read', args=[notification.id]),
+            {'next': f"{reverse('notifications:inbox')}?page=2"},
+        )
+        self.assertRedirects(
+            response,
+            f"{reverse('notifications:inbox')}?page=2",
+            fetch_redirect_response=False,
+        )
+        notification.refresh_from_db()
+        self.assertIsNotNone(notification.read_at)
+
+        notification.read_at = None
+        notification.save(update_fields=['read_at'])
+        response = self.client.post(
+            reverse('notifications:mark_read', args=[notification.id]),
+            {'next': 'https://evil.example/phishing'},
+        )
+        self.assertRedirects(response, reverse('notifications:inbox'))
+
     def test_inbox_reuses_navigation_unread_count(self):
         ReleaseNotification.objects.create(
             user=self.user,
