@@ -164,6 +164,35 @@ class ReleaseNotificationWorkflowTests(TestCase):
         )
         self.assertRedirects(response, reverse('notifications:inbox'))
 
+    def test_mark_all_read_preserves_safe_inbox_page_and_rejects_external_redirect(self):
+        ReleaseNotification.objects.create(
+            user=self.user,
+            content=self.content,
+            event_key='mark-all-page',
+            title='Unread page notification',
+            message='Mark all while staying here.',
+        )
+        self.client.force_login(self.user)
+
+        response = self.client.post(
+            reverse('notifications:mark_all_read'),
+            {'next': f"{reverse('notifications:inbox')}?page=2"},
+        )
+        self.assertRedirects(
+            response,
+            f"{reverse('notifications:inbox')}?page=2",
+            fetch_redirect_response=False,
+        )
+        self.assertFalse(
+            ReleaseNotification.objects.filter(user=self.user, read_at__isnull=True).exists()
+        )
+
+        response = self.client.post(
+            reverse('notifications:mark_all_read'),
+            {'next': 'https://evil.example/phishing'},
+        )
+        self.assertRedirects(response, reverse('notifications:inbox'))
+
     def test_inbox_reuses_navigation_unread_count(self):
         ReleaseNotification.objects.create(
             user=self.user,
