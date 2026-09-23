@@ -210,4 +210,4 @@ aitv does not bypass provider authentication or DRM and does not store/replay ra
 
 ## Status
 
-aitv now centers live TV/movie discovery, truthful provider/network visibility, recognized provider watch destinations supplied by live sources (visibly labeled `Direct watch`; unrecognized official sites remain details-only), compact regional provider choices whose TMDB links are labeled as provider discovery rather than direct playback, account-specific personalization, Watchlist/Favorites, and optional recurring Favorite release notifications.
+aitv now centers live TV/movie discovery, truthful provider/network visibility, recognized provider watch destinations supplied by live sources (visibly labeled `Direct watch`; unrecognized official sites remain details-only; recognized coverage includes The Roku Channel and both Prime Video's native domain and scoped Amazon video paths), compact regional provider choices whose TMDB links are labeled as provider discovery rather than direct playback, account-specific personalization, Watchlist/Favorites, and optional recurring Favorite release notifications.
