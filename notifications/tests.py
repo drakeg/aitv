@@ -245,6 +245,27 @@ class ReleaseNotificationWorkflowTests(TestCase):
         past_end = self.client.get(reverse('notifications:inbox'), {'page': 999})
         self.assertEqual(past_end.context['page_obj'].number, 2)
 
+    def test_inbox_shows_elided_direct_page_navigation_for_long_history(self):
+        for index in range(300):
+            ReleaseNotification.objects.create(
+                user=self.user,
+                content=self.content,
+                event_key=f'long-page-{index}',
+                title=f'Long history {index}',
+                message=f'Long notification {index}.',
+            )
+        self.client.force_login(self.user)
+
+        response = self.client.get(reverse('notifications:inbox'), {'page': 6})
+        self.assertEqual(response.context['page_obj'].number, 6)
+        self.assertEqual(response.context['page_obj'].paginator.num_pages, 12)
+        self.assertContains(response, 'aria-current="page"')
+        self.assertContains(response, '?page=1')
+        self.assertContains(response, '?page=5')
+        self.assertContains(response, '?page=7')
+        self.assertContains(response, '?page=12')
+        self.assertContains(response, '…')
+
     @patch('core.views.fetch_free_archive_movies', return_value=[])
     @patch('core.views.fetch_popular_tv', return_value=[])
     @patch('core.views.fetch_tv_on_the_air', return_value=[])
