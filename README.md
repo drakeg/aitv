@@ -12,7 +12,7 @@ The goal is fewer clicks to legitimate content. Direct network/service destinati
 - Provider-first cards that distinguish direct-watch destinations from metadata/source-detail links
 - Regional TMDB provider availability with access types such as Free, Free with ads, Subscription, Rent, and Buy
 - Compact provider pills with expandable `+N more` choices instead of stretching card rows
-- Per-user US/region availability behavior, category preferences, TV-first/Balanced/Movies-first content mix, and preferred streaming-service ordering/ranking with live `On <provider>` match feedback
+- Per-user US/region availability behavior, category preferences, TV-first/Balanced/Movies-first content mix, and preferred streaming-service ordering/ranking with live `On <provider>` match feedback and provider-specific watch-option labels when the preferred service is the best reported regional choice
 - Independent per-user Watchlist and Favorite state; Favorites are prioritized in discovery and can drive release notifications
 - Paginated in-app Favorite release notifications plus optional SMTP email delivery
 - Optional Docker notification worker for recurring Favorite release checks
