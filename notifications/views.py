@@ -24,9 +24,11 @@ def _safe_inbox_return(request):
 def inbox(request):
     notification_list = ReleaseNotification.objects.filter(user=request.user).select_related('content')
     page_obj = Paginator(notification_list, 25).get_page(request.GET.get('page'))
+    page_range = page_obj.paginator.get_elided_page_range(number=page_obj.number)
     return render(request, 'notifications/inbox.html', {
         'notifications': page_obj.object_list,
         'page_obj': page_obj,
+        'page_range': page_range,
     })
 
 
