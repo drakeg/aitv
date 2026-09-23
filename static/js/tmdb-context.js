@@ -71,19 +71,19 @@ document.addEventListener('DOMContentLoaded', () => {
     const bestAccess = bestProvider?.access || '';
     const isPreferred = providerName && preferredProviderOrder.has(providerName.toLocaleLowerCase());
     if (isPreferred) {
-      if (bestAccess === 'Free') return `See free ${providerName} options`;
-      if (bestAccess === 'Free with ads') return `See ${providerName} free-with-ads options`;
-      if (bestAccess === 'Subscription') return `See ${providerName} subscription options`;
-      if (bestAccess === 'Rent') return `See ${providerName} rental options`;
-      if (bestAccess === 'Buy') return `See ${providerName} purchase options`;
-      return `See ${providerName} options`;
+      if (bestAccess === 'Free') return `Find free ${providerName} option`;
+      if (bestAccess === 'Free with ads') return `Find ${providerName} free-with-ads option`;
+      if (bestAccess === 'Subscription') return `Find ${providerName} subscription option`;
+      if (bestAccess === 'Rent') return `Find ${providerName} rental option`;
+      if (bestAccess === 'Buy') return `Find ${providerName} purchase option`;
+      return `Find ${providerName} option`;
     }
-    if (bestAccess === 'Free') return 'Watch free options';
-    if (bestAccess === 'Free with ads') return 'Watch free with ads';
-    if (bestAccess === 'Subscription') return 'See subscription options';
-    if (bestAccess === 'Rent') return 'See rental options';
-    if (bestAccess === 'Buy') return 'See purchase options';
-    return 'See regional watch options';
+    if (bestAccess === 'Free') return 'Find free watch option';
+    if (bestAccess === 'Free with ads') return 'Find free-with-ads option';
+    if (bestAccess === 'Subscription') return 'Find subscription option';
+    if (bestAccess === 'Rent') return 'Find rental option';
+    if (bestAccess === 'Buy') return 'Find purchase option';
+    return 'Open provider listing';
   };
 
   const enrichTmdbContext = async (element) => {
