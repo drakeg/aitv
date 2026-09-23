@@ -210,4 +210,4 @@ aitv does not bypass provider authentication or DRM and does not store/replay ra
 
 ## Status
 
-aitv now centers live TV/movie discovery, truthful provider/network visibility, direct source-supplied watch destinations, compact regional provider choices, account-specific personalization, Watchlist/Favorites, and optional recurring Favorite release notifications.
+aitv now centers live TV/movie discovery, truthful provider/network visibility, direct source-supplied watch destinations (visibly labeled `Direct watch`), compact regional provider choices whose TMDB links are labeled as provider discovery rather than direct playback, account-specific personalization, Watchlist/Favorites, and optional recurring Favorite release notifications.
