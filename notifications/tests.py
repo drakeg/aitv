@@ -231,19 +231,40 @@ class ReleaseNotificationWorkflowTests(TestCase):
         self.assertEqual(len(first_page.context['notifications']), 25)
         self.assertEqual(first_page.context['page_obj'].number, 1)
         self.assertEqual(first_page.context['page_obj'].paginator.count, 30)
-        self.assertContains(first_page, 'Page 1 of 2')
+        self.assertContains(first_page, 'aria-current="page"')
         self.assertContains(first_page, '?page=2')
 
         second_page = self.client.get(reverse('notifications:inbox'), {'page': 2})
         self.assertEqual(len(second_page.context['notifications']), 5)
         self.assertEqual(second_page.context['page_obj'].number, 2)
-        self.assertContains(second_page, 'Page 2 of 2')
+        self.assertContains(second_page, 'aria-current="page"')
 
         invalid_page = self.client.get(reverse('notifications:inbox'), {'page': 'not-a-number'})
         self.assertEqual(invalid_page.context['page_obj'].number, 1)
 
         past_end = self.client.get(reverse('notifications:inbox'), {'page': 999})
         self.assertEqual(past_end.context['page_obj'].number, 2)
+
+    def test_inbox_shows_elided_direct_page_navigation_for_long_history(self):
+        for index in range(300):
+            ReleaseNotification.objects.create(
+                user=self.user,
+                content=self.content,
+                event_key=f'long-page-{index}',
+                title=f'Long history {index}',
+                message=f'Long notification {index}.',
+            )
+        self.client.force_login(self.user)
+
+        response = self.client.get(reverse('notifications:inbox'), {'page': 3})
+        self.assertEqual(response.context['page_obj'].number, 3)
+        self.assertEqual(response.context['page_obj'].paginator.num_pages, 12)
+        self.assertContains(response, 'aria-current="page"')
+        self.assertContains(response, '?page=1')
+        self.assertContains(response, '?page=2')
+        self.assertContains(response, '?page=4')
+        self.assertContains(response, '?page=12')
+        self.assertContains(response, '…')
 
     @patch('core.views.fetch_free_archive_movies', return_value=[])
     @patch('core.views.fetch_popular_tv', return_value=[])
