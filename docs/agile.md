@@ -40,3 +40,8 @@ Maintenance sprints should periodically audit the repository rather than waiting
 - divergence between documented product behavior and the current UI.
 
 Findings should be handled as focused sprint work, with tests and documentation updated in the same pull request.
+
+
+### Regression-test accuracy
+
+Pagination/navigation regressions must exercise representative middle-state behavior, not only edge pages that can mask current-page bugs.
