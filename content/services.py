@@ -249,12 +249,15 @@ def fetch_live_tv_schedule(limit=100, country='US'):
         if not show_id or show_id in seen:
             continue
         official_url = (show.get('officialSite') or '').strip()
+        episode_url = (episode.get('url') or '').strip()
         details_url = (show.get('url') or '').strip()
         network_data = show.get('network') or show.get('webChannel') or {}
         network = (network_data.get('name') or 'TV').strip()
         image = show.get('image') or episode.get('image') or {}
-        provider = detect_provider(official_url) if official_url else None
-        direct_watch_url = official_url if provider else ''
+        episode_provider = detect_provider(episode_url) if episode_url else None
+        show_provider = detect_provider(official_url) if official_url else None
+        provider = episode_provider or show_provider
+        direct_watch_url = episode_url if episode_provider else (official_url if show_provider else '')
         access_type = provider['access_type'] if provider else ''
         provider_name = provider['provider'] if provider else network
         action_label = ''
@@ -283,7 +286,8 @@ def fetch_live_tv_schedule(limit=100, country='US'):
             'rating': (show.get('rating') or {}).get('average'), 'external_source': 'tvmaze',
             'external_id': str(show_id), 'is_external': True, 'is_live_source': True,
             'provider': provider_name, 'network': network, 'access_type': access_type,
-            'action_label': action_label, 'episode_label': episode_label,
+            'action_label': action_label, 'watch_scope': 'episode' if episode_provider else ('show' if show_provider else ''),
+            'episode_label': episode_label,
             'airtime': episode.get('airtime') or '', 'runtime': episode.get('runtime'),
             'show_type': show_type, 'is_news': is_news,
         })
