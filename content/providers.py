@@ -59,6 +59,12 @@ PROVIDER_RULES = (
         'access_type': ContentAvailability.AccessType.ADS,
     },
     {
+        'domains': ('therokuchannel.roku.com',),
+        'provider': 'The Roku Channel',
+        'source_type': 'streaming',
+        'access_type': ContentAvailability.AccessType.ADS,
+    },
+    {
         'domains': ('pluto.tv',),
         'provider': 'Pluto TV',
         'source_type': 'streaming',
@@ -101,7 +107,7 @@ PROVIDER_RULES = (
         'access_type': ContentAvailability.AccessType.SUBSCRIPTION,
     },
     {
-        'domains': ('primevideo.com',),
+        'domains': ('primevideo.com', 'amazon.com'),
         'provider': 'Prime Video',
         'source_type': 'streaming',
         'access_type': ContentAvailability.AccessType.SUBSCRIPTION,
