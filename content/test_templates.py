@@ -58,6 +58,6 @@ class ContentCardTemplateTests(TestCase):
         self.assertIn('?region=US', rendered)
         self.assertIn('Checking regional watch sources', rendered)
         self.assertIn('region-pending', rendered)
-        self.assertIn('See watch options', rendered)
+        self.assertIn('Open provider listing', rendered)
         self.assertIn('TMDB details', rendered)
         self.assertNotIn('Open source', rendered)
