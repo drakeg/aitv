@@ -49,7 +49,15 @@
             <li class="page-item{% if not page_obj.has_previous %} disabled{% endif %}">
                 {% if page_obj.has_previous %}<a class="page-link" href="?page={{ page_obj.previous_page_number }}">Previous</a>{% else %}<span class="page-link">Previous</span>{% endif %}
             </li>
-            <li class="page-item disabled"><span class="page-link">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span></li>
+            {% for page_number in page_obj.paginator.get_elided_page_range %}
+                {% if page_number == page_obj.paginator.ELLIPSIS %}
+                <li class="page-item disabled"><span class="page-link">{{ page_number }}</span></li>
+                {% elif page_number == page_obj.number %}
+                <li class="page-item active" aria-current="page"><span class="page-link">{{ page_number }}</span></li>
+                {% else %}
+                <li class="page-item"><a class="page-link" href="?page={{ page_number }}">{{ page_number }}</a></li>
+                {% endif %}
+            {% endfor %}
             <li class="page-item{% if not page_obj.has_next %} disabled{% endif %}">
                 {% if page_obj.has_next %}<a class="page-link" href="?page={{ page_obj.next_page_number }}">Next</a>{% else %}<span class="page-link">Next</span>{% endif %}
             </li>
