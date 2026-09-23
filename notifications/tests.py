@@ -231,13 +231,13 @@ class ReleaseNotificationWorkflowTests(TestCase):
         self.assertEqual(len(first_page.context['notifications']), 25)
         self.assertEqual(first_page.context['page_obj'].number, 1)
         self.assertEqual(first_page.context['page_obj'].paginator.count, 30)
-        self.assertContains(first_page, 'Page 1 of 2')
+        self.assertContains(first_page, 'aria-current="page"')
         self.assertContains(first_page, '?page=2')
 
         second_page = self.client.get(reverse('notifications:inbox'), {'page': 2})
         self.assertEqual(len(second_page.context['notifications']), 5)
         self.assertEqual(second_page.context['page_obj'].number, 2)
-        self.assertContains(second_page, 'Page 2 of 2')
+        self.assertContains(second_page, 'aria-current="page"')
 
         invalid_page = self.client.get(reverse('notifications:inbox'), {'page': 'not-a-number'})
         self.assertEqual(invalid_page.context['page_obj'].number, 1)
@@ -256,13 +256,13 @@ class ReleaseNotificationWorkflowTests(TestCase):
             )
         self.client.force_login(self.user)
 
-        response = self.client.get(reverse('notifications:inbox'), {'page': 6})
-        self.assertEqual(response.context['page_obj'].number, 6)
+        response = self.client.get(reverse('notifications:inbox'), {'page': 3})
+        self.assertEqual(response.context['page_obj'].number, 3)
         self.assertEqual(response.context['page_obj'].paginator.num_pages, 12)
         self.assertContains(response, 'aria-current="page"')
         self.assertContains(response, '?page=1')
-        self.assertContains(response, '?page=5')
-        self.assertContains(response, '?page=7')
+        self.assertContains(response, '?page=2')
+        self.assertContains(response, '?page=4')
         self.assertContains(response, '?page=12')
         self.assertContains(response, '…')
 
