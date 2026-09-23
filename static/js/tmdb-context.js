@@ -66,7 +66,18 @@ document.addEventListener('DOMContentLoaded', () => {
   };
 
   const watchActionLabel = (data) => {
-    const bestAccess = providerRows(data)[0]?.access || '';
+    const bestProvider = providerRows(data)[0];
+    const providerName = bestProvider?.name || '';
+    const bestAccess = bestProvider?.access || '';
+    const isPreferred = providerName && preferredProviderOrder.has(providerName.toLocaleLowerCase());
+    if (isPreferred) {
+      if (bestAccess === 'Free') return `See free ${providerName} options`;
+      if (bestAccess === 'Free with ads') return `See ${providerName} free-with-ads options`;
+      if (bestAccess === 'Subscription') return `See ${providerName} subscription options`;
+      if (bestAccess === 'Rent') return `See ${providerName} rental options`;
+      if (bestAccess === 'Buy') return `See ${providerName} purchase options`;
+      return `See ${providerName} options`;
+    }
     if (bestAccess === 'Free') return 'Watch free options';
     if (bestAccess === 'Free with ads') return 'Watch free with ads';
     if (bestAccess === 'Subscription') return 'See subscription options';
