@@ -108,6 +108,7 @@ PROVIDER_RULES = (
     },
     {
         'domains': ('primevideo.com', 'amazon.com'),
+        'path_prefixes': {'amazon.com': ('/gp/video/', '/Amazon-Video/', '/video/')},
         'provider': 'Prime Video',
         'source_type': 'streaming',
         'access_type': ContentAvailability.AccessType.SUBSCRIPTION,
@@ -141,8 +142,13 @@ def detect_provider(url):
 
     host = (parsed.hostname or '').lower()
     for rule in PROVIDER_RULES:
-        if any(_host_matches(host, domain) for domain in rule['domains']):
-            return rule
+        matched_domain = next((domain for domain in rule['domains'] if _host_matches(host, domain)), None)
+        if not matched_domain:
+            continue
+        prefixes = rule.get('path_prefixes', {}).get(matched_domain)
+        if prefixes and not any(parsed.path.startswith(prefix) for prefix in prefixes):
+            continue
+        return rule
     return None
 
 
