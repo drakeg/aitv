@@ -246,7 +246,7 @@ class ReleaseNotificationWorkflowTests(TestCase):
         self.assertEqual(past_end.context['page_obj'].number, 2)
 
     def test_inbox_shows_elided_direct_page_navigation_for_long_history(self):
-        for index in range(300):
+        for index in range(400):
             ReleaseNotification.objects.create(
                 user=self.user,
                 content=self.content,
@@ -256,14 +256,14 @@ class ReleaseNotificationWorkflowTests(TestCase):
             )
         self.client.force_login(self.user)
 
-        response = self.client.get(reverse('notifications:inbox'), {'page': 3})
-        self.assertEqual(response.context['page_obj'].number, 3)
-        self.assertEqual(response.context['page_obj'].paginator.num_pages, 12)
+        response = self.client.get(reverse('notifications:inbox'), {'page': 8})
+        self.assertEqual(response.context['page_obj'].number, 8)
+        self.assertEqual(response.context['page_obj'].paginator.num_pages, 16)
         self.assertContains(response, 'aria-current="page"')
         self.assertContains(response, '?page=1')
-        self.assertContains(response, '?page=2')
-        self.assertContains(response, '?page=4')
-        self.assertContains(response, '?page=12')
+        self.assertContains(response, '?page=7')
+        self.assertContains(response, '?page=9')
+        self.assertContains(response, '?page=16')
         self.assertContains(response, '…')
 
     @patch('core.views.fetch_free_archive_movies', return_value=[])
