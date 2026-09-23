@@ -254,10 +254,11 @@ def fetch_live_tv_schedule(limit=100, country='US'):
         network = (network_data.get('name') or 'TV').strip()
         image = show.get('image') or episode.get('image') or {}
         provider = detect_provider(official_url) if official_url else None
-        access_type = provider['access_type'] if provider else ('other' if official_url else '')
+        direct_watch_url = official_url if provider else ''
+        access_type = provider['access_type'] if provider else ''
         provider_name = provider['provider'] if provider else network
         action_label = ''
-        if official_url:
+        if direct_watch_url:
             if access_type == 'auth':
                 action_label = f'{provider_name} · Sign-in required'
             elif access_type == 'subscription':
@@ -275,8 +276,8 @@ def fetch_live_tv_schedule(limit=100, country='US'):
             'id': f'tvmaze_{show_id}', 'title': show.get('name') or 'Untitled',
             'genre': ', '.join(genres) or 'TV', 'genres': genres,
             'thumbnail': image.get('medium') or image.get('original') or '',
-            'url': official_url or details_url, 'watch_url': official_url,
-            'has_direct_watch': bool(official_url), 'details_url': details_url,
+            'url': direct_watch_url or details_url, 'watch_url': direct_watch_url,
+            'has_direct_watch': bool(direct_watch_url), 'details_url': official_url or details_url,
             'source_type': 'tvmaze', 'content_type': 'tv', 'description': _strip_html(show.get('summary')),
             'release_year': int(show['premiered'][:4]) if str(show.get('premiered') or '')[:4].isdigit() else None,
             'rating': (show.get('rating') or {}).get('average'), 'external_source': 'tvmaze',

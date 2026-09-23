@@ -47,6 +47,33 @@ class TvmazeScheduleCoverageTests(SimpleTestCase):
         self.assertEqual(item['action_label'], '')
 
     @patch('content.services.requests.get')
+    def test_unknown_official_site_is_details_only_not_direct_watch(self, mock_get):
+        response = Mock()
+        response.raise_for_status.return_value = None
+        response.json.return_value = [{
+            'season': 1, 'number': 3, 'airtime': '19:00', 'runtime': 30,
+            'show': {
+                'id': 81, 'name': 'Independent Show',
+                'url': 'https://www.tvmaze.com/shows/81/independent-show',
+                'officialSite': 'https://independent.example/shows/independent-show',
+                'type': 'Scripted', 'genres': ['Comedy'],
+                'network': {'name': 'Independent Network'},
+                'rating': {'average': 7.0},
+            },
+        }]
+        mock_get.return_value = response
+
+        item = fetch_live_tv_schedule(country='US')[0]
+
+        self.assertFalse(item['has_direct_watch'])
+        self.assertEqual(item['watch_url'], '')
+        self.assertEqual(item['url'], 'https://www.tvmaze.com/shows/81/independent-show')
+        self.assertEqual(item['details_url'], 'https://independent.example/shows/independent-show')
+        self.assertEqual(item['provider'], 'Independent Network')
+        self.assertEqual(item['access_type'], '')
+        self.assertEqual(item['action_label'], '')
+
+    @patch('content.services.requests.get')
     def test_schedule_preserves_direct_provider_action_when_official_site_exists(self, mock_get):
         response = Mock()
         response.raise_for_status.return_value = None
