@@ -52,12 +52,15 @@ class ProviderPreferenceTests(TestCase):
         self.assertIn("row.insertBefore(card, anchor)", script)
         self.assertIn("const bestProvider = providerRows(data)[0]", script)
         self.assertIn("preferredProviderOrder.has(providerName.toLocaleLowerCase())", script)
-        self.assertIn("return `See ${providerName} subscription options`", script)
+        self.assertIn("return `Find ${providerName} subscription option`", script)
+        self.assertIn("return 'Open provider listing'", script)
 
     def test_cards_expose_neutral_provider_match_state(self):
         template = Path(settings.BASE_DIR, 'templates', 'partials', 'card.html').read_text()
         self.assertIn('data-preferred-provider-match="0"', template)
         self.assertIn('data-preferred-provider-badge', template)
+        self.assertIn('Direct watch', template)
+        self.assertIn('data-context-watch>Open provider listing</a>', template)
 
 
     def test_provider_personalization_documentation_tracks_current_behavior(self):
