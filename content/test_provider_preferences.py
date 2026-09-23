@@ -50,6 +50,9 @@ class ProviderPreferenceTests(TestCase):
         self.assertIn("if (!card || !preferredProviderOrder.size) return", script)
         self.assertIn("[data-favorite-form][data-favorite-state=\"1\"]", script)
         self.assertIn("row.insertBefore(card, anchor)", script)
+        self.assertIn("const bestProvider = providerRows(data)[0]", script)
+        self.assertIn("preferredProviderOrder.has(providerName.toLocaleLowerCase())", script)
+        self.assertIn("return `See ${providerName} subscription options`", script)
 
     def test_cards_expose_neutral_provider_match_state(self):
         template = Path(settings.BASE_DIR, 'templates', 'partials', 'card.html').read_text()
