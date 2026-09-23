@@ -20,7 +20,7 @@
             {% if item.release_year %}<span class="badge text-bg-light">{{ item.release_year }}</span>{% endif %}
             {% if item.rating %}<span class="badge text-bg-light">★ {{ item.rating }}</span>{% endif %}
             <span class="badge text-bg-success d-none" data-preferred-provider-badge></span>
-            {% if item.is_live_source and item.has_direct_watch != False %}<span class="badge text-bg-success" title="The live source supplied this destination">Direct watch</span>{% endif %}
+            {% if item.is_live_source and item.has_direct_watch != False %}<span class="badge text-bg-success" title="The live source supplied this destination">{% if item.watch_scope == "episode" %}Episode watch{% else %}Direct watch{% endif %}</span>{% endif %}
         </div>
 
         <strong class="content-title" title="{% if item.title %}{{ item.title }}{% else %}{{ item.name|default:'Untitled' }}{% endif %}">{% if item.title %}{{ item.title|truncatechars:28 }}{% else %}{{ item.name|default:'Untitled'|truncatechars:28 }}{% endif %}</strong>

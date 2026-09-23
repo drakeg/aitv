@@ -60,6 +60,8 @@ class ProviderPreferenceTests(TestCase):
         self.assertIn('data-preferred-provider-match="0"', template)
         self.assertIn('data-preferred-provider-badge', template)
         self.assertIn('Direct watch', template)
+        self.assertIn('Episode watch', template)
+        self.assertIn('item.watch_scope', template)
         self.assertIn('data-context-watch>Open provider listing</a>', template)
 
 

@@ -74,6 +74,53 @@ class TvmazeScheduleCoverageTests(SimpleTestCase):
         self.assertEqual(item['action_label'], '')
 
     @patch('content.services.requests.get')
+    def test_recognized_episode_url_is_preferred_over_show_homepage(self, mock_get):
+        response = Mock()
+        response.raise_for_status.return_value = None
+        response.json.return_value = [{
+            'season': 4, 'number': 7, 'airtime': '20:00', 'runtime': 42,
+            'url': 'https://www.cbs.com/shows/provider-show/video/s4e7/',
+            'show': {
+                'id': 87, 'name': 'Provider Show',
+                'url': 'https://www.tvmaze.com/shows/87/provider-show',
+                'officialSite': 'https://www.cbs.com/shows/provider-show/',
+                'type': 'Scripted', 'genres': ['Drama'],
+                'network': {'name': 'CBS'}, 'rating': {'average': 8.0},
+            },
+        }]
+        mock_get.return_value = response
+
+        item = fetch_live_tv_schedule(country='US')[0]
+
+        self.assertTrue(item['has_direct_watch'])
+        self.assertEqual(item['watch_scope'], 'episode')
+        self.assertEqual(item['watch_url'], 'https://www.cbs.com/shows/provider-show/video/s4e7/')
+        self.assertEqual(item['details_url'], 'https://www.cbs.com/shows/provider-show/')
+        self.assertEqual(item['provider'], 'CBS')
+
+    @patch('content.services.requests.get')
+    def test_unrecognized_episode_url_does_not_override_recognized_show_destination(self, mock_get):
+        response = Mock()
+        response.raise_for_status.return_value = None
+        response.json.return_value = [{
+            'season': 1, 'number': 2, 'airtime': '20:00', 'runtime': 60,
+            'url': 'https://www.tvmaze.com/episodes/123/provider-show-1x02',
+            'show': {
+                'id': 89, 'name': 'Provider Show',
+                'url': 'https://www.tvmaze.com/shows/89/provider-show',
+                'officialSite': 'https://www.cbs.com/shows/provider-show/',
+                'type': 'Scripted', 'genres': ['Drama'],
+                'network': {'name': 'CBS'}, 'rating': {'average': 8.0},
+            },
+        }]
+        mock_get.return_value = response
+
+        item = fetch_live_tv_schedule(country='US')[0]
+
+        self.assertEqual(item['watch_scope'], 'show')
+        self.assertEqual(item['watch_url'], 'https://www.cbs.com/shows/provider-show/')
+
+    @patch('content.services.requests.get')
     def test_schedule_preserves_direct_provider_action_when_official_site_exists(self, mock_get):
         response = Mock()
         response.raise_for_status.return_value = None
@@ -100,4 +147,5 @@ class TvmazeScheduleCoverageTests(SimpleTestCase):
         self.assertTrue(item['has_direct_watch'])
         self.assertEqual(item['watch_url'], 'https://www.cbs.com/shows/provider-show/')
         self.assertEqual(item['provider'], 'CBS')
+        self.assertEqual(item['watch_scope'], 'show')
         self.assertIn('CBS', item['action_label'])
