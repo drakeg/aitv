@@ -53,3 +53,22 @@ input, select { background-color: #333 !important; color: white !important; bord
 input::placeholder { color: #aaa; }
 .text-muted { color: #aaa !important; }
 .mb-3 { margin-bottom: 20px !important; }
+
+
+/* =========================
+   LIVE TV GUIDE
+========================= */
+.live-guide { max-width: 1400px; margin: 0 auto; }
+.guide-list { display: flex; flex-direction: column; gap: 6px; }
+.guide-row { display: grid; grid-template-columns: minmax(150px, 0.7fr) minmax(240px, 1.4fr) minmax(240px, 1.4fr); background: #1c1c1c; border: 1px solid #333; border-radius: 7px; overflow: hidden; }
+.guide-channel, .guide-program { min-width: 0; padding: 11px 13px; display: flex; flex-direction: column; gap: 3px; }
+.guide-channel { background: #151515; justify-content: center; }
+.guide-channel span, .guide-program span { font-size: 0.72rem; color: #aaa; }
+.guide-program { border-left: 1px solid #333; }
+.guide-program-now { background: #202020; }
+.guide-label { font-size: 0.65rem !important; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; }
+.guide-program strong { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+@media (max-width: 760px) {
+    .guide-row { grid-template-columns: 1fr; }
+    .guide-program { border-left: 0; border-top: 1px solid #333; }
+}
