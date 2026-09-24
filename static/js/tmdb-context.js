@@ -5,7 +5,18 @@ document.addEventListener('DOMContentLoaded', () => {
   const isAuthenticated = settings?.dataset.authenticated === '1';
   const importUrl = settings?.dataset.importUrl || '';
   const preferredProviders = (settings?.dataset.preferredProviders || '').split('|').map((name) => name.trim()).filter(Boolean);
-  const preferredProviderOrder = new Map(preferredProviders.map((name, index) => [name.toLocaleLowerCase(), index]));
+  const providerAliases = new Map([
+    ['amazon prime video', 'prime video'],
+    ['disney plus', 'disney+'],
+    ['paramount plus', 'paramount+'],
+    ['peacock premium', 'peacock'],
+    ['tubi tv', 'tubi'],
+  ]);
+  const providerKey = (name) => {
+    const normalized = (name || '').trim().toLocaleLowerCase();
+    return providerAliases.get(normalized) || normalized;
+  };
+  const preferredProviderOrder = new Map(preferredProviders.map((name, index) => [providerKey(name), index]));
   const csrfToken = document.querySelector('input[name="csrfmiddlewaretoken"]')?.value || '';
 
   const updateRowEmptyState = (row) => {
@@ -20,8 +31,8 @@ document.addEventListener('DOMContentLoaded', () => {
   const orderedProviders = (rows) => {
     if (!preferredProviderOrder.size) return rows || [];
     return (rows || []).map((provider, index) => ({provider, index})).sort((left, right) => {
-      const leftRank = preferredProviderOrder.get((left.provider.name || '').toLocaleLowerCase());
-      const rightRank = preferredProviderOrder.get((right.provider.name || '').toLocaleLowerCase());
+      const leftRank = preferredProviderOrder.get(providerKey(left.provider.name));
+      const rightRank = preferredProviderOrder.get(providerKey(right.provider.name));
       const leftPreferred = leftRank !== undefined;
       const rightPreferred = rightRank !== undefined;
       if (leftPreferred !== rightPreferred) return leftPreferred ? -1 : 1;
@@ -35,7 +46,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const hasPreferredProvider = (data) => {
     if (!preferredProviderOrder.size) return false;
     return (data.all_providers || data.providers || []).some((provider) =>
-      preferredProviderOrder.has((provider.name || '').toLocaleLowerCase()));
+      preferredProviderOrder.has(providerKey(provider.name)));
   };
 
   const rankProviderMatches = (row) => {
@@ -55,7 +66,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const applyPreferredProviderRank = (card, row, data) => {
     if (!card || !preferredProviderOrder.size) return;
-    const matchedProviders = (data.all_providers || data.providers || []).map((provider) => provider.name || '').filter((name) => preferredProviderOrder.has(name.toLocaleLowerCase()));
+    const matchedProviders = (data.all_providers || data.providers || []).map((provider) => provider.name || '').filter((name) => preferredProviderOrder.has(providerKey(name)));
     card.dataset.preferredProviderMatch = matchedProviders.length ? '1' : '0';
     const badge = card.querySelector('[data-preferred-provider-badge]');
     if (badge) {
@@ -69,7 +80,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const bestProvider = providerRows(data)[0];
     const providerName = bestProvider?.name || '';
     const bestAccess = bestProvider?.access || '';
-    const isPreferred = providerName && preferredProviderOrder.has(providerName.toLocaleLowerCase());
+    const isPreferred = providerName && preferredProviderOrder.has(providerKey(providerName));
     if (isPreferred) {
       if (bestAccess === 'Free') return `Find free ${providerName} option`;
       if (bestAccess === 'Free with ads') return `Find ${providerName} free-with-ads option`;
