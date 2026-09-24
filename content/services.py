@@ -359,7 +359,9 @@ def refresh_epg_source(adapter, region='US', retention_hours=6):
             ends_at = row.get('ends_at')
             if not airing_external_id or not channel_external_id or not program_external_id:
                 continue
-            if not starts_at or not ends_at or ends_at <= starts_at:
+            if not isinstance(starts_at, datetime) or not isinstance(ends_at, datetime):
+                continue
+            if ends_at <= starts_at:
                 continue
 
             channel, _ = Channel.objects.update_or_create(
