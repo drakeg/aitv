@@ -2,7 +2,7 @@
 
 aitv is a Django-based personal streaming dashboard for discovering movies and TV from live upstream sources, seeing where titles are actually available, and keeping account-specific Watchlist and Favorite state.
 
-The goal is fewer clicks to legitimate content. Direct network/service destinations are preferred when a source actually supplies them; TMDB is used for discovery, metadata, canonical identity, and regional provider context rather than treated as the viewing destination. The next major product direction is a unified Live TV/EPG experience across legitimate sources; its source and playback boundaries are documented in `docs/live-tv-epg.md`.
+The goal is fewer clicks to legitimate content. Direct network/service destinations are preferred when a source actually supplies them; TMDB is used for discovery, metadata, canonical identity, and regional provider context rather than treated as the viewing destination. A unified Live TV/EPG experience is now being built across legitimate sources: the first normalized region-aware now/next guide is available at `/live-tv/`, and signed-in viewers can Favorite channels and filter the guide to their own Favorites. Source and playback boundaries are documented in `docs/live-tv-epg.md`.
 
 ## Current capabilities
 
