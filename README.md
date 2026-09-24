@@ -2,7 +2,7 @@
 
 aitv is a Django-based personal streaming dashboard for discovering movies and TV from live upstream sources, seeing where titles are actually available, and keeping account-specific Watchlist and Favorite state.
 
-The goal is fewer clicks to legitimate content. Direct network/service destinations are preferred when a source actually supplies them; TMDB is used for discovery, metadata, canonical identity, and regional provider context rather than treated as the viewing destination. A unified Live TV/EPG experience is now being built across legitimate sources: the first normalized region-aware now/next guide is available at `/live-tv/`, and signed-in viewers can Favorite channels and filter the guide to their own Favorites. Source and playback boundaries are documented in `docs/live-tv-epg.md`.
+The goal is fewer clicks to legitimate content. Direct network/service destinations are preferred when a source actually supplies them; TMDB is used for discovery, metadata, canonical identity, and regional provider context rather than treated as the viewing destination. A unified Live TV/EPG experience is now being built across legitimate sources: the normalized region-aware now/next guide is available at `/live-tv/`, signed-in viewers can Favorite channels and filter the guide to their own Favorites, and trusted channel destinations are stored separately from schedule metadata so Watch actions appear only when an explicit playable destination exists. Source and playback boundaries are documented in `docs/live-tv-epg.md`.
 
 ## Current capabilities
 
@@ -210,4 +210,4 @@ aitv does not bypass provider authentication or DRM and does not store/replay ra
 
 ## Status
 
-aitv now centers live TV/movie discovery, a normalized adapter-based Live TV/EPG persistence path, truthful provider/network visibility, recognized provider watch destinations supplied by live sources (visibly labeled `Direct watch`; unrecognized official sites remain details-only; recognized coverage includes The Roku Channel and both Prime Video's native domain and scoped Amazon video paths), compact regional provider choices whose TMDB links are labeled as provider discovery rather than direct playback, account-specific personalization, Watchlist/Favorites, and optional recurring Favorite release notifications.
+aitv now centers live TV/movie discovery, a normalized adapter-based Live TV/EPG persistence path with source-provenanced channel destinations, truthful provider/network visibility, recognized provider watch destinations supplied by live sources (visibly labeled `Direct watch`; unrecognized official sites remain details-only; recognized coverage includes The Roku Channel and both Prime Video's native domain and scoped Amazon video paths), compact regional provider choices whose TMDB links are labeled as provider discovery rather than direct playback, account-specific personalization, Watchlist/Favorites, and optional recurring Favorite release notifications.
