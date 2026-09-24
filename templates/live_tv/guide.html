@@ -37,6 +37,9 @@
                             {% endif %}
                         </div>
                         <span>{{ row.channel.region }}</span>
+                        {% if row.destination %}
+                            <a class="btn btn-sm btn-success guide-watch-action" href="{{ row.destination.url }}" target="_blank" rel="noopener noreferrer">{{ row.destination.action_label }}</a>
+                        {% endif %}
                     </div>
                     <div class="guide-program guide-program-now">
                         <span class="guide-label">Now</span>
