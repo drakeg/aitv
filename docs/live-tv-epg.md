@@ -38,7 +38,7 @@ Airing data and playback destinations must not be conflated. Knowing that a prog
 ## Initial implementation path
 
 1. Introduce normalized Channel/Program/Airing concepts without replacing existing discovery. **Implemented in Sprint 57:** persisted source identities and region-aware channels, reusable programs, timed airings, duplicate guards, and an end-after-start constraint. Playback URLs intentionally remain outside these schedule models.
-2. Normalize existing trustworthy schedule data into the EPG persistence layer. **Implemented in Sprint 58 for TVmaze:** stable source identities are upserted into Channel/Program/Airing records, repeated refreshes are idempotent, malformed identity/time rows are skipped, and only expired TVmaze airings are cleaned up.\n3. Build a Live TV guide route and now/next presentation from the normalized schedule data.
+2. Normalize existing trustworthy schedule data into the EPG persistence layer. **Implemented in Sprint 58 for TVmaze:** stable source identities are upserted into Channel/Program/Airing records, repeated refreshes are idempotent, malformed identity/time rows are skipped, and only expired TVmaze airings are cleaned up.\n3. Build a Live TV guide route and now/next presentation from the normalized schedule data. **Implemented in Sprint 59:** `/live-tv/` reads normalized EPG persistence, groups current/next programming by channel, respects the signed-in account region, and does not expose playback actions from schedule data alone.
 4. Add per-user channel Favorites and filtering.
 5. Add additional legitimate channel/schedule adapters one source at a time with contract tests.
 6. Add supported provider/session or user-owned tuner integrations separately from schedule ingestion.

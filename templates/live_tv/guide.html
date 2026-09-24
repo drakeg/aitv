@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section class="live-guide">
+    <div class="d-flex justify-content-between align-items-end flex-wrap gap-2 mb-3">
+        <div>
+            <h2 class="mb-1">Live TV Guide</h2>
+            <div class="text-muted">Now and next · {{ guide_region }} · schedule data does not imply playback availability</div>
+        </div>
+        <a class="btn btn-outline-light" href="{% url 'home' %}">Back to discovery</a>
+    </div>
+
+    {% if guide_rows %}
+        <div class="guide-list" aria-label="Live TV channel guide">
+            {% for row in guide_rows %}
+                <article class="guide-row">
+                    <div class="guide-channel">
+                        <strong>{{ row.channel.name }}</strong>
+                        <span>{{ row.channel.region }}</span>
+                    </div>
+                    <div class="guide-program guide-program-now">
+                        <span class="guide-label">Now</span>
+                        {% if row.current %}
+                            <strong>{{ row.current.program.title }}</strong>
+                            <span>{{ row.current.starts_at|date:"g:i A" }}–{{ row.current.ends_at|date:"g:i A" }}</span>
+                        {% else %}
+                            <span class="text-muted">No current program listed</span>
+                        {% endif %}
+                    </div>
+                    <div class="guide-program">
+                        <span class="guide-label">Next</span>
+                        {% if row.next %}
+                            <strong>{{ row.next.program.title }}</strong>
+                            <span>{{ row.next.starts_at|date:"g:i A" }}–{{ row.next.ends_at|date:"g:i A" }}</span>
+                        {% else %}
+                            <span class="text-muted">No next program listed</span>
+                        {% endif %}
+                    </div>
+                </article>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="empty-state">
+            <strong>No current guide data is available for {{ guide_region }}.</strong>
+            <div class="text-muted mt-1">The Live TV guide only shows normalized schedule data from configured trustworthy sources.</div>
+        </div>
+    {% endif %}
+</section>
+{% endblock %}

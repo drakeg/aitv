@@ -2,8 +2,9 @@ from django.contrib.auth import login
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import UserCreationForm
 from django.shortcuts import redirect, render
+from django.utils import timezone
 
-from content.models import DiscoveryPreference
+from content.models import Airing, DiscoveryPreference
 from content.services import (
     fetch_free_archive_movies,
     fetch_live_tv_schedule,
@@ -269,3 +270,40 @@ def home(request):
         'require_region_availability': require_region_availability, 'content_mix': content_mix,
     }
     return render(request, 'home.html', context)
+
+
+
+def live_tv_guide(request):
+    region = 'US'
+    if request.user.is_authenticated:
+        preference, _ = DiscoveryPreference.objects.get_or_create(user=request.user)
+        region = preference.region
+
+    now = timezone.now()
+    upcoming = (
+        Airing.objects
+        .filter(channel__region=region, ends_at__gt=now)
+        .select_related('channel', 'program')
+        .order_by('channel__name', 'starts_at')
+    )
+    channels = {}
+    for airing in upcoming:
+        row = channels.setdefault(airing.channel_id, {
+            'channel': airing.channel,
+            'current': None,
+            'next': None,
+        })
+        if airing.starts_at <= now < airing.ends_at and row['current'] is None:
+            row['current'] = airing
+        elif airing.starts_at > now and row['next'] is None:
+            row['next'] = airing
+
+    guide_rows = [
+        row for row in channels.values()
+        if row['current'] is not None or row['next'] is not None
+    ]
+    return render(request, 'live_tv/guide.html', {
+        'guide_rows': guide_rows,
+        'guide_region': region,
+        'guide_now': now,
+    })
