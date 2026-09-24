@@ -39,6 +39,12 @@ class ProviderPreferenceTests(TestCase):
     def test_client_prioritizes_selected_providers_stably(self):
         script = Path(settings.BASE_DIR, 'static', 'js', 'tmdb-context.js').read_text()
         self.assertIn('preferredProviderOrder', script)
+        self.assertIn("['amazon prime video', 'prime video']", script)
+        self.assertIn("['disney plus', 'disney+']", script)
+        self.assertIn("['paramount plus', 'paramount+']", script)
+        self.assertIn("['peacock premium', 'peacock']", script)
+        self.assertIn("['tubi tv', 'tubi']", script)
+        self.assertIn('const providerKey = (name)', script)
         self.assertIn('if (!preferredProviderOrder.size) return rows || []', script)
         self.assertIn('if (leftPreferred !== rightPreferred) return leftPreferred ? -1 : 1', script)
         self.assertIn('return left.index - right.index', script)
@@ -51,7 +57,7 @@ class ProviderPreferenceTests(TestCase):
         self.assertIn("[data-favorite-form][data-favorite-state=\"1\"]", script)
         self.assertIn("row.insertBefore(card, anchor)", script)
         self.assertIn("const bestProvider = providerRows(data)[0]", script)
-        self.assertIn("preferredProviderOrder.has(providerName.toLocaleLowerCase())", script)
+        self.assertIn("preferredProviderOrder.has(providerKey(providerName))", script)
         self.assertIn("return `Find ${providerName} subscription option`", script)
         self.assertIn("return 'Open provider listing'", script)
 
