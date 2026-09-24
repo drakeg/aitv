@@ -79,3 +79,76 @@ class DiscoveryPreference(models.Model):
 
     def __str__(self):
         return f'Discovery preferences for {self.user}'
+
+
+class Channel(models.Model):
+    """Normalized Live TV channel identity independent of schedule/playback."""
+
+    name = models.CharField(max_length=255)
+    slug = models.SlugField(max_length=255)
+    region = models.CharField(max_length=2, default='US')
+    source = models.CharField(max_length=50)
+    external_id = models.CharField(max_length=100)
+    logo_url = models.URLField(blank=True)
+    categories = models.JSONField(default=list, blank=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=['source', 'external_id', 'region'],
+                name='unique_channel_source_external_region',
+            ),
+        ]
+        ordering = ['name', 'region']
+
+    def __str__(self):
+        return self.name
+
+
+class Program(models.Model):
+    """Program metadata that can be reused across multiple channel airings."""
+
+    title = models.CharField(max_length=255)
+    source = models.CharField(max_length=50)
+    external_id = models.CharField(max_length=100)
+    description = models.TextField(blank=True)
+    program_type = models.CharField(max_length=50, blank=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=['source', 'external_id'],
+                name='unique_program_source_external',
+            ),
+        ]
+        ordering = ['title']
+
+    def __str__(self):
+        return self.title
+
+
+class Airing(models.Model):
+    """A scheduled program occurrence; schedule data does not imply playback."""
+
+    channel = models.ForeignKey(Channel, on_delete=models.CASCADE, related_name='airings')
+    program = models.ForeignKey(Program, on_delete=models.CASCADE, related_name='airings')
+    starts_at = models.DateTimeField()
+    ends_at = models.DateTimeField()
+    source = models.CharField(max_length=50)
+    external_id = models.CharField(max_length=100)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=['source', 'external_id'],
+                name='unique_airing_source_external',
+            ),
+            models.CheckConstraint(
+                condition=models.Q(ends_at__gt=models.F('starts_at')),
+                name='airing_ends_after_start',
+            ),
+        ]
+        ordering = ['starts_at', 'channel__name']
+
+    def __str__(self):
+        return f'{self.channel}: {self.program} @ {self.starts_at}'
