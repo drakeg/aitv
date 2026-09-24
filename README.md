@@ -2,7 +2,7 @@
 
 aitv is a Django-based personal streaming dashboard for discovering movies and TV from live upstream sources, seeing where titles are actually available, and keeping account-specific Watchlist and Favorite state.
 
-The goal is fewer clicks to legitimate content. Direct network/service destinations are preferred when a source actually supplies them; TMDB is used for discovery, metadata, canonical identity, and regional provider context rather than treated as the viewing destination.
+The goal is fewer clicks to legitimate content. Direct network/service destinations are preferred when a source actually supplies them; TMDB is used for discovery, metadata, canonical identity, and regional provider context rather than treated as the viewing destination. The next major product direction is a unified Live TV/EPG experience across legitimate sources; its source and playback boundaries are documented in `docs/live-tv-epg.md`.
 
 ## Current capabilities
 
@@ -194,7 +194,7 @@ GitHub Actions runs Django checks and the test suite for pull requests and pushe
 
 ### Definition of done
 
-Feature and maintenance work is expected to keep implementation, tests, and documentation synchronized. Behavior changes should include regression coverage at the most appropriate layer and update README/product/operations documentation when user-visible behavior, configuration, architecture, or operating procedures change. CI must pass before a sprint PR is treated as ready. The full sprint workflow and maintenance-review checklist live in `docs/agile.md`.
+Feature and maintenance work is expected to keep implementation, tests, and documentation synchronized. Behavior changes should include regression coverage at the most appropriate layer and update README/product/operations documentation when user-visible behavior, configuration, architecture, or operating procedures change. CI must pass before a sprint PR is treated as ready. The full sprint workflow and maintenance-review checklist live in `docs/agile.md`. Repository coding rules live in `docs/coding-standards.md`, and the durable sprint history is maintained in `docs/sprints.md`.
 
 ## Architecture notes
 
