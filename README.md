@@ -98,7 +98,7 @@ Preferred streaming services affect ordering only. If TMDB reports legitimate re
 
 ### TVmaze
 
-TVmaze supplies scheduled TV plus show/network or web-channel, episode, runtime, airtime, genres, and official destinations where available. A card can remain useful as schedule metadata even when TVmaze does not publish a direct show URL. aitv can lazily resolve an exact TVmaze title to a canonical TMDB title for regional provider context and saved/Favorite state.
+TVmaze supplies scheduled TV plus show/network or web-channel, episode, runtime, airtime, genres, and official destinations where available. A card can remain useful as schedule metadata even when TVmaze does not publish a direct show URL. aitv can lazily resolve an exact TVmaze title to a canonical TMDB title for regional provider context and saved/Favorite state. For the normalized Live TV guide, TVmaze now passes through the shared EPG schedule-source adapter contract before Channel/Program/Airing persistence; future schedule sources must normalize to the same contract and keep their own provenance.
 
 ### Internet Archive
 
@@ -210,4 +210,4 @@ aitv does not bypass provider authentication or DRM and does not store/replay ra
 
 ## Status
 
-aitv now centers live TV/movie discovery, truthful provider/network visibility, recognized provider watch destinations supplied by live sources (visibly labeled `Direct watch`; unrecognized official sites remain details-only; recognized coverage includes The Roku Channel and both Prime Video's native domain and scoped Amazon video paths), compact regional provider choices whose TMDB links are labeled as provider discovery rather than direct playback, account-specific personalization, Watchlist/Favorites, and optional recurring Favorite release notifications.
+aitv now centers live TV/movie discovery, a normalized adapter-based Live TV/EPG persistence path, truthful provider/network visibility, recognized provider watch destinations supplied by live sources (visibly labeled `Direct watch`; unrecognized official sites remain details-only; recognized coverage includes The Roku Channel and both Prime Video's native domain and scoped Amazon video paths), compact regional provider choices whose TMDB links are labeled as provider discovery rather than direct playback, account-specific personalization, Watchlist/Favorites, and optional recurring Favorite release notifications.
