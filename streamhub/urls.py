@@ -2,7 +2,7 @@ from django.contrib import admin
 from django.contrib.auth import views as auth_views
 from django.urls import include, path
 
-from core.views import home, profile, register
+from core.views import home, live_tv_guide, profile, register
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -10,6 +10,7 @@ urlpatterns = [
     path('accounts/logout/', auth_views.LogoutView.as_view(), name='logout'),
     path('accounts/register/', register, name='register'),
     path('accounts/profile/', profile, name='profile'),
+    path('live-tv/', live_tv_guide, name='live_tv_guide'),
     path('content/', include('content.urls')),
     path('watchlist/', include('watchlist.urls')),
     path('notifications/', include('notifications.urls')),
