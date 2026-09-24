@@ -10,14 +10,23 @@
         <div class="d-flex gap-2 flex-wrap">
             {% if user.is_authenticated %}
                 {% if show_favorites_only %}
-                    <a class="btn btn-outline-light" href="{% url 'live_tv_guide' %}">Show all channels</a>
+                    <a class="btn btn-outline-light" href="{% url 'live_tv_guide' %}{% if guide_query %}?q={{ guide_query|urlencode }}{% endif %}">Show all channels</a>
                 {% else %}
-                    <a class="btn btn-outline-warning" href="{% url 'live_tv_guide' %}?favorites=1">★ Favorites only</a>
+                    <a class="btn btn-outline-warning" href="{% url 'live_tv_guide' %}?favorites=1{% if guide_query %}&amp;q={{ guide_query|urlencode }}{% endif %}">★ Favorites only</a>
                 {% endif %}
             {% endif %}
             <a class="btn btn-outline-light" href="{% url 'home' %}">Back to discovery</a>
         </div>
     </div>
+
+    <form class="browse-bar guide-search mb-3 d-flex gap-2 flex-wrap" method="get" action="{% url 'live_tv_guide' %}">
+        {% if show_favorites_only %}<input type="hidden" name="favorites" value="1">{% endif %}
+        <input type="search" name="q" value="{{ guide_query }}" placeholder="Search channels or programs" aria-label="Search Live TV channels or programs">
+        <button class="btn btn-primary" type="submit">Search guide</button>
+        {% if guide_query %}
+            <a class="btn btn-outline-light" href="{% url 'live_tv_guide' %}{% if show_favorites_only %}?favorites=1{% endif %}">Clear search</a>
+        {% endif %}
+    </form>
 
     {% if guide_rows %}
         <div class="guide-list" aria-label="Live TV channel guide">
@@ -30,6 +39,7 @@
                                 <form method="post" action="{% url 'toggle_channel_favorite' row.channel.id %}">
                                     {% csrf_token %}
                                     {% if show_favorites_only %}<input type="hidden" name="favorites" value="1">{% endif %}
+                                    {% if guide_query %}<input type="hidden" name="q" value="{{ guide_query }}">{% endif %}
                                     <button class="guide-favorite{% if row.is_favorite %} is-favorite{% endif %}" type="submit" aria-label="{% if row.is_favorite %}Remove{% else %}Add{% endif %} {{ row.channel.name }} {% if row.is_favorite %}from{% else %}to{% endif %} favorites" title="{% if row.is_favorite %}Remove from favorites{% else %}Add to favorites{% endif %}">
                                         {% if row.is_favorite %}★{% else %}☆{% endif %}
                                     </button>
@@ -64,7 +74,10 @@
         </div>
     {% else %}
         <div class="empty-state">
-            {% if show_favorites_only %}
+            {% if guide_query %}
+                <strong>No channels or upcoming programs match “{{ guide_query }}” for {{ guide_region }}.</strong>
+                <div class="text-muted mt-1">Search matches channel names and normalized upcoming program titles.</div>
+            {% elif show_favorites_only %}
                 <strong>No favorite channels currently have guide data for {{ guide_region }}.</strong>
                 <div class="text-muted mt-1">Favorite channels from other accounts are never included.</div>
             {% else %}
