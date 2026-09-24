@@ -281,7 +281,7 @@ def fetch_live_tv_schedule(limit=100, country='US'):
         is_news = show_type.lower() in NEWS_TERMS or any(str(g).lower() in NEWS_TERMS for g in genres)
         episode_id = episode.get('id')
         items.append({
-            'id': f'tvmaze_{show_id}', 'schedule_external_id': str(episode_id) if episode_id is not None else '', 'channel_external_id': str(network_data.get('id') or network),, 'title': show.get('name') or 'Untitled',
+            'id': f'tvmaze_{show_id}', 'schedule_external_id': str(episode_id) if episode_id is not None else '', 'channel_external_id': str(network_data.get('id') or network), 'title': show.get('name') or 'Untitled',
             'genre': ', '.join(genres) or 'TV', 'genres': genres,
             'thumbnail': image.get('medium') or image.get('original') or '',
             'url': direct_watch_url or details_url, 'watch_url': direct_watch_url,
