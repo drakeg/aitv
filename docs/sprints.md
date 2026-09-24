@@ -29,6 +29,7 @@ This ledger is the durable project record for sprint-sized development. Git hist
 | 60 | #84 | Add per-user Live TV channel Favorites and Favorites-only guide filtering. |
 | 61 | #85 | Introduce a shared EPG schedule-source adapter contract and move TVmaze ingestion behind it. |
 | 62 | #86 | Persist trusted channel destinations separately from schedule data and render only explicit playable destinations. |
+| 63 | pending | Add Live TV channel/program search and preferred-provider destination ranking. |
 
 ## Earlier development
 
