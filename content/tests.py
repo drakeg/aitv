@@ -156,8 +156,8 @@ class ProviderDetectionTests(SimpleTestCase):
         cases = {
             'https://www.abc.com/shows/example': 'ABC',
             'https://www.cbs.com/shows/survivor/': 'CBS',
-            'https://www.nbc.com/example': 'NBC',
-            'https://www.fox.com/example': 'FOX',
+            'https://www.nbc.com/shows/example': 'NBC',
+            'https://www.fox.com/watch/example': 'FOX',
             'https://www.pbs.org/show/frontline/': 'PBS',
             'https://www.cwtv.com/shows/example/': 'The CW',
             'https://tubitv.com/movies/example': 'Tubi',

@@ -21,3 +21,28 @@ class ProviderDetectionTests(SimpleTestCase):
         self.assertIsNotNone(provider)
         self.assertEqual(provider['provider'], 'Prime Video')
         self.assertIsNone(detect_provider('https://www.amazon.com/dp/example'))
+
+
+    def test_major_network_watch_paths_are_recognized(self):
+        cases = (
+            ('https://abc.com/shows/example', 'ABC'),
+            ('https://www.cbs.com/shows/example/', 'CBS'),
+            ('https://www.nbc.com/shows/example', 'NBC'),
+            ('https://www.fox.com/watch/example/', 'FOX'),
+        )
+        for url, expected_provider in cases:
+            with self.subTest(url=url):
+                provider = detect_provider(url)
+                self.assertIsNotNone(provider)
+                self.assertEqual(provider['provider'], expected_provider)
+
+    def test_major_network_non_watch_paths_are_not_direct_playback(self):
+        urls = (
+            'https://abc.com/news/example-story',
+            'https://www.cbs.com/news/example-story/',
+            'https://www.nbc.com/news/example-story',
+            'https://www.fox.com/article/example-story/',
+        )
+        for url in urls:
+            with self.subTest(url=url):
+                self.assertIsNone(detect_provider(url))
