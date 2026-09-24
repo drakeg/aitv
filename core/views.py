@@ -1,6 +1,7 @@
 from django.contrib.auth import login
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import UserCreationForm
+from django.db.models import Q
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils import timezone
@@ -44,6 +45,20 @@ CATEGORY_ALIASES = {
     'fantasy': {'sci-fi & fantasy'}, 'action': {'action & adventure'},
     'adventure': {'action & adventure'}, 'action & adventure': {'action', 'adventure'},
 }
+
+PROVIDER_MATCH_ALIASES = {
+    'amazon prime video': 'prime video',
+    'disney plus': 'disney+',
+    'paramount plus': 'paramount+',
+    'peacock premium': 'peacock',
+    'tubi tv': 'tubi',
+}
+
+
+def _provider_match_key(value):
+    normalized = str(value or '').strip().casefold()
+    return PROVIDER_MATCH_ALIASES.get(normalized, normalized)
+
 
 
 def register(request):
@@ -279,18 +294,32 @@ def live_tv_guide(request):
     region = 'US'
     favorite_channel_ids = set()
     show_favorites_only = False
+    preferred_providers = []
     if request.user.is_authenticated:
         preference, _ = DiscoveryPreference.objects.get_or_create(user=request.user)
         region = preference.region
+        preferred_providers = preference.preferred_providers
         favorite_channel_ids = set(
             ChannelFavorite.objects.filter(user=request.user).values_list('channel_id', flat=True)
         )
         show_favorites_only = request.GET.get('favorites') == '1'
 
+    query = request.GET.get('q', '').strip()
     now = timezone.now()
     upcoming = Airing.objects.filter(channel__region=region, ends_at__gt=now)
+
     if show_favorites_only:
         upcoming = upcoming.filter(channel_id__in=favorite_channel_ids)
+
+    if query:
+        matching_channel_ids = (
+            upcoming
+            .filter(Q(channel__name__icontains=query) | Q(program__title__icontains=query))
+            .values_list('channel_id', flat=True)
+            .distinct()
+        )
+        upcoming = upcoming.filter(channel_id__in=matching_channel_ids)
+
     upcoming = (
         upcoming
         .select_related('channel', 'program')
@@ -312,7 +341,11 @@ def live_tv_guide(request):
 
     playable_destinations = {}
     if channels:
-        destinations = (
+        preferred_provider_order = {
+            _provider_match_key(provider): index
+            for index, provider in enumerate(preferred_providers)
+        }
+        destinations = list(
             ChannelDestination.objects
             .filter(
                 channel_id__in=channels,
@@ -321,8 +354,16 @@ def live_tv_guide(request):
                     ChannelDestination.DestinationType.TUNER,
                 ],
             )
-            .order_by('channel_id', 'provider', 'url')
         )
+        destinations.sort(key=lambda destination: (
+            preferred_provider_order.get(
+                _provider_match_key(destination.provider),
+                len(preferred_provider_order),
+            ),
+            0 if destination.destination_type == ChannelDestination.DestinationType.DIRECT else 1,
+            destination.provider.casefold(),
+            destination.url,
+        ))
         for destination in destinations:
             playable_destinations.setdefault(destination.channel_id, destination)
 
@@ -337,6 +378,7 @@ def live_tv_guide(request):
         'guide_rows': guide_rows,
         'guide_region': region,
         'guide_now': now,
+        'guide_query': query,
         'show_favorites_only': show_favorites_only,
     })
 
@@ -350,6 +392,13 @@ def toggle_channel_favorite(request, channel_id):
         favorite.delete()
 
     target = reverse('live_tv_guide')
+    params = []
     if request.POST.get('favorites') == '1':
-        target = f'{target}?favorites=1'
+        params.append('favorites=1')
+    query = request.POST.get('q', '').strip()
+    if query:
+        from urllib.parse import quote_plus
+        params.append(f'q={quote_plus(query)}')
+    if params:
+        target = f"{target}?{'&'.join(params)}"
     return redirect(target)
