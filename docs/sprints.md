@@ -22,7 +22,7 @@ This ledger is the durable project record for sprint-sized development. Git hist
 | 53 | #77 | Path-scope ABC/CBS/NBC/FOX direct-watch recognition. |
 | 54 | #78 | Complete network path scoping for PBS and The CW. |
 | 55 | #79 | Normalize provider-preference aliases against canonical upstream names. |
-| 56 | #80 | Establish repository-wide coding/sprint standards and Live TV/EPG architecture boundaries. |\n| 57 | #81 | Add the normalized Channel / Program / Airing persistence foundation and schedule invariants. |\n| 58 | pending | Normalize trustworthy TVmaze schedule data into idempotent EPG persistence. |
+| 56 | #80 | Establish repository-wide coding/sprint standards and Live TV/EPG architecture boundaries. |\n| 57 | #81 | Add the normalized Channel / Program / Airing persistence foundation and schedule invariants. |\n| 58 | #82 | Normalize trustworthy TVmaze schedule data into idempotent EPG persistence. |\n| 59 | pending | Add the first region-aware Live TV now/next guide backed by normalized EPG data. |
 
 ## Earlier development
 
