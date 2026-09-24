@@ -1,10 +1,12 @@
 from django.contrib.auth import login
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import UserCreationForm
-from django.shortcuts import redirect, render
+from django.shortcuts import get_object_or_404, redirect, render
+from django.urls import reverse
 from django.utils import timezone
+from django.views.decorators.http import require_POST
 
-from content.models import Airing, DiscoveryPreference
+from content.models import Airing, Channel, ChannelFavorite, DiscoveryPreference
 from content.services import (
     fetch_free_archive_movies,
     fetch_live_tv_schedule,
@@ -275,23 +277,33 @@ def home(request):
 
 def live_tv_guide(request):
     region = 'US'
+    favorite_channel_ids = set()
+    show_favorites_only = False
     if request.user.is_authenticated:
         preference, _ = DiscoveryPreference.objects.get_or_create(user=request.user)
         region = preference.region
+        favorite_channel_ids = set(
+            ChannelFavorite.objects.filter(user=request.user).values_list('channel_id', flat=True)
+        )
+        show_favorites_only = request.GET.get('favorites') == '1'
 
     now = timezone.now()
+    upcoming = Airing.objects.filter(channel__region=region, ends_at__gt=now)
+    if show_favorites_only:
+        upcoming = upcoming.filter(channel_id__in=favorite_channel_ids)
     upcoming = (
-        Airing.objects
-        .filter(channel__region=region, ends_at__gt=now)
+        upcoming
         .select_related('channel', 'program')
         .order_by('channel__name', 'starts_at')
     )
+
     channels = {}
     for airing in upcoming:
         row = channels.setdefault(airing.channel_id, {
             'channel': airing.channel,
             'current': None,
             'next': None,
+            'is_favorite': airing.channel_id in favorite_channel_ids,
         })
         if airing.starts_at <= now < airing.ends_at and row['current'] is None:
             row['current'] = airing
@@ -306,4 +318,19 @@ def live_tv_guide(request):
         'guide_rows': guide_rows,
         'guide_region': region,
         'guide_now': now,
+        'show_favorites_only': show_favorites_only,
     })
+
+
+@login_required
+@require_POST
+def toggle_channel_favorite(request, channel_id):
+    channel = get_object_or_404(Channel, pk=channel_id)
+    favorite, created = ChannelFavorite.objects.get_or_create(user=request.user, channel=channel)
+    if not created:
+        favorite.delete()
+
+    target = reverse('live_tv_guide')
+    if request.POST.get('favorites') == '1':
+        target = f'{target}?favorites=1'
+    return redirect(target)
