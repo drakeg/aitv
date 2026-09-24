@@ -27,6 +27,7 @@ This ledger is the durable project record for sprint-sized development. Git hist
 | 58 | #82 | Normalize trustworthy TVmaze schedule data into idempotent EPG persistence. |
 | 59 | #83 | Add the first region-aware Live TV now/next guide backed by normalized EPG data. |
 | 60 | #84 | Add per-user Live TV channel Favorites and Favorites-only guide filtering. |
+| 61 | #85 | Introduce a shared EPG schedule-source adapter contract and move TVmaze ingestion behind it. |
 
 ## Earlier development
 
