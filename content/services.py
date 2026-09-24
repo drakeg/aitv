@@ -1,8 +1,12 @@
 import os
+from datetime import datetime, timedelta
 from html import unescape
 
 import requests
+from django.db import transaction
+from django.utils import timezone
 
+from .models import Airing, Channel, Program
 from .providers import detect_provider
 
 TMDB_API_ROOT = 'https://api.themoviedb.org/3'
@@ -275,8 +279,9 @@ def fetch_live_tv_schedule(limit=100, country='US'):
         if show_type and show_type not in genres:
             genres.append(show_type)
         is_news = show_type.lower() in NEWS_TERMS or any(str(g).lower() in NEWS_TERMS for g in genres)
+        episode_id = episode.get('id')
         items.append({
-            'id': f'tvmaze_{show_id}', 'title': show.get('name') or 'Untitled',
+            'id': f'tvmaze_{show_id}', 'schedule_external_id': str(episode_id) if episode_id is not None else '', 'channel_external_id': str(network_data.get('id') or network), 'title': show.get('name') or 'Untitled',
             'genre': ', '.join(genres) or 'TV', 'genres': genres,
             'thumbnail': image.get('medium') or image.get('original') or '',
             'url': direct_watch_url or details_url, 'watch_url': direct_watch_url,
@@ -327,3 +332,71 @@ def fetch_free_archive_movies(limit=10):
             description = ' '.join(str(part) for part in description)
         items.append({'id': f'archive_{identifier}', 'title': title, 'genre': 'Free Movie', 'genres': [], 'thumbnail': f'https://archive.org/services/img/{identifier}', 'url': f'https://archive.org/details/{identifier}', 'watch_url': f'https://archive.org/details/{identifier}', 'has_direct_watch': True, 'details_url': f'https://archive.org/details/{identifier}', 'source_type': 'internet_archive', 'content_type': 'movie', 'description': _strip_html(description), 'release_year': year, 'rating': None, 'external_source': 'internet_archive', 'external_id': identifier, 'is_external': True, 'is_live_source': True, 'provider': 'Internet Archive', 'network': '', 'access_type': 'free', 'action_label': 'Watch free on Internet Archive', 'is_news': False})
     return items
+
+
+
+def refresh_tvmaze_epg(country='US', retention_hours=6):
+    """Persist today's trustworthy TVmaze schedule into normalized EPG models."""
+    country = str(country or 'US').strip().upper()
+    if len(country) != 2 or not country.isalpha():
+        country = 'US'
+    items = fetch_live_tv_schedule(limit=1000, country=country)
+    now = timezone.now()
+    refreshed_airing_ids = []
+
+    with transaction.atomic():
+        for item in items:
+            airing_external_id = item.get('schedule_external_id')
+            channel_external_id = item.get('channel_external_id')
+            if not airing_external_id or not channel_external_id:
+                continue
+            airtime = str(item.get('airtime') or '').strip()
+            try:
+                hour, minute = [int(part) for part in airtime.split(':', 1)]
+            except (TypeError, ValueError):
+                continue
+            starts_at = now.replace(hour=hour, minute=minute, second=0, microsecond=0)
+            runtime = item.get('runtime')
+            try:
+                runtime_minutes = int(runtime)
+            except (TypeError, ValueError):
+                runtime_minutes = 30
+            if runtime_minutes <= 0:
+                runtime_minutes = 30
+            ends_at = starts_at + timedelta(minutes=runtime_minutes)
+
+            channel, _ = Channel.objects.update_or_create(
+                source='tvmaze',
+                external_id=channel_external_id,
+                region=country,
+                defaults={
+                    'name': item.get('network') or 'TV',
+                    'slug': f'tvmaze-{channel_external_id}'.lower(),
+                    'categories': item.get('genres') or [],
+                },
+            )
+            program, _ = Program.objects.update_or_create(
+                source='tvmaze',
+                external_id=str(item.get('external_id') or ''),
+                defaults={
+                    'title': item.get('title') or 'Untitled',
+                    'description': item.get('description') or '',
+                    'program_type': item.get('show_type') or '',
+                },
+            )
+            airing, _ = Airing.objects.update_or_create(
+                source='tvmaze',
+                external_id=airing_external_id,
+                defaults={
+                    'channel': channel,
+                    'program': program,
+                    'starts_at': starts_at,
+                    'ends_at': ends_at,
+                },
+            )
+            refreshed_airing_ids.append(airing.pk)
+
+        stale_before = now - timedelta(hours=max(0, retention_hours))
+        Airing.objects.filter(source='tvmaze', ends_at__lt=stale_before).delete()
+
+    return len(refreshed_airing_ids)
