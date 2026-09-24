@@ -144,6 +144,29 @@ class TvmazeScheduleCoverageTests(SimpleTestCase):
         self.assertEqual(item['details_url'], 'https://www.cbs.com/news/example-story/')
 
     @patch('content.services.requests.get')
+    def test_pbs_non_watch_official_site_remains_details_only(self, mock_get):
+        response = Mock()
+        response.raise_for_status.return_value = None
+        response.json.return_value = [{
+            'season': 1, 'number': 1, 'airtime': '20:00', 'runtime': 60,
+            'show': {
+                'id': 91, 'name': 'PBS Special',
+                'url': 'https://www.tvmaze.com/shows/91/pbs-special',
+                'officialSite': 'https://www.pbs.org/about/about-pbs/',
+                'type': 'Documentary', 'genres': ['History'],
+                'network': {'name': 'PBS'}, 'rating': {'average': 7.5},
+            },
+        }]
+        mock_get.return_value = response
+
+        item = fetch_live_tv_schedule(country='US')[0]
+
+        self.assertFalse(item['has_direct_watch'])
+        self.assertEqual(item['watch_url'], '')
+        self.assertEqual(item['url'], 'https://www.tvmaze.com/shows/91/pbs-special')
+        self.assertEqual(item['details_url'], 'https://www.pbs.org/about/about-pbs/')
+
+    @patch('content.services.requests.get')
     def test_schedule_preserves_direct_provider_action_when_official_site_exists(self, mock_get):
         response = Mock()
         response.raise_for_status.return_value = None

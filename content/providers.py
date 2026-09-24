@@ -34,12 +34,14 @@ PROVIDER_RULES = (
     },
     {
         'domains': ('pbs.org',),
+        'path_prefixes': {'pbs.org': ('/show/', '/video/', '/livestream/')},
         'provider': 'PBS',
         'source_type': 'network',
         'access_type': ContentAvailability.AccessType.FREE,
     },
     {
         'domains': ('cwtv.com',),
+        'path_prefixes': {'cwtv.com': ('/shows/', '/episodes/', '/thecw/', '/live/')},
         'provider': 'The CW',
         'source_type': 'network',
         'access_type': ContentAvailability.AccessType.ADS,

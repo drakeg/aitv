@@ -46,3 +46,28 @@ class ProviderDetectionTests(SimpleTestCase):
         for url in urls:
             with self.subTest(url=url):
                 self.assertIsNone(detect_provider(url))
+
+
+    def test_pbs_and_cw_watch_paths_are_recognized(self):
+        cases = (
+            ('https://www.pbs.org/show/frontline/', 'PBS'),
+            ('https://www.pbs.org/video/example/', 'PBS'),
+            ('https://www.cwtv.com/shows/example/', 'The CW'),
+            ('https://www.cwtv.com/episodes/example/', 'The CW'),
+        )
+        for url, expected_provider in cases:
+            with self.subTest(url=url):
+                provider = detect_provider(url)
+                self.assertIsNotNone(provider)
+                self.assertEqual(provider['provider'], expected_provider)
+
+    def test_pbs_and_cw_non_watch_paths_are_not_direct_playback(self):
+        urls = (
+            'https://www.pbs.org/about/about-pbs/',
+            'https://www.pbs.org/education/example/',
+            'https://www.cwtv.com/about/',
+            'https://www.cwtv.com/feedback/',
+        )
+        for url in urls:
+            with self.subTest(url=url):
+                self.assertIsNone(detect_provider(url))
