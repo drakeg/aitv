@@ -5,7 +5,7 @@ from django.test import TestCase
 from django.urls import reverse
 from django.utils import timezone
 
-from content.models import Airing, Channel, DiscoveryPreference, Program
+from content.models import Airing, Channel, ChannelFavorite, DiscoveryPreference, Program
 
 
 class LiveTvGuideTests(TestCase):
@@ -62,3 +62,78 @@ class LiveTvGuideTests(TestCase):
         response = self.client.get(reverse('live_tv_guide'))
 
         self.assertContains(response, 'No current guide data is available for US.')
+
+    def test_signed_in_viewer_can_toggle_channel_favorite(self):
+        channel = Channel.objects.create(
+            name='Favorite Network', slug='favorite-network', region='US',
+            source='tvmaze', external_id='favorite-network',
+        )
+        user = get_user_model().objects.create_user(username='favorite-viewer', password='password')
+        self.client.force_login(user)
+        url = reverse('toggle_channel_favorite', args=[channel.pk])
+
+        response = self.client.post(url)
+        self.assertRedirects(response, reverse('live_tv_guide'))
+        self.assertTrue(ChannelFavorite.objects.filter(user=user, channel=channel).exists())
+
+        response = self.client.post(url)
+        self.assertRedirects(response, reverse('live_tv_guide'))
+        self.assertFalse(ChannelFavorite.objects.filter(user=user, channel=channel).exists())
+
+    def test_channel_favorite_action_requires_authentication_and_post(self):
+        channel = Channel.objects.create(
+            name='Protected Network', slug='protected-network', region='US',
+            source='tvmaze', external_id='protected-network',
+        )
+        url = reverse('toggle_channel_favorite', args=[channel.pk])
+
+        response = self.client.post(url)
+        self.assertEqual(response.status_code, 302)
+        self.assertIn('/accounts/login/', response.url)
+        self.assertFalse(ChannelFavorite.objects.exists())
+
+        user = get_user_model().objects.create_user(username='post-only-viewer', password='password')
+        self.client.force_login(user)
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 405)
+        self.assertFalse(ChannelFavorite.objects.exists())
+
+    def test_favorites_only_filter_is_scoped_to_signed_in_user(self):
+        favorite_channel = Channel.objects.create(
+            name='My Network', slug='my-network', region='US',
+            source='tvmaze', external_id='my-network',
+        )
+        other_channel = Channel.objects.create(
+            name='Other Network', slug='other-network', region='US',
+            source='tvmaze', external_id='other-network',
+        )
+        favorite_program = Program.objects.create(
+            title='My Show', source='tvmaze', external_id='my-show',
+        )
+        other_program = Program.objects.create(
+            title='Other Show', source='tvmaze', external_id='other-show',
+        )
+        self._airing(favorite_channel, favorite_program, timedelta(minutes=-5), timedelta(minutes=25), 'my-airing')
+        self._airing(other_channel, other_program, timedelta(minutes=-5), timedelta(minutes=25), 'other-airing')
+
+        user = get_user_model().objects.create_user(username='filter-viewer', password='password')
+        other_user = get_user_model().objects.create_user(username='other-viewer', password='password')
+        ChannelFavorite.objects.create(user=user, channel=favorite_channel)
+        ChannelFavorite.objects.create(user=other_user, channel=other_channel)
+        self.client.force_login(user)
+
+        response = self.client.get(reverse('live_tv_guide'), {'favorites': '1'})
+
+        self.assertContains(response, 'My Network')
+        self.assertContains(response, 'My Show')
+        self.assertNotContains(response, 'Other Network')
+        self.assertNotContains(response, 'Other Show')
+        self.assertContains(response, 'Show all channels')
+
+    def test_favorites_filter_empty_state_is_truthful(self):
+        user = get_user_model().objects.create_user(username='empty-favorites-viewer', password='password')
+        self.client.force_login(user)
+
+        response = self.client.get(reverse('live_tv_guide'), {'favorites': '1'})
+
+        self.assertContains(response, 'No favorite channels currently have guide data for US.')
