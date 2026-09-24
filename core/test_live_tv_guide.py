@@ -5,7 +5,7 @@ from django.test import TestCase
 from django.urls import reverse
 from django.utils import timezone
 
-from content.models import Airing, Channel, ChannelFavorite, DiscoveryPreference, Program
+from content.models import Airing, Channel, ChannelDestination, ChannelFavorite, DiscoveryPreference, Program
 
 
 class LiveTvGuideTests(TestCase):
@@ -39,6 +39,48 @@ class LiveTvGuideTests(TestCase):
         self.assertContains(response, 'Next Show')
         self.assertContains(response, 'schedule data does not imply playback availability')
         self.assertNotContains(response, '>Watch<', html=False)
+
+    def test_guide_shows_only_explicit_playable_channel_destination(self):
+        channel = Channel.objects.create(
+            name='Playable Network', slug='playable-network', region='US',
+            source='tvmaze', external_id='playable-network',
+        )
+        program = Program.objects.create(title='Playable Show', source='tvmaze', external_id='playable-show')
+        self._airing(channel, program, timedelta(minutes=-5), timedelta(minutes=25), 'playable-airing')
+        ChannelDestination.objects.create(
+            channel=channel,
+            provider='Example Stream',
+            url='https://example.com/live',
+            access_type='free',
+            destination_type=ChannelDestination.DestinationType.DIRECT,
+            source='fixture',
+        )
+
+        response = self.client.get(reverse('live_tv_guide'))
+
+        self.assertContains(response, 'Watch on Example Stream')
+        self.assertContains(response, 'https://example.com/live')
+
+    def test_metadata_destination_does_not_create_watch_action(self):
+        channel = Channel.objects.create(
+            name='Metadata Network', slug='metadata-network', region='US',
+            source='tvmaze', external_id='metadata-network',
+        )
+        program = Program.objects.create(title='Metadata Show', source='tvmaze', external_id='metadata-show')
+        self._airing(channel, program, timedelta(minutes=-5), timedelta(minutes=25), 'metadata-airing')
+        ChannelDestination.objects.create(
+            channel=channel,
+            provider='Example Provider',
+            url='https://example.com/details',
+            access_type='other',
+            destination_type=ChannelDestination.DestinationType.DETAILS,
+            source='fixture',
+        )
+
+        response = self.client.get(reverse('live_tv_guide'))
+
+        self.assertNotContains(response, 'https://example.com/details')
+        self.assertNotContains(response, 'Watch on Example Provider')
 
     def test_signed_in_guide_uses_account_region(self):
         us_channel = Channel.objects.create(name='US Network', slug='us', region='US', source='tvmaze', external_id='us')

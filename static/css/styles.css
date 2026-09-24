@@ -68,6 +68,7 @@ input::placeholder { color: #aaa; }
 .guide-favorite { appearance: none; border: 0; background: transparent; color: #aaa; padding: 0 2px; font-size: 1.15rem; line-height: 1; cursor: pointer; }
 .guide-favorite:hover, .guide-favorite:focus-visible, .guide-favorite.is-favorite { color: #ffc107; }
 .guide-channel span, .guide-program span { font-size: 0.72rem; color: #aaa; }
+.guide-watch-action { align-self: flex-start; margin-top: 5px; }
 .guide-program { border-left: 1px solid #333; }
 .guide-program-now { background: #202020; }
 .guide-label { font-size: 0.65rem !important; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; }

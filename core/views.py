@@ -6,7 +6,7 @@ from django.urls import reverse
 from django.utils import timezone
 from django.views.decorators.http import require_POST
 
-from content.models import Airing, Channel, ChannelFavorite, DiscoveryPreference
+from content.models import Airing, Channel, ChannelDestination, ChannelFavorite, DiscoveryPreference
 from content.services import (
     fetch_free_archive_movies,
     fetch_live_tv_schedule,
@@ -310,10 +310,29 @@ def live_tv_guide(request):
         elif airing.starts_at > now and row['next'] is None:
             row['next'] = airing
 
+    playable_destinations = {}
+    if channels:
+        destinations = (
+            ChannelDestination.objects
+            .filter(
+                channel_id__in=channels,
+                destination_type__in=[
+                    ChannelDestination.DestinationType.DIRECT,
+                    ChannelDestination.DestinationType.TUNER,
+                ],
+            )
+            .order_by('channel_id', 'provider', 'url')
+        )
+        for destination in destinations:
+            playable_destinations.setdefault(destination.channel_id, destination)
+
     guide_rows = [
         row for row in channels.values()
         if row['current'] is not None or row['next'] is not None
     ]
+    for row in guide_rows:
+        row['destination'] = playable_destinations.get(row['channel'].id)
+
     return render(request, 'live_tv/guide.html', {
         'guide_rows': guide_rows,
         'guide_region': region,

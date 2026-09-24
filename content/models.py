@@ -105,6 +105,64 @@ class Channel(models.Model):
         return self.name
 
 
+class ChannelDestination(models.Model):
+    """Trusted channel destination kept separate from schedule metadata."""
+
+    class DestinationType(models.TextChoices):
+        DIRECT = 'direct', 'Direct playback'
+        PROVIDER = 'provider', 'Provider discovery'
+        DETAILS = 'details', 'Details'
+        TUNER = 'tuner', 'User-owned tuner'
+
+    channel = models.ForeignKey(Channel, on_delete=models.CASCADE, related_name='destinations')
+    provider = models.CharField(max_length=100)
+    url = models.URLField()
+    access_type = models.CharField(
+        max_length=20,
+        choices=ContentAvailability.AccessType.choices,
+        default=ContentAvailability.AccessType.OTHER,
+    )
+    destination_type = models.CharField(
+        max_length=20,
+        choices=DestinationType.choices,
+        default=DestinationType.DETAILS,
+    )
+    source = models.CharField(max_length=50)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=['channel', 'source', 'url'],
+                name='unique_channel_destination_source_url',
+            ),
+        ]
+        ordering = ['provider', 'destination_type', 'url']
+
+    @property
+    def is_playable(self):
+        return self.destination_type in {self.DestinationType.DIRECT, self.DestinationType.TUNER}
+
+    @property
+    def action_label(self):
+        if self.destination_type == self.DestinationType.TUNER:
+            return f'Watch via {self.provider}'
+        if self.destination_type != self.DestinationType.DIRECT:
+            return f'Open {self.provider}'
+        if self.access_type == ContentAvailability.AccessType.AUTH:
+            return f'{self.provider} · Sign-in required'
+        if self.access_type == ContentAvailability.AccessType.SUBSCRIPTION:
+            return f'{self.provider} · Subscription'
+        if self.access_type in {
+            ContentAvailability.AccessType.FREE,
+            ContentAvailability.AccessType.ADS,
+        }:
+            return f'Watch on {self.provider}'
+        return f'Watch on {self.provider}'
+
+    def __str__(self):
+        return f'{self.channel}: {self.provider}'
+
+
 class ChannelFavorite(models.Model):
     """Per-account saved channel preference for the Live TV guide."""
 
