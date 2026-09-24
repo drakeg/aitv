@@ -397,7 +397,6 @@ def toggle_channel_favorite(request, channel_id):
         params.append('favorites=1')
     query = request.POST.get('q', '').strip()
     if query:
-        from urllib.parse import quote_plus
         params.append(f'q={quote_plus(query)}')
     if params:
         target = f"{target}?{'&'.join(params)}"
