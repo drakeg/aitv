@@ -59,6 +59,7 @@ class EpgSourceAdapterContractTests(TestCase):
             self._row(airing_external_id=''),
             self._row(channel_external_id=''),
             self._row(program_external_id=''),
+            self._row(starts_at='2026-09-23T20:00:00', ends_at='2026-09-23T21:00:00'),
             self._row(ends_at=starts_at, starts_at=starts_at),
         ])
 
