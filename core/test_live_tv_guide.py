@@ -172,6 +172,101 @@ class LiveTvGuideTests(TestCase):
         self.assertNotContains(response, 'Other Show')
         self.assertContains(response, 'Show all channels')
 
+    def test_guide_search_matches_channel_name_and_keeps_now_next_context(self):
+        channel = Channel.objects.create(
+            name='Mystery Network', slug='mystery-network', region='US',
+            source='tvmaze', external_id='mystery-network',
+        )
+        current = Program.objects.create(title='Morning Show', source='tvmaze', external_id='morning-show')
+        upcoming = Program.objects.create(title='Evening Drama', source='tvmaze', external_id='evening-drama')
+        self._airing(channel, current, timedelta(minutes=-5), timedelta(minutes=25), 'mystery-current')
+        self._airing(channel, upcoming, timedelta(minutes=25), timedelta(minutes=85), 'mystery-next')
+
+        response = self.client.get(reverse('live_tv_guide'), {'q': 'Mystery'})
+
+        self.assertContains(response, 'Mystery Network')
+        self.assertContains(response, 'Morning Show')
+        self.assertContains(response, 'Evening Drama')
+        self.assertContains(response, 'value="Mystery"', html=False)
+
+    def test_guide_search_matches_upcoming_program_and_keeps_channel_context(self):
+        channel = Channel.objects.create(
+            name='Drama Network', slug='drama-network', region='US',
+            source='tvmaze', external_id='drama-network',
+        )
+        current = Program.objects.create(title='Current Comedy', source='tvmaze', external_id='current-comedy')
+        future = Program.objects.create(title='Crime Hour', source='tvmaze', external_id='crime-hour')
+        self._airing(channel, current, timedelta(minutes=-10), timedelta(minutes=20), 'drama-current')
+        self._airing(channel, future, timedelta(minutes=20), timedelta(minutes=80), 'drama-next')
+
+        response = self.client.get(reverse('live_tv_guide'), {'q': 'Crime'})
+
+        self.assertContains(response, 'Drama Network')
+        self.assertContains(response, 'Current Comedy')
+        self.assertContains(response, 'Crime Hour')
+
+    def test_guide_search_empty_state_is_specific(self):
+        response = self.client.get(reverse('live_tv_guide'), {'q': 'Nothing Here'})
+
+        self.assertContains(response, 'No channels or upcoming programs match “Nothing Here” for US.')
+
+    def test_preferred_provider_ranks_playable_channel_destination(self):
+        channel = Channel.objects.create(
+            name='Ranked Network', slug='ranked-network', region='US',
+            source='tvmaze', external_id='ranked-network',
+        )
+        program = Program.objects.create(title='Ranked Show', source='tvmaze', external_id='ranked-show')
+        self._airing(channel, program, timedelta(minutes=-5), timedelta(minutes=25), 'ranked-airing')
+        ChannelDestination.objects.create(
+            channel=channel,
+            provider='Other Provider',
+            url='https://example.com/other',
+            access_type='free',
+            destination_type=ChannelDestination.DestinationType.DIRECT,
+            source='fixture',
+        )
+        ChannelDestination.objects.create(
+            channel=channel,
+            provider='Prime Video',
+            url='https://example.com/prime',
+            access_type='subscription',
+            destination_type=ChannelDestination.DestinationType.DIRECT,
+            source='fixture',
+        )
+        user = get_user_model().objects.create_user(username='provider-viewer', password='password')
+        DiscoveryPreference.objects.create(
+            user=user,
+            region='US',
+            preferred_providers=['Amazon Prime Video'],
+        )
+        self.client.force_login(user)
+
+        response = self.client.get(reverse('live_tv_guide'))
+
+        self.assertContains(response, 'Prime Video · Subscription')
+        self.assertContains(response, 'https://example.com/prime')
+        self.assertNotContains(response, 'https://example.com/other')
+
+    def test_favorite_toggle_preserves_search_and_favorites_filter(self):
+        channel = Channel.objects.create(
+            name='Search Favorite Network', slug='search-favorite-network', region='US',
+            source='tvmaze', external_id='search-favorite-network',
+        )
+        user = get_user_model().objects.create_user(username='search-favorite-viewer', password='password')
+        ChannelFavorite.objects.create(user=user, channel=channel)
+        self.client.force_login(user)
+
+        response = self.client.post(
+            reverse('toggle_channel_favorite', args=[channel.pk]),
+            {'favorites': '1', 'q': 'Crime Drama'},
+        )
+
+        self.assertRedirects(
+            response,
+            f"{reverse('live_tv_guide')}?favorites=1&q=Crime+Drama",
+            fetch_redirect_response=False,
+        )
+
     def test_favorites_filter_empty_state_is_truthful(self):
         user = get_user_model().objects.create_user(username='empty-favorites-viewer', password='password')
         self.client.force_login(user)
