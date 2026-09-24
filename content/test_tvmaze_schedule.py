@@ -121,6 +121,29 @@ class TvmazeScheduleCoverageTests(SimpleTestCase):
         self.assertEqual(item['watch_url'], 'https://www.cbs.com/shows/provider-show/')
 
     @patch('content.services.requests.get')
+    def test_network_article_official_site_is_not_promoted_to_direct_watch(self, mock_get):
+        response = Mock()
+        response.raise_for_status.return_value = None
+        response.json.return_value = [{
+            'season': 1, 'number': 1, 'airtime': '18:00', 'runtime': 30,
+            'show': {
+                'id': 90, 'name': 'Network News Special',
+                'url': 'https://www.tvmaze.com/shows/90/network-news-special',
+                'officialSite': 'https://www.cbs.com/news/example-story/',
+                'type': 'News', 'genres': [],
+                'network': {'name': 'CBS'}, 'rating': {'average': 6.5},
+            },
+        }]
+        mock_get.return_value = response
+
+        item = fetch_live_tv_schedule(country='US')[0]
+
+        self.assertFalse(item['has_direct_watch'])
+        self.assertEqual(item['watch_url'], '')
+        self.assertEqual(item['url'], 'https://www.tvmaze.com/shows/90/network-news-special')
+        self.assertEqual(item['details_url'], 'https://www.cbs.com/news/example-story/')
+
+    @patch('content.services.requests.get')
     def test_schedule_preserves_direct_provider_action_when_official_site_exists(self, mock_get):
         response = Mock()
         response.raise_for_status.return_value = None
