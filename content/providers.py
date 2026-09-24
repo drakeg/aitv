@@ -6,24 +6,28 @@ from .models import ContentAvailability
 PROVIDER_RULES = (
     {
         'domains': ('abc.com',),
+        'path_prefixes': {'abc.com': ('/show/', '/shows/', '/episode/', '/episodes/', '/video/', '/watch-live/')},
         'provider': 'ABC',
         'source_type': 'network',
         'access_type': ContentAvailability.AccessType.OTHER,
     },
     {
         'domains': ('cbs.com',),
+        'path_prefixes': {'cbs.com': ('/shows/', '/video/', '/live-tv/')},
         'provider': 'CBS',
         'source_type': 'network',
         'access_type': ContentAvailability.AccessType.OTHER,
     },
     {
         'domains': ('nbc.com',),
+        'path_prefixes': {'nbc.com': ('/shows/', '/video/', '/live/')},
         'provider': 'NBC',
         'source_type': 'network',
         'access_type': ContentAvailability.AccessType.OTHER,
     },
     {
         'domains': ('fox.com',),
+        'path_prefixes': {'fox.com': ('/watch/', '/shows/', '/live/')},
         'provider': 'FOX',
         'source_type': 'network',
         'access_type': ContentAvailability.AccessType.AUTH,
