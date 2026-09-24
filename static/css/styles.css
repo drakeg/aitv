@@ -63,6 +63,10 @@ input::placeholder { color: #aaa; }
 .guide-row { display: grid; grid-template-columns: minmax(150px, 0.7fr) minmax(240px, 1.4fr) minmax(240px, 1.4fr); background: #1c1c1c; border: 1px solid #333; border-radius: 7px; overflow: hidden; }
 .guide-channel, .guide-program { min-width: 0; padding: 11px 13px; display: flex; flex-direction: column; gap: 3px; }
 .guide-channel { background: #151515; justify-content: center; }
+.guide-channel-heading { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.guide-channel-heading form { margin: 0; }
+.guide-favorite { appearance: none; border: 0; background: transparent; color: #aaa; padding: 0 2px; font-size: 1.15rem; line-height: 1; cursor: pointer; }
+.guide-favorite:hover, .guide-favorite:focus-visible, .guide-favorite.is-favorite { color: #ffc107; }
 .guide-channel span, .guide-program span { font-size: 0.72rem; color: #aaa; }
 .guide-program { border-left: 1px solid #333; }
 .guide-program-now { background: #202020; }

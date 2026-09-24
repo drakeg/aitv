@@ -105,6 +105,26 @@ class Channel(models.Model):
         return self.name
 
 
+class ChannelFavorite(models.Model):
+    """Per-account saved channel preference for the Live TV guide."""
+
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='channel_favorites')
+    channel = models.ForeignKey(Channel, on_delete=models.CASCADE, related_name='favorited_by')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=['user', 'channel'],
+                name='unique_user_channel_favorite',
+            ),
+        ]
+        ordering = ['channel__name']
+
+    def __str__(self):
+        return f'{self.user}: {self.channel}'
+
+
 class Program(models.Model):
     """Program metadata that can be reused across multiple channel airings."""
 

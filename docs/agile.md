@@ -10,7 +10,9 @@ aitv uses small, reviewable sprint increments. The current main branch is the so
 4. Update implementation, regression tests, and relevant documentation together.
 5. Open a pull request describing behavior, non-goals, migrations/dependencies, and operational impact.
 6. Treat GitHub Actions as the readiness gate. A PR is not called green/ready until the current head SHA has completed CI successfully.
-7. After merge, verify GitHub recorded the merge and re-read main before beginning the next sprint.\n8. Keep `docs/sprints.md` current so sprint history survives beyond chat context.\n9. Apply `docs/coding-standards.md` to feature, maintenance, and hotfix work.
+7. After merge, verify GitHub recorded the merge and re-read main before beginning the next sprint.
+8. Keep `docs/sprints.md` current so sprint history survives beyond chat context.
+9. Apply `docs/coding-standards.md` to feature, maintenance, and hotfix work.
 
 ## Definition of done
 

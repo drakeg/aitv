@@ -7,7 +7,16 @@
             <h2 class="mb-1">Live TV Guide</h2>
             <div class="text-muted">Now and next · {{ guide_region }} · schedule data does not imply playback availability</div>
         </div>
-        <a class="btn btn-outline-light" href="{% url 'home' %}">Back to discovery</a>
+        <div class="d-flex gap-2 flex-wrap">
+            {% if user.is_authenticated %}
+                {% if show_favorites_only %}
+                    <a class="btn btn-outline-light" href="{% url 'live_tv_guide' %}">Show all channels</a>
+                {% else %}
+                    <a class="btn btn-outline-warning" href="{% url 'live_tv_guide' %}?favorites=1">★ Favorites only</a>
+                {% endif %}
+            {% endif %}
+            <a class="btn btn-outline-light" href="{% url 'home' %}">Back to discovery</a>
+        </div>
     </div>
 
     {% if guide_rows %}
@@ -15,7 +24,18 @@
             {% for row in guide_rows %}
                 <article class="guide-row">
                     <div class="guide-channel">
-                        <strong>{{ row.channel.name }}</strong>
+                        <div class="guide-channel-heading">
+                            <strong>{{ row.channel.name }}</strong>
+                            {% if user.is_authenticated %}
+                                <form method="post" action="{% url 'toggle_channel_favorite' row.channel.id %}">
+                                    {% csrf_token %}
+                                    {% if show_favorites_only %}<input type="hidden" name="favorites" value="1">{% endif %}
+                                    <button class="guide-favorite{% if row.is_favorite %} is-favorite{% endif %}" type="submit" aria-label="{% if row.is_favorite %}Remove{% else %}Add{% endif %} {{ row.channel.name }} {% if row.is_favorite %}from{% else %}to{% endif %} favorites" title="{% if row.is_favorite %}Remove from favorites{% else %}Add to favorites{% endif %}">
+                                        {% if row.is_favorite %}★{% else %}☆{% endif %}
+                                    </button>
+                                </form>
+                            {% endif %}
+                        </div>
                         <span>{{ row.channel.region }}</span>
                     </div>
                     <div class="guide-program guide-program-now">
@@ -41,8 +61,13 @@
         </div>
     {% else %}
         <div class="empty-state">
-            <strong>No current guide data is available for {{ guide_region }}.</strong>
-            <div class="text-muted mt-1">The Live TV guide only shows normalized schedule data from configured trustworthy sources.</div>
+            {% if show_favorites_only %}
+                <strong>No favorite channels currently have guide data for {{ guide_region }}.</strong>
+                <div class="text-muted mt-1">Favorite channels from other accounts are never included.</div>
+            {% else %}
+                <strong>No current guide data is available for {{ guide_region }}.</strong>
+                <div class="text-muted mt-1">The Live TV guide only shows normalized schedule data from configured trustworthy sources.</div>
+            {% endif %}
         </div>
     {% endif %}
 </section>
