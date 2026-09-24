@@ -5,7 +5,9 @@ from html import unescape
 import requests
 from django.db import transaction
 from django.utils import timezone
+from django.utils.text import slugify
 
+from .epg_sources import TvmazeScheduleAdapter
 from .models import Airing, Channel, Program
 from .providers import detect_provider
 
@@ -335,57 +337,52 @@ def fetch_free_archive_movies(limit=10):
 
 
 
-def refresh_tvmaze_epg(country='US', retention_hours=6):
-    """Persist today's trustworthy TVmaze schedule into normalized EPG models."""
-    country = str(country or 'US').strip().upper()
-    if len(country) != 2 or not country.isalpha():
-        country = 'US'
-    items = fetch_live_tv_schedule(limit=1000, country=country)
+def refresh_epg_source(adapter, region='US', retention_hours=6):
+    """Persist normalized schedule rows from one trusted source adapter."""
+    region = str(region or 'US').strip().upper()
+    if len(region) != 2 or not region.isalpha():
+        region = 'US'
+
+    rows = adapter.fetch_airings(region=region, limit=1000)
     now = timezone.now()
     refreshed_airing_ids = []
 
     with transaction.atomic():
-        for item in items:
-            airing_external_id = item.get('schedule_external_id')
-            channel_external_id = item.get('channel_external_id')
-            if not airing_external_id or not channel_external_id:
+        for row in rows:
+            if not isinstance(row, dict):
                 continue
-            airtime = str(item.get('airtime') or '').strip()
-            try:
-                hour, minute = [int(part) for part in airtime.split(':', 1)]
-            except (TypeError, ValueError):
+
+            airing_external_id = str(row.get('airing_external_id') or '').strip()
+            channel_external_id = str(row.get('channel_external_id') or '').strip()
+            program_external_id = str(row.get('program_external_id') or '').strip()
+            starts_at = row.get('starts_at')
+            ends_at = row.get('ends_at')
+            if not airing_external_id or not channel_external_id or not program_external_id:
                 continue
-            starts_at = now.replace(hour=hour, minute=minute, second=0, microsecond=0)
-            runtime = item.get('runtime')
-            try:
-                runtime_minutes = int(runtime)
-            except (TypeError, ValueError):
-                runtime_minutes = 30
-            if runtime_minutes <= 0:
-                runtime_minutes = 30
-            ends_at = starts_at + timedelta(minutes=runtime_minutes)
+            if not starts_at or not ends_at or ends_at <= starts_at:
+                continue
 
             channel, _ = Channel.objects.update_or_create(
-                source='tvmaze',
+                source=adapter.source,
                 external_id=channel_external_id,
-                region=country,
+                region=region,
                 defaults={
-                    'name': item.get('network') or 'TV',
-                    'slug': f'tvmaze-{channel_external_id}'.lower(),
-                    'categories': item.get('genres') or [],
+                    'name': row.get('channel_name') or 'TV',
+                    'slug': slugify(f'{adapter.source}-{channel_external_id}')[:255] or 'channel',
+                    'categories': row.get('channel_categories') or [],
                 },
             )
             program, _ = Program.objects.update_or_create(
-                source='tvmaze',
-                external_id=str(item.get('external_id') or ''),
+                source=adapter.source,
+                external_id=program_external_id,
                 defaults={
-                    'title': item.get('title') or 'Untitled',
-                    'description': item.get('description') or '',
-                    'program_type': item.get('show_type') or '',
+                    'title': row.get('program_title') or 'Untitled',
+                    'description': row.get('program_description') or '',
+                    'program_type': row.get('program_type') or '',
                 },
             )
             airing, _ = Airing.objects.update_or_create(
-                source='tvmaze',
+                source=adapter.source,
                 external_id=airing_external_id,
                 defaults={
                     'channel': channel,
@@ -397,6 +394,13 @@ def refresh_tvmaze_epg(country='US', retention_hours=6):
             refreshed_airing_ids.append(airing.pk)
 
         stale_before = now - timedelta(hours=max(0, retention_hours))
-        Airing.objects.filter(source='tvmaze', ends_at__lt=stale_before).delete()
+        Airing.objects.filter(source=adapter.source, ends_at__lt=stale_before).delete()
 
     return len(refreshed_airing_ids)
+
+
+def refresh_tvmaze_epg(country='US', retention_hours=6):
+    """Persist today's trustworthy TVmaze schedule through the shared adapter contract."""
+    adapter = TvmazeScheduleAdapter(fetch_schedule=fetch_live_tv_schedule)
+    return refresh_epg_source(adapter, region=country, retention_hours=retention_hours)
+
