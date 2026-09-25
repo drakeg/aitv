@@ -69,6 +69,9 @@ class ChannelAdmin(admin.ModelAdmin):
     def has_add_permission(self, request):
         return False
 
+    def has_delete_permission(self, request, obj=None):
+        return False
+
     @admin.display(description='Destinations')
     def destination_count(self, obj):
         return obj.destinations.count()
@@ -93,6 +96,9 @@ class ProgramAdmin(admin.ModelAdmin):
     def has_add_permission(self, request):
         return False
 
+    def has_delete_permission(self, request, obj=None):
+        return False
+
 
 @admin.register(Airing)
 class AiringAdmin(admin.ModelAdmin):
@@ -105,6 +111,9 @@ class AiringAdmin(admin.ModelAdmin):
     def has_add_permission(self, request):
         return False
 
+    def has_delete_permission(self, request, obj=None):
+        return False
+
 
 @admin.register(ChannelFavorite)
 class ChannelFavoriteAdmin(admin.ModelAdmin):
@@ -114,4 +123,7 @@ class ChannelFavoriteAdmin(admin.ModelAdmin):
     readonly_fields = ('user', 'channel', 'created_at')
 
     def has_add_permission(self, request):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
         return False
