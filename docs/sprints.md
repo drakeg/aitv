@@ -30,6 +30,7 @@ This ledger is the durable project record for sprint-sized development. Git hist
 | 61 | #85 | Introduce a shared EPG schedule-source adapter contract and move TVmaze ingestion behind it. |
 | 62 | #86 | Persist trusted channel destinations separately from schedule data and render only explicit playable destinations. |
 | 63 | #87 | Add Live TV channel/program search and preferred-provider destination ranking. |
+| 64 | #88 | Add supported manual and opt-in recurring EPG refresh operations. |
 
 ## Earlier development
 

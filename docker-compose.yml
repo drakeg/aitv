@@ -65,5 +65,49 @@ services:
       - .:/app
       - aitv_data:/data
 
+  epg:
+    profiles:
+      - epg
+    build:
+      context: .
+    env_file:
+      - .env
+    depends_on:
+      - web
+    restart: unless-stopped
+    command: >-
+      sh -c '
+        interval="${EPG_REFRESH_INTERVAL_SECONDS:-1800}";
+        regions="${EPG_REGIONS:-US}";
+        retention="${EPG_RETENTION_HOURS:-6}";
+        case "$interval" in
+          ""|*[!0-9]*) echo "EPG_REFRESH_INTERVAL_SECONDS must be a positive integer; using 1800." >&2; interval=1800 ;;
+          0) echo "EPG_REFRESH_INTERVAL_SECONDS must be greater than zero; using 1800." >&2; interval=1800 ;;
+        esac;
+        case "$retention" in
+          ""|*[!0-9]*) echo "EPG_RETENTION_HOURS must be a non-negative integer; using 6." >&2; retention=6 ;;
+        esac;
+        until [ -f /data/db.sqlite3 ]; do sleep 2; done;
+        while true; do
+          if ! python manage.py refresh_epg --regions "$regions" --retention-hours "$retention"; then
+            echo "EPG refresh failed; retrying after $interval seconds." >&2;
+          fi;
+          sleep "$interval";
+        done
+      '
+    environment:
+      DJANGO_SECRET_KEY: "${DJANGO_SECRET_KEY:-dev-docker-key-change-me}"
+      DJANGO_DEBUG: "${DJANGO_DEBUG:-true}"
+      DJANGO_ALLOWED_HOSTS: "${DJANGO_ALLOWED_HOSTS:-127.0.0.1,localhost,0.0.0.0}"
+      SQLITE_DB_PATH: "${SQLITE_DB_PATH:-/data/db.sqlite3}"
+      SQLITE_TIMEOUT_SECONDS: "${SQLITE_TIMEOUT_SECONDS:-30}"
+      SOURCE_TIMEOUT_SECONDS: "${SOURCE_TIMEOUT_SECONDS:-5}"
+      EPG_REFRESH_INTERVAL_SECONDS: "${EPG_REFRESH_INTERVAL_SECONDS:-1800}"
+      EPG_REGIONS: "${EPG_REGIONS:-US}"
+      EPG_RETENTION_HOURS: "${EPG_RETENTION_HOURS:-6}"
+    volumes:
+      - .:/app
+      - aitv_data:/data
+
 volumes:
   aitv_data:
