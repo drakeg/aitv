@@ -16,6 +16,7 @@ The goal is fewer clicks to legitimate content. Direct network/service destinati
 - Independent per-user Watchlist and Favorite state; Favorites are prioritized in discovery and can drive release notifications
 - Paginated in-app Favorite release notifications plus optional SMTP email delivery
 - Optional Docker notification worker for recurring Favorite release checks
+- Tested `refresh_epg` management command plus optional Docker EPG worker for recurring normalized Live TV guide refreshes
 - Live-source-only home discovery: no seeded/sample catalog fallback
 - Configurable Docker host port and persistent SQLite data volume
 - Automated Django checks and tests in GitHub Actions
@@ -118,6 +119,28 @@ Provider context is ordered Free → Free with ads → Subscription → Rent →
 
 TMDB failures or missing credentials do not prevent other live sources from loading.
 
+## Live TV EPG refresh
+
+Refresh normalized TVmaze-backed EPG data manually with:
+
+```bash
+docker compose run --rm web python manage.py refresh_epg
+```
+
+The command defaults to the US region. Repeat `--region` or use comma-separated `--regions` for multiple regions, for example:
+
+```bash
+docker compose run --rm web python manage.py refresh_epg --regions US,CA
+```
+
+For recurring Docker refreshes, enable the opt-in `epg` profile:
+
+```bash
+docker compose --profile epg up -d --build
+```
+
+The EPG worker shares the same image, `.env`, and `aitv_data` SQLite volume as the web container. By default it refreshes `US` every 1800 seconds and keeps expired source airings for 6 hours. Configure `EPG_REGIONS`, `EPG_REFRESH_INTERVAL_SECONDS`, and `EPG_RETENTION_HOURS` in `.env`. The worker is not started by ordinary `docker compose up`.
+
 ## Favorite release notifications
 
 Favorites are distinct from ordinary Watchlist saves. The release checker looks for newly reported TV release state for eligible saved TMDB TV Favorites, creates in-app notifications, and can optionally send email. The authenticated notification inbox displays 25 newest-first notifications per page while the navigation badge continues to reflect the account's total unread count. Pagination includes direct page-number links with an elided range for longer histories, alongside Previous/Next controls. Marking one notification or all notifications read keeps the viewer on the current inbox page; both return targets use the same same-site URL validation before redirecting.
@@ -154,6 +177,9 @@ SMTP is optional. Without SMTP, recurring checks can still create in-app notific
 | `TMDB_READ_ACCESS_TOKEN` | empty | Optional TMDB Bearer-token authentication; preferred when set. |
 | `TMDB_TIMEOUT_SECONDS` | `5` | TMDB request timeout fallback. |
 | `SOURCE_TIMEOUT_SECONDS` | `5` | Shared upstream-source timeout. |
+| `EPG_REGIONS` | `US` | Comma-separated two-letter regions refreshed by the opt-in EPG worker. |
+| `EPG_REFRESH_INTERVAL_SECONDS` | `1800` | Positive whole-number interval for recurring EPG refreshes. |
+| `EPG_RETENTION_HOURS` | `6` | Non-negative hours of expired source airings retained during refresh cleanup. |
 | `RELEASE_CHECK_INTERVAL_SECONDS` | `3600` | Positive whole-number interval for the opt-in notification worker. |
 | `SMTP_HOST` | empty | SMTP server; empty disables release-notification email. |
 | `SMTP_PORT` | `587` | SMTP port. |
@@ -200,7 +226,7 @@ Feature and maintenance work is expected to keep implementation, tests, and docu
 
 `core.views.home` assembles live discovery from TVmaze, Internet Archive, and TMDB. Server-side ranking accounts for direct-watch usefulness, user content mix, categories, and known Favorite state. Browser-side enrichment adds TMDB context to eligible TVmaze cards near the viewport and can immediately synchronize Watchlist/Favorite state and provider choices without a page refresh.
 
-The Docker path remains development-focused: Django's development server, bind-mounted source, persistent SQLite, and an optional lightweight notification worker. Production server/database/static serving/security/health-check deployment remains separate work.
+The Docker path remains development-focused: Django's development server, bind-mounted source, persistent SQLite, an optional EPG refresh worker, and an optional lightweight notification worker. Production server/database/static serving/security/health-check deployment remains separate work.
 
 ## Security and provider authentication
 
