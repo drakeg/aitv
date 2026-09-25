@@ -14,6 +14,11 @@ class Command(BaseCommand):
             help='Two-letter region code to refresh. Repeat for multiple regions. Defaults to US.',
         )
         parser.add_argument(
+            '--regions',
+            dest='regions_csv',
+            help='Comma-separated two-letter region codes. May be combined with repeated --region options.',
+        )
+        parser.add_argument(
             '--retention-hours',
             type=int,
             default=6,
@@ -25,7 +30,13 @@ class Command(BaseCommand):
         if retention_hours < 0:
             raise CommandError('--retention-hours must be zero or greater.')
 
-        raw_regions = options.get('regions') or ['US']
+        raw_regions = list(options.get('regions') or [])
+        regions_csv = str(options.get('regions_csv') or '').strip()
+        if regions_csv:
+            raw_regions.extend(regions_csv.split(','))
+        if not raw_regions:
+            raw_regions = ['US']
+
         regions = []
         for value in raw_regions:
             region = str(value or '').strip().upper()
