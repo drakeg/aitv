@@ -141,6 +141,10 @@ docker compose --profile epg up -d --build
 
 The EPG worker shares the same image, `.env`, and `aitv_data` SQLite volume as the web container. By default it refreshes `US` every 1800 seconds and keeps expired source airings for 6 hours. Configure `EPG_REGIONS`, `EPG_REFRESH_INTERVAL_SECONDS`, and `EPG_RETENTION_HOURS` in `.env`. The worker is not started by ordinary `docker compose up`.
 
+### Managing channel destinations
+
+Django admin exposes the normalized Live TV models for operator inspection. Channels, Programs, Airings, and Channel Favorites are source/account-owned and therefore read-only for add/delete operations. Open an existing Channel in admin to add or maintain trusted `ChannelDestination` rows (provider, URL, access type, destination type, and provenance source). Only destinations explicitly marked `Direct playback` or `User-owned tuner` can become Watch actions in the guide. Playable destinations entered through admin must use HTTP or HTTPS.
+
 ## Favorite release notifications
 
 Favorites are distinct from ordinary Watchlist saves. The release checker looks for newly reported TV release state for eligible saved TMDB TV Favorites, creates in-app notifications, and can optionally send email. The authenticated notification inbox displays 25 newest-first notifications per page while the navigation badge continues to reflect the account's total unread count. Pagination includes direct page-number links with an elided range for longer histories, alongside Previous/Next controls. Marking one notification or all notifications read keeps the viewer on the current inbox page; both return targets use the same same-site URL validation before redirecting.
