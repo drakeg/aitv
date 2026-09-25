@@ -46,3 +46,7 @@ Airing data and playback destinations must not be conflated. Knowing that a prog
 7. Add search across channels/programs and preferred-destination ranking. **Implemented in Sprint 63:** the Live TV guide can search normalized channel names and upcoming program titles while preserving now/next context, Favorites filtering can be combined with search, and signed-in viewers' preferred providers rank otherwise-legitimate playable channel destinations without fabricating availability.
 
 Each source integration must define its provenance, region semantics, access type, refresh behavior, failure behavior, and whether its URL is metadata, provider discovery, or direct playback.
+
+## Refresh operations
+
+**Implemented in Sprint 64:** normalized EPG persistence now has a supported `refresh_epg` management command and an opt-in Docker `epg` worker. Operators can refresh one or multiple configured regions, control expired-airing retention, and choose the recurring refresh interval through `.env`. Worker failures are surfaced and retried on the next interval; ordinary `docker compose up` does not enable recurring EPG refreshes.
