@@ -40,6 +40,22 @@ class RefreshEpgCommandTests(SimpleTestCase):
         self.assertIn('Refreshed 11 airing(s) across 2 region(s).', output.getvalue())
 
     @patch('content.management.commands.refresh_epg.refresh_tvmaze_epg')
+    def test_comma_separated_regions_support_worker_configuration(self, refresh_tvmaze_epg):
+        refresh_tvmaze_epg.side_effect = [3, 5]
+        output = StringIO()
+
+        call_command('refresh_epg', regions_csv='US,ca', stdout=output)
+
+        self.assertEqual(
+            refresh_tvmaze_epg.call_args_list,
+            [
+                call(country='US', retention_hours=6),
+                call(country='CA', retention_hours=6),
+            ],
+        )
+        self.assertIn('Refreshed 8 airing(s) across 2 region(s).', output.getvalue())
+
+    @patch('content.management.commands.refresh_epg.refresh_tvmaze_epg')
     def test_invalid_region_fails_before_refresh(self, refresh_tvmaze_epg):
         with self.assertRaisesMessage(CommandError, 'Invalid region'):
             call_command('refresh_epg', regions=['USA'])
