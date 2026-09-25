@@ -50,3 +50,7 @@ Each source integration must define its provenance, region semantics, access typ
 ## Refresh operations
 
 **Implemented in Sprint 64:** normalized EPG persistence now has a supported `refresh_epg` management command and an opt-in Docker `epg` worker. Operators can refresh one or multiple configured regions, control expired-airing retention, and choose the recurring refresh interval through `.env`. Worker failures are surfaced and retried on the next interval; ordinary `docker compose up` does not enable recurring EPG refreshes.
+
+## Operator destination management
+
+**Implemented in Sprint 65:** Django admin provides an operator surface for the normalized EPG domain. Source-owned Channels, Programs, and Airings plus account-owned Channel Favorites are inspect-only for add/delete operations. Existing Channels expose editable ChannelDestination rows so an operator can deliberately record a provider, URL, access type, destination type, and provenance source without modifying schedule identities. Playable destinations entered through this surface must use HTTP(S), and the guide still renders Watch actions only for explicit direct/tuner destination types.
