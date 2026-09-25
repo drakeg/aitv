@@ -25,7 +25,7 @@ class RefreshEpgCommandTests(SimpleTestCase):
 
         call_command(
             'refresh_epg',
-            region=['us', 'CA', 'US'],
+            regions=['us', 'CA', 'US'],
             retention_hours=2,
             stdout=output,
         )
@@ -42,7 +42,7 @@ class RefreshEpgCommandTests(SimpleTestCase):
     @patch('content.management.commands.refresh_epg.refresh_tvmaze_epg')
     def test_invalid_region_fails_before_refresh(self, refresh_tvmaze_epg):
         with self.assertRaisesMessage(CommandError, 'Invalid region'):
-            call_command('refresh_epg', region=['USA'])
+            call_command('refresh_epg', regions=['USA'])
 
         refresh_tvmaze_epg.assert_not_called()
 
