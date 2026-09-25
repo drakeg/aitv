@@ -41,7 +41,7 @@ class EpgAdminTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'Channel destinations')
         self.assertContains(response, 'provider')
-        self.assertContains(response, 'destination type')
+        self.assertContains(response, 'Destination type')
 
     def test_destination_admin_accepts_explicit_http_playback_destination(self):
         form = ChannelDestinationAdminForm(data={
