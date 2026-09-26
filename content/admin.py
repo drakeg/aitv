@@ -5,6 +5,7 @@ from django.contrib import admin
 
 from .models import (
     Airing,
+    AiringDestination,
     Channel,
     ChannelDestination,
     ChannelFavorite,
@@ -107,6 +108,20 @@ class AiringAdmin(admin.ModelAdmin):
     search_fields = ('channel__name', 'program__title', 'external_id')
     readonly_fields = ('channel', 'program', 'starts_at', 'ends_at', 'source', 'external_id')
     date_hierarchy = 'starts_at'
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+
+@admin.register(AiringDestination)
+class AiringDestinationAdmin(admin.ModelAdmin):
+    list_display = ('airing', 'provider', 'scope', 'access_type', 'source')
+    list_filter = ('scope', 'access_type', 'source')
+    search_fields = ('airing__channel__name', 'airing__program__title', 'provider', 'url')
+    readonly_fields = ('airing', 'provider', 'url', 'access_type', 'scope', 'source')
 
     def has_add_permission(self, request):
         return False
