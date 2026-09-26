@@ -109,6 +109,7 @@ class EpgSourceAdapterContractTests(TestCase):
                 'description': 'Description',
                 'show_type': 'Scripted',
                 'airtime': '20:30',
+                'airstamp': '2026-09-26T20:30:00-04:00',
                 'runtime': 45,
             }]
 
@@ -122,15 +123,45 @@ class EpgSourceAdapterContractTests(TestCase):
         self.assertEqual(row['channel_name'], 'Example Network')
         self.assertEqual(int((row['ends_at'] - row['starts_at']).total_seconds() / 60), 45)
 
+    def test_tvmaze_airstamp_preserves_date_and_timezone_across_midnight(self):
+        def fetch_schedule(*, limit, country):
+            return [{
+                'schedule_external_id': 'late-episode',
+                'channel_external_id': 'network',
+                'external_id': 'show',
+                'airtime': '00:35',
+                'airstamp': '2026-09-27T00:35:00-04:00',
+                'runtime': 60,
+            }]
+
+        rows = TvmazeScheduleAdapter(fetch_schedule=fetch_schedule).fetch_airings(region='US')
+
+        self.assertEqual(len(rows), 1)
+        self.assertEqual(rows[0]['starts_at'].isoformat(), '2026-09-27T00:35:00-04:00')
+        self.assertEqual(rows[0]['ends_at'].isoformat(), '2026-09-27T01:35:00-04:00')
+
+    def test_tvmaze_adapter_requires_dated_timezone_aware_airstamp(self):
+        def fetch_schedule(*, limit, country):
+            return [
+                {'airstamp': '', 'airtime': '20:00'},
+                {'airstamp': '2026-09-26T20:00:00', 'airtime': '20:00'},
+                {'airstamp': 'not-a-date', 'airtime': '20:00'},
+            ]
+
+        rows = TvmazeScheduleAdapter(fetch_schedule=fetch_schedule).fetch_airings(region='US')
+
+        self.assertEqual(rows, [])
+
     def test_tvmaze_adapter_skips_bad_airtime_and_defaults_bad_runtime(self):
         def fetch_schedule(*, limit, country):
             return [
-                {'schedule_external_id': 'bad-time', 'airtime': 'not-a-time'},
+                {'schedule_external_id': 'bad-time', 'airtime': 'not-a-time', 'airstamp': 'bad-time'},
                 {
                     'schedule_external_id': 'good-time',
                     'channel_external_id': 'network',
                     'external_id': 'show',
                     'airtime': '10:00',
+                    'airstamp': '2026-09-26T10:00:00+02:00',
                     'runtime': 0,
                 },
             ]
