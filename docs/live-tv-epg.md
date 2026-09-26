@@ -22,9 +22,10 @@ Future implementation should separate:
 - **Program**: title and descriptive metadata independent of a particular airing.
 - **Airing**: channel + start/end time + program.
 - **Channel destination**: provider/source URL plus access type and provenance.
+- **Airing destination**: source-supplied episode/show playback URL scoped to one scheduled airing.
 - **Viewer state**: Favorite channels/programs and provider preferences, scoped per account.
 
-Airing data and playback destinations must not be conflated. Knowing that a program airs on a channel does not prove that aitv has a playable URL for it.
+Airing data and playback destinations must not be conflated. Knowing that a program airs on a channel does not prove that aitv has a playable URL for it. Likewise, a show/episode URL supplied for one airing must not be promoted to a channel-wide destination.
 
 ## Source trust boundary
 
@@ -50,6 +51,10 @@ Each source integration must define its provenance, region semantics, access typ
 ## Refresh operations
 
 **Implemented in Sprint 64:** normalized EPG persistence now has a supported `refresh_epg` management command and an opt-in Docker `epg` worker. Operators can refresh one or multiple configured regions, control expired-airing retention, and choose the recurring refresh interval through `.env`. Worker failures are surfaced and retried on the next interval; ordinary `docker compose up` does not enable recurring EPG refreshes.
+
+## Airing-specific destinations
+
+**Implemented in Sprint 66:** trusted provider URLs supplied by the TVmaze schedule path are normalized into source-owned AiringDestination records rather than ChannelDestination records. Each refresh revalidates the URL through the existing provider detector and removes a stale source destination if upstream no longer supplies a trusted URL. The Live TV guide prefers the current airing's destination over a broader channel destination, while future/other airings remain unaffected.
 
 ## Operator destination management
 

@@ -56,6 +56,10 @@ class TvmazeScheduleAdapter:
                 'program_type': item.get('show_type') or '',
                 'starts_at': starts_at,
                 'ends_at': starts_at + timedelta(minutes=runtime_minutes),
+                'destination_url': item.get('watch_url') or '',
+                'destination_provider': item.get('provider') or '',
+                'destination_access_type': item.get('access_type') or '',
+                'destination_scope': item.get('watch_scope') or '',
             })
 
         return rows

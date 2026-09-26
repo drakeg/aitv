@@ -5,7 +5,7 @@ from django.test import TestCase
 from django.urls import reverse
 from django.utils import timezone
 
-from content.models import Airing, Channel, ChannelDestination, ChannelFavorite, DiscoveryPreference, Program
+from content.models import Airing, AiringDestination, Channel, ChannelDestination, ChannelFavorite, DiscoveryPreference, Program
 
 
 class LiveTvGuideTests(TestCase):
@@ -60,6 +60,38 @@ class LiveTvGuideTests(TestCase):
 
         self.assertContains(response, 'Watch on Example Stream')
         self.assertContains(response, 'https://example.com/live')
+
+    def test_current_airing_destination_precedes_channel_destination(self):
+        channel = Channel.objects.create(
+            name='Airing Network', slug='airing-network', region='US',
+            source='tvmaze', external_id='airing-network',
+        )
+        program = Program.objects.create(title='Airing Show', source='tvmaze', external_id='airing-show')
+        airing = self._airing(
+            channel, program, timedelta(minutes=-5), timedelta(minutes=25), 'airing-destination',
+        )
+        ChannelDestination.objects.create(
+            channel=channel,
+            provider='Channel Stream',
+            url='https://example.com/channel',
+            access_type='free',
+            destination_type=ChannelDestination.DestinationType.DIRECT,
+            source='fixture',
+        )
+        AiringDestination.objects.create(
+            airing=airing,
+            provider='ABC',
+            url='https://abc.com/episode/example',
+            access_type='other',
+            scope=AiringDestination.Scope.EPISODE,
+            source='tvmaze',
+        )
+
+        response = self.client.get(reverse('live_tv_guide'))
+
+        self.assertContains(response, 'Watch on ABC')
+        self.assertContains(response, 'https://abc.com/episode/example')
+        self.assertNotContains(response, 'https://example.com/channel')
 
     def test_metadata_destination_does_not_create_watch_action(self):
         channel = Channel.objects.create(
