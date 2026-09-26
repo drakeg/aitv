@@ -4,7 +4,7 @@ from django.test import RequestFactory, TestCase
 from django.urls import reverse
 
 from content.admin import ChannelDestinationAdminForm
-from content.models import Airing, Channel, ChannelDestination, ChannelFavorite, Program
+from content.models import Airing, AiringDestination, Channel, ChannelDestination, ChannelFavorite, Program
 
 
 class EpgAdminTests(TestCase):
@@ -26,11 +26,11 @@ class EpgAdminTests(TestCase):
         )
 
     def test_epg_models_are_registered(self):
-        for model in (Channel, ChannelDestination, Program, Airing, ChannelFavorite):
+        for model in (Channel, ChannelDestination, Program, Airing, AiringDestination, ChannelFavorite):
             self.assertIn(model, admin.site._registry)
 
     def test_normalized_source_models_cannot_be_added_or_deleted_in_admin(self):
-        for model in (Channel, Program, Airing, ChannelFavorite):
+        for model in (Channel, Program, Airing, AiringDestination, ChannelFavorite):
             model_admin = admin.site._registry[model]
             self.assertFalse(model_admin.has_add_permission(self.request))
             self.assertFalse(model_admin.has_delete_permission(self.request))
