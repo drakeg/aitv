@@ -48,6 +48,10 @@ Airing data and playback destinations must not be conflated. Knowing that a prog
 
 Each source integration must define its provenance, region semantics, access type, refresh behavior, failure behavior, and whether its URL is metadata, provider discovery, or direct playback.
 
+## Authoritative schedule timestamps
+
+**Sprint 67:** TVmaze's episode `airstamp` supplies a dated, timezone-aware instant. EPG normalization preserves that timestamp, including post-midnight broadcasts and offsets; a bare `airtime` is no longer promoted to a guessed server-date airing. Missing, malformed, or timezone-naive airstamps are skipped rather than fabricating current/next guide timing. The existing Live TV home cards can still show their source-supplied airtime label.
+
 ## Refresh operations
 
 **Implemented in Sprint 64:** normalized EPG persistence now has a supported `refresh_epg` management command and an opt-in Docker `epg` worker. Operators can refresh one or multiple configured regions, control expired-airing retention, and choose the recurring refresh interval through `.env`. Worker failures are surfaced and retried on the next interval; ordinary `docker compose up` does not enable recurring EPG refreshes.
