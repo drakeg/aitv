@@ -33,6 +33,7 @@ This ledger is the durable project record for sprint-sized development. Git hist
 | 64 | #88 | Add supported manual and opt-in recurring EPG refresh operations. |
 | 65 | #89 | Add protected Django-admin inspection for normalized EPG data and operator management of trusted channel destinations. |
 | 66 | #90 | Persist trusted episode/show playback at the airing level and prefer it over broader channel destinations for the current airing. |
+| 67 | pending | Preserve authoritative TVmaze airstamp date/timezone in EPG normalization and reject ambiguous schedule timestamps. |
 
 ## Earlier development
 
