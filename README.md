@@ -99,7 +99,7 @@ Preferred streaming services affect ordering only. If TMDB reports legitimate re
 
 ### TVmaze
 
-TVmaze supplies scheduled TV plus show/network or web-channel, episode, runtime, airtime, genres, and official destinations where available. A card can remain useful as schedule metadata even when TVmaze does not publish a direct show URL. aitv can lazily resolve an exact TVmaze title to a canonical TMDB title for regional provider context and saved/Favorite state. For the normalized Live TV guide, TVmaze now passes through the shared EPG schedule-source adapter contract before Channel/Program/Airing persistence; future schedule sources must normalize to the same contract and keep their own provenance.
+TVmaze supplies scheduled TV plus show/network or web-channel, episode, runtime, airtime, genres, and official destinations where available. A card can remain useful as schedule metadata even when TVmaze does not publish a direct show URL. aitv can lazily resolve an exact TVmaze title to a canonical TMDB title for regional provider context and saved/Favorite state. For the normalized Live TV guide, TVmaze now passes through the shared EPG schedule-source adapter contract before Channel/Program/Airing persistence. Its timezone-aware episode `airstamp` determines the actual calendar date and instant of each airing; entries without an authoritative dated timestamp are skipped instead of assigned a guessed server-local date. Future schedule sources must normalize to the same contract and keep their own provenance.
 
 ### Internet Archive
 
