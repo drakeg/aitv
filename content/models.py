@@ -163,6 +163,50 @@ class ChannelDestination(models.Model):
         return f'{self.channel}: {self.provider}'
 
 
+class AiringDestination(models.Model):
+    """Trusted destination for one scheduled airing, separate from channel playback."""
+
+    class Scope(models.TextChoices):
+        EPISODE = 'episode', 'Episode'
+        SHOW = 'show', 'Show'
+
+    airing = models.ForeignKey('Airing', on_delete=models.CASCADE, related_name='destinations')
+    provider = models.CharField(max_length=100)
+    url = models.URLField()
+    access_type = models.CharField(
+        max_length=20,
+        choices=ContentAvailability.AccessType.choices,
+        default=ContentAvailability.AccessType.OTHER,
+    )
+    scope = models.CharField(max_length=20, choices=Scope.choices, default=Scope.SHOW)
+    source = models.CharField(max_length=50)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=['airing', 'source', 'url'],
+                name='unique_airing_destination_source_url',
+            ),
+        ]
+        ordering = ['provider', 'scope', 'url']
+
+    @property
+    def action_label(self):
+        if self.access_type == ContentAvailability.AccessType.AUTH:
+            return f'{self.provider} · Sign-in required'
+        if self.access_type == ContentAvailability.AccessType.SUBSCRIPTION:
+            return f'{self.provider} · Subscription'
+        if self.access_type in {
+            ContentAvailability.AccessType.FREE,
+            ContentAvailability.AccessType.ADS,
+        }:
+            return f'Watch on {self.provider}'
+        return f'Watch on {self.provider}'
+
+    def __str__(self):
+        return f'{self.airing}: {self.provider}'
+
+
 class ChannelFavorite(models.Model):
     """Per-account saved channel preference for the Live TV guide."""
 
