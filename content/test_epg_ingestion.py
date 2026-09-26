@@ -3,7 +3,7 @@ from unittest.mock import patch
 from django.test import TestCase
 from django.utils import timezone
 
-from content.models import Airing, Channel, Program
+from content.models import Airing, AiringDestination, Channel, Program
 from content.services import refresh_tvmaze_epg
 
 
@@ -40,6 +40,43 @@ class TvmazeEpgIngestionTests(TestCase):
         self.assertEqual(airing.channel, channel)
         self.assertEqual(airing.program, program)
         self.assertGreater(airing.ends_at, airing.starts_at)
+
+    @patch('content.services.fetch_live_tv_schedule')
+    def test_refresh_persists_only_trusted_airing_destination(self, fetch_schedule):
+        fetch_schedule.return_value = [self._item(
+            watch_url='https://abc.com/episode/example',
+            provider='ABC',
+            access_type='other',
+            watch_scope='episode',
+        )]
+
+        refresh_tvmaze_epg(country='US')
+
+        destination = AiringDestination.objects.get()
+        self.assertEqual(destination.provider, 'ABC')
+        self.assertEqual(destination.scope, AiringDestination.Scope.EPISODE)
+        self.assertEqual(destination.url, 'https://abc.com/episode/example')
+
+    @patch('content.services.fetch_live_tv_schedule')
+    def test_refresh_drops_untrusted_or_removed_airing_destination(self, fetch_schedule):
+        fetch_schedule.return_value = [self._item(
+            watch_url='https://abc.com/show/example',
+            provider='ABC',
+            access_type='other',
+            watch_scope='show',
+        )]
+        refresh_tvmaze_epg(country='US')
+        self.assertTrue(AiringDestination.objects.exists())
+
+        fetch_schedule.return_value = [self._item(
+            watch_url='https://untrusted.example/live',
+            provider='Untrusted',
+            access_type='free',
+            watch_scope='show',
+        )]
+        refresh_tvmaze_epg(country='US')
+
+        self.assertFalse(AiringDestination.objects.exists())
 
     @patch('content.services.fetch_live_tv_schedule')
     def test_refresh_is_idempotent_and_updates_existing_records(self, fetch_schedule):
