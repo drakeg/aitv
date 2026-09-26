@@ -8,7 +8,7 @@ from django.utils import timezone
 from django.utils.text import slugify
 
 from .epg_sources import TvmazeScheduleAdapter
-from .models import Airing, Channel, Program
+from .models import Airing, AiringDestination, Channel, Program
 from .providers import detect_provider
 
 TMDB_API_ROOT = 'https://api.themoviedb.org/3'
@@ -393,6 +393,32 @@ def refresh_epg_source(adapter, region='US', retention_hours=6):
                     'ends_at': ends_at,
                 },
             )
+            destination_url = str(row.get('destination_url') or '').strip()
+            destination = detect_provider(destination_url) if destination_url else None
+            if destination:
+                scope = str(row.get('destination_scope') or '').strip()
+                if scope not in AiringDestination.Scope.values:
+                    scope = AiringDestination.Scope.SHOW
+                AiringDestination.objects.update_or_create(
+                    airing=airing,
+                    source=adapter.source,
+                    url=destination_url,
+                    defaults={
+                        'provider': destination['provider'],
+                        'access_type': destination['access_type'],
+                        'scope': scope,
+                    },
+                )
+                AiringDestination.objects.filter(
+                    airing=airing,
+                    source=adapter.source,
+                ).exclude(url=destination_url).delete()
+            else:
+                AiringDestination.objects.filter(
+                    airing=airing,
+                    source=adapter.source,
+                ).delete()
+
             refreshed_airing_ids.append(airing.pk)
 
         stale_before = now - timedelta(hours=max(0, retention_hours))
