@@ -19,6 +19,7 @@ class TvmazeEpgIngestionTests(TestCase):
             'network': 'Example Network',
             'genres': ['Drama'],
             'airtime': '20:00',
+            'airstamp': (timezone.now() + timezone.timedelta(hours=1)).isoformat(),
             'runtime': 60,
         }
         values.update(overrides)
@@ -40,6 +41,21 @@ class TvmazeEpgIngestionTests(TestCase):
         self.assertEqual(airing.channel, channel)
         self.assertEqual(airing.program, program)
         self.assertGreater(airing.ends_at, airing.starts_at)
+
+    @patch('content.services.fetch_live_tv_schedule')
+    def test_refresh_preserves_source_airstamp_in_database(self, fetch_schedule):
+        airstamp = (timezone.now() + timezone.timedelta(hours=2)).replace(
+            minute=35, second=0, microsecond=0,
+        )
+        fetch_schedule.return_value = [self._item(
+            airtime='00:35',
+            airstamp=airstamp.isoformat(),
+        )]
+
+        refresh_tvmaze_epg(country='US')
+
+        airing = Airing.objects.get()
+        self.assertEqual(airing.starts_at, airstamp)
 
     @patch('content.services.fetch_live_tv_schedule')
     def test_refresh_persists_only_trusted_airing_destination(self, fetch_schedule):

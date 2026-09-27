@@ -1,8 +1,7 @@
 from dataclasses import dataclass
-from datetime import timedelta
+from datetime import datetime, timedelta
 from typing import Callable, Protocol
 
-from django.utils import timezone
 
 
 class ScheduleSourceAdapter(Protocol):
@@ -23,18 +22,22 @@ class TvmazeScheduleAdapter:
 
     def fetch_airings(self, *, region: str, limit: int = 1000) -> list[dict]:
         items = self.fetch_schedule(limit=limit, country=region)
-        now = timezone.now()
         rows = []
 
         for item in items:
             if not isinstance(item, dict):
                 continue
 
-            airtime = str(item.get('airtime') or '').strip()
+            # TVmaze's airstamp includes the actual calendar date and UTC offset.
+            # A bare airtime cannot represent midnight or a different network timezone.
+            airstamp = item.get('airstamp')
+            if not isinstance(airstamp, str) or not airstamp.strip():
+                continue
             try:
-                hour, minute = [int(part) for part in airtime.split(':', 1)]
-                starts_at = now.replace(hour=hour, minute=minute, second=0, microsecond=0)
-            except (TypeError, ValueError):
+                starts_at = datetime.fromisoformat(airstamp.strip())
+            except ValueError:
+                continue
+            if starts_at.tzinfo is None or starts_at.utcoffset() is None:
                 continue
 
             runtime = item.get('runtime')

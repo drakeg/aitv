@@ -295,7 +295,7 @@ def fetch_live_tv_schedule(limit=100, country='US'):
             'provider': provider_name, 'network': network, 'access_type': access_type,
             'action_label': action_label, 'watch_scope': 'episode' if episode_provider else ('show' if show_provider else ''),
             'episode_label': episode_label,
-            'airtime': episode.get('airtime') or '', 'runtime': episode.get('runtime'),
+            'airtime': episode.get('airtime') or '', 'airstamp': episode.get('airstamp') or '', 'runtime': episode.get('runtime'),
             'show_type': show_type, 'is_news': is_news,
         })
         seen.add(show_id)
