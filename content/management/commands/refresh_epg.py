@@ -1,5 +1,7 @@
 from django.core.management.base import BaseCommand, CommandError
+from django.utils import timezone
 
+from content.models import EpgRefreshState
 from content.services import refresh_tvmaze_epg
 
 
@@ -48,6 +50,11 @@ class Command(BaseCommand):
         total = 0
         for region in regions:
             count = refresh_tvmaze_epg(country=region, retention_hours=retention_hours)
+            EpgRefreshState.objects.update_or_create(
+                source='tvmaze',
+                region=region,
+                defaults={'refreshed_at': timezone.now(), 'airing_count': count},
+            )
             total += count
             self.stdout.write(f'{region}: refreshed {count} airing(s).')
 
