@@ -139,7 +139,7 @@ For recurring Docker refreshes, enable the opt-in `epg` profile:
 docker compose --profile epg up -d --build
 ```
 
-The EPG worker shares the same image, `.env`, and `aitv_data` SQLite volume as the web container. By default it refreshes `US` every 1800 seconds and keeps expired source airings for 6 hours. Configure `EPG_REGIONS`, `EPG_REFRESH_INTERVAL_SECONDS`, and `EPG_RETENTION_HOURS` in `.env`. The worker is not started by ordinary `docker compose up`.
+The EPG worker shares the same image, `.env`, and `aitv_data` SQLite volume as the web container. By default it refreshes `US` every 1800 seconds and keeps expired source airings for 6 hours. Configure `EPG_REGIONS`, `EPG_REFRESH_INTERVAL_SECONDS`, `EPG_RETENTION_HOURS`, and `EPG_STALE_AFTER_SECONDS` in `.env`. The Live TV guide displays the last completed refresh age and warns when it exceeds the stale threshold (default 7200 seconds). The worker is not started by ordinary `docker compose up`.
 
 ### Managing channel destinations
 
