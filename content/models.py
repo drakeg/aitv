@@ -82,12 +82,19 @@ class DiscoveryPreference(models.Model):
 
 
 class EpgRefreshState(models.Model):
-    """Last completed refresh metadata for one EPG source/region."""
+    """Last refresh attempt/result metadata for one EPG source/region."""
+
+    class Status(models.TextChoices):
+        SUCCESS = 'success', 'Success'
+        FAILURE = 'failure', 'Failure'
 
     source = models.CharField(max_length=50)
     region = models.CharField(max_length=2)
-    refreshed_at = models.DateTimeField()
+    refreshed_at = models.DateTimeField(null=True, blank=True)
     airing_count = models.PositiveIntegerField(default=0)
+    attempted_at = models.DateTimeField(null=True, blank=True)
+    status = models.CharField(max_length=20, choices=Status.choices, blank=True)
+    last_error = models.TextField(blank=True)
 
     class Meta:
         constraints = [
@@ -99,7 +106,8 @@ class EpgRefreshState(models.Model):
         ordering = ['source', 'region']
 
     def __str__(self):
-        return f'{self.source} {self.region} @ {self.refreshed_at}'
+        timestamp = self.refreshed_at or self.attempted_at
+        return f'{self.source} {self.region} @ {timestamp}'
 
 
 class Channel(models.Model):
