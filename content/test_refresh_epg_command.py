@@ -3,10 +3,12 @@ from unittest.mock import call, patch
 
 from django.core.management import call_command
 from django.core.management.base import CommandError
-from django.test import SimpleTestCase
+from django.test import TestCase
+
+from content.models import EpgRefreshState
 
 
-class RefreshEpgCommandTests(SimpleTestCase):
+class RefreshEpgCommandTests(TestCase):
     @patch('content.management.commands.refresh_epg.refresh_tvmaze_epg')
     def test_default_refreshes_us_region(self, refresh_tvmaze_epg):
         refresh_tvmaze_epg.return_value = 12
@@ -17,6 +19,8 @@ class RefreshEpgCommandTests(SimpleTestCase):
         refresh_tvmaze_epg.assert_called_once_with(country='US', retention_hours=6)
         self.assertIn('US: refreshed 12 airing(s).', output.getvalue())
         self.assertIn('Refreshed 12 airing(s) across 1 region(s).', output.getvalue())
+        state = EpgRefreshState.objects.get(source='tvmaze', region='US')
+        self.assertEqual(state.airing_count, 12)
 
     @patch('content.management.commands.refresh_epg.refresh_tvmaze_epg')
     def test_multiple_regions_are_normalized_and_deduplicated(self, refresh_tvmaze_epg):
@@ -40,6 +44,10 @@ class RefreshEpgCommandTests(SimpleTestCase):
             ],
         )
         self.assertIn('Refreshed 11 airing(s) across 2 region(s).', output.getvalue())
+        self.assertEqual(
+            set(EpgRefreshState.objects.values_list('region', 'airing_count')),
+            {('US', 4), ('CA', 7)},
+        )
 
     @patch('content.management.commands.refresh_epg.refresh_tvmaze_epg')
     def test_comma_separated_regions_support_worker_configuration(self, refresh_tvmaze_epg):
