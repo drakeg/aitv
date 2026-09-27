@@ -1,3 +1,4 @@
+import os
 from django.contrib.auth import login
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import UserCreationForm
@@ -7,7 +8,7 @@ from django.urls import reverse
 from django.utils import timezone
 from django.views.decorators.http import require_POST
 
-from content.models import Airing, AiringDestination, Channel, ChannelDestination, ChannelFavorite, DiscoveryPreference
+from content.models import Airing, AiringDestination, Channel, ChannelDestination, ChannelFavorite, DiscoveryPreference, EpgRefreshState
 from content.services import (
     fetch_free_archive_movies,
     fetch_live_tv_schedule,
@@ -391,12 +392,25 @@ def live_tv_guide(request):
         )
         row['destination'] = current_destination or playable_destinations.get(row['channel'].id)
 
+    refresh_state = EpgRefreshState.objects.filter(source='tvmaze', region=region).first()
+    try:
+        stale_after_seconds = int(os.getenv('EPG_STALE_AFTER_SECONDS', '7200'))
+    except ValueError:
+        stale_after_seconds = 7200
+    stale_after_seconds = max(1, stale_after_seconds)
+    guide_is_stale = bool(
+        refresh_state
+        and refresh_state.refreshed_at < now - timezone.timedelta(seconds=stale_after_seconds)
+    )
+
     return render(request, 'live_tv/guide.html', {
         'guide_rows': guide_rows,
         'guide_region': region,
         'guide_now': now,
         'guide_query': query,
         'show_favorites_only': show_favorites_only,
+        'epg_refresh_state': refresh_state,
+        'epg_is_stale': guide_is_stale,
     })
 
 
