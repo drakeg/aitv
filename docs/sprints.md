@@ -35,6 +35,7 @@ This ledger is the durable project record for sprint-sized development. Git hist
 | 66 | #90 | Persist trusted episode/show playback at the airing level and prefer it over broader channel destinations for the current airing. |
 | 67 | #91 | Preserve authoritative TVmaze airstamp date/timezone in EPG normalization and reject ambiguous schedule timestamps. |
 | 68 | #92 | Add durable per-region EPG refresh state and stale-data visibility in the Live TV guide. |
+| 69 | pending | Record EPG refresh failures per region while preserving prior successful guide state and exposing safe operator/user warnings. |
 
 ## Earlier development
 
