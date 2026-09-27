@@ -5,7 +5,7 @@ from django.test import TestCase
 from django.urls import reverse
 from django.utils import timezone
 
-from content.models import Airing, AiringDestination, Channel, ChannelDestination, ChannelFavorite, DiscoveryPreference, Program
+from content.models import Airing, AiringDestination, Channel, ChannelDestination, ChannelFavorite, DiscoveryPreference, EpgRefreshState, Program
 
 
 class LiveTvGuideTests(TestCase):
@@ -136,6 +136,27 @@ class LiveTvGuideTests(TestCase):
         response = self.client.get(reverse('live_tv_guide'))
 
         self.assertContains(response, 'No current guide data is available for US.')
+
+    def test_guide_shows_refresh_age_and_stale_warning(self):
+        channel = Channel.objects.create(
+            name='Freshness Network', slug='freshness-network', region='US',
+            source='tvmaze', external_id='freshness-network',
+        )
+        program = Program.objects.create(title='Freshness Show', source='tvmaze', external_id='freshness-show')
+        self._airing(channel, program, timedelta(minutes=-5), timedelta(minutes=25), 'freshness-airing')
+        EpgRefreshState.objects.create(
+            source='tvmaze',
+            region='US',
+            refreshed_at=timezone.now() - timedelta(hours=3),
+            airing_count=9,
+        )
+
+        with self.settings():
+            response = self.client.get(reverse('live_tv_guide'))
+
+        self.assertContains(response, 'Guide refreshed')
+        self.assertContains(response, '9 airings')
+        self.assertContains(response, 'Guide data may be stale')
 
     def test_signed_in_viewer_can_toggle_channel_favorite(self):
         channel = Channel.objects.create(
