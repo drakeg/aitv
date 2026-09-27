@@ -411,6 +411,7 @@ def live_tv_guide(request):
         'show_favorites_only': show_favorites_only,
         'epg_refresh_state': refresh_state,
         'epg_is_stale': guide_is_stale,
+        'epg_refresh_failed': bool(refresh_state and refresh_state.status == EpgRefreshState.Status.FAILURE),
     })
 
 
