@@ -81,6 +81,27 @@ class DiscoveryPreference(models.Model):
         return f'Discovery preferences for {self.user}'
 
 
+class EpgRefreshState(models.Model):
+    """Last completed refresh metadata for one EPG source/region."""
+
+    source = models.CharField(max_length=50)
+    region = models.CharField(max_length=2)
+    refreshed_at = models.DateTimeField()
+    airing_count = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=['source', 'region'],
+                name='unique_epg_refresh_state_source_region',
+            ),
+        ]
+        ordering = ['source', 'region']
+
+    def __str__(self):
+        return f'{self.source} {self.region} @ {self.refreshed_at}'
+
+
 class Channel(models.Model):
     """Normalized Live TV channel identity independent of schedule/playback."""
 
