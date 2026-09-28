@@ -1,5 +1,7 @@
 from io import StringIO
-from unittest.mock import call, patch
+from unittest.mock import Mock, call, patch
+
+import requests
 
 from django.core.management import call_command
 from django.core.management.base import CommandError
@@ -102,6 +104,32 @@ class RefreshEpgCommandTests(TestCase):
         self.assertEqual(us_state.status, EpgRefreshState.Status.FAILURE)
         self.assertEqual(ca_state.status, EpgRefreshState.Status.SUCCESS)
         self.assertEqual(ca_state.airing_count, 7)
+
+    @patch('content.services.requests.get')
+    def test_upstream_timeout_is_not_recorded_as_successful_empty_refresh(self, get):
+        get.side_effect = requests.Timeout('https://example.test/?token=private')
+
+        with self.assertRaisesMessage(CommandError, 'EPG refresh failed for US'):
+            call_command('refresh_epg')
+
+        state = EpgRefreshState.objects.get(source='tvmaze', region='US')
+        self.assertEqual(state.status, EpgRefreshState.Status.FAILURE)
+        self.assertIsNone(state.refreshed_at)
+        self.assertIn('ScheduleFetchError', state.last_error)
+        self.assertNotIn('private', state.last_error)
+
+    @patch('content.services.requests.get')
+    def test_legitimate_empty_upstream_schedule_is_success(self, get):
+        response = Mock()
+        response.json.return_value = []
+        get.return_value = response
+
+        call_command('refresh_epg', stdout=StringIO())
+
+        state = EpgRefreshState.objects.get(source='tvmaze', region='US')
+        self.assertEqual(state.status, EpgRefreshState.Status.SUCCESS)
+        self.assertEqual(state.airing_count, 0)
+        self.assertIsNotNone(state.refreshed_at)
 
     @patch('content.management.commands.refresh_epg.refresh_tvmaze_epg')
     def test_invalid_region_fails_before_refresh(self, refresh_tvmaze_epg):
