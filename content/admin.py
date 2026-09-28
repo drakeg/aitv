@@ -133,9 +133,9 @@ class AiringDestinationAdmin(admin.ModelAdmin):
 
 @admin.register(EpgRefreshState)
 class EpgRefreshStateAdmin(admin.ModelAdmin):
-    list_display = ('source', 'region', 'refreshed_at', 'airing_count')
-    list_filter = ('source', 'region')
-    readonly_fields = ('source', 'region', 'refreshed_at', 'airing_count')
+    list_display = ('source', 'region', 'status', 'attempted_at', 'refreshed_at', 'airing_count')
+    list_filter = ('source', 'region', 'status')
+    readonly_fields = ('source', 'region', 'status', 'attempted_at', 'refreshed_at', 'airing_count', 'last_error')
 
     def has_add_permission(self, request):
         return False

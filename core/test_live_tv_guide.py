@@ -158,6 +158,29 @@ class LiveTvGuideTests(TestCase):
         self.assertContains(response, '9 airings')
         self.assertContains(response, 'Guide data may be stale')
 
+    def test_guide_shows_latest_refresh_failure_without_exposing_error_details(self):
+        channel = Channel.objects.create(
+            name='Failure Network', slug='failure-network', region='US',
+            source='tvmaze', external_id='failure-network',
+        )
+        program = Program.objects.create(title='Failure Show', source='tvmaze', external_id='failure-show')
+        self._airing(channel, program, timedelta(minutes=-5), timedelta(minutes=25), 'failure-airing')
+        EpgRefreshState.objects.create(
+            source='tvmaze',
+            region='US',
+            refreshed_at=timezone.now() - timedelta(minutes=30),
+            attempted_at=timezone.now() - timedelta(minutes=1),
+            airing_count=11,
+            status=EpgRefreshState.Status.FAILURE,
+            last_error='RuntimeError: secret upstream detail',
+        )
+
+        response = self.client.get(reverse('live_tv_guide'))
+
+        self.assertContains(response, 'The latest EPG refresh attempt failed')
+        self.assertContains(response, '11 airings')
+        self.assertNotContains(response, 'secret upstream detail')
+
     def test_signed_in_viewer_can_toggle_channel_favorite(self):
         channel = Channel.objects.create(
             name='Favorite Network', slug='favorite-network', region='US',

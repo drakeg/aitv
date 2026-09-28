@@ -60,6 +60,10 @@ Each source integration must define its provenance, region semantics, access typ
 
 **Implemented in Sprint 68:** each completed TVmaze refresh records source, region, completion time, and normalized airing count. The Live TV guide displays the refresh age and warns when the most recent completed refresh exceeds `EPG_STALE_AFTER_SECONDS` (default 7200). Refresh state is read-only in Django admin, so a stopped worker can be distinguished from ordinary schedule gaps.
 
+## Refresh failure observability
+
+**Implemented in Sprint 69:** refresh state now records the latest attempt time, success/failure status, and an operator-visible error summary without overwriting the prior successful refresh timestamp or airing count. Multi-region refreshes continue healthy regions before returning failure for failed regions. The public guide shows a generic failure warning but never exposes stored exception details.
+
 ## Airing-specific destinations
 
 **Implemented in Sprint 66:** trusted provider URLs supplied by the TVmaze schedule path are normalized into source-owned AiringDestination records rather than ChannelDestination records. Each refresh revalidates the URL through the existing provider detector and removes a stale source destination if upstream no longer supplies a trusted URL. The Live TV guide prefers the current airing's destination over a broader channel destination, while future/other airings remain unaffected.
