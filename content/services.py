@@ -232,7 +232,11 @@ def _strip_html(value):
     return ' '.join(unescape(text).split())
 
 
-def fetch_live_tv_schedule(limit=100, country='US'):
+class ScheduleFetchError(RuntimeError):
+    """Upstream schedule unavailable; do not report an EPG refresh success."""
+
+
+def fetch_live_tv_schedule(limit=100, country='US', *, strict=False):
     country = str(country or 'US').strip().upper()
     if len(country) != 2 or not country.isalpha():
         country = 'US'
@@ -240,9 +244,14 @@ def fetch_live_tv_schedule(limit=100, country='US'):
         response = requests.get(f'{TVMAZE_API_ROOT}/schedule', params={'country': country}, timeout=_timeout())
         response.raise_for_status()
         episodes = response.json()
-    except (requests.RequestException, ValueError):
+    except (requests.RequestException, ValueError) as exc:
+        if strict:
+            # Do not persist URL, credentials, response bodies, or upstream exception text.
+            raise ScheduleFetchError('TVmaze schedule request failed') from exc
         return []
     if not isinstance(episodes, list):
+        if strict:
+            raise ScheduleFetchError('TVmaze schedule response is not a list')
         return []
 
     items = []
@@ -429,6 +438,9 @@ def refresh_epg_source(adapter, region='US', retention_hours=6):
 
 def refresh_tvmaze_epg(country='US', retention_hours=6):
     """Persist today's trustworthy TVmaze schedule through the shared adapter contract."""
-    adapter = TvmazeScheduleAdapter(fetch_schedule=fetch_live_tv_schedule)
+    def fetch_schedule(*, limit, country):
+        return fetch_live_tv_schedule(limit=limit, country=country, strict=True)
+
+    adapter = TvmazeScheduleAdapter(fetch_schedule=fetch_schedule)
     return refresh_epg_source(adapter, region=country, retention_hours=retention_hours)
 
