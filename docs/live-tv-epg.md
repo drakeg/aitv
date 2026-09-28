@@ -60,6 +60,10 @@ Each source integration must define its provenance, region semantics, access typ
 
 **Implemented in Sprint 68:** each completed TVmaze refresh records source, region, completion time, and normalized airing count. The Live TV guide displays the refresh age and warns when the most recent completed refresh exceeds `EPG_STALE_AFTER_SECONDS` (default 7200). Refresh state is read-only in Django admin, so a stopped worker can be distinguished from ordinary schedule gaps.
 
+## Source failure versus empty schedule
+
+**Sprint 70:** interactive TVmaze home discovery remains fail-soft, but the scheduled EPG refresh invokes strict TVmaze fetching. Transport, HTTP, JSON, or unexpected payload failures raise a sanitized source error, allowing the refresh command to record failure while preserving the previous successful schedule state. A valid empty source schedule remains a successful zero-airing refresh. Source exception text, response bodies, and credentials are not copied into the persisted error summary.
+
 ## Refresh failure observability
 
 **Implemented in Sprint 69:** refresh state now records the latest attempt time, success/failure status, and an operator-visible error summary without overwriting the prior successful refresh timestamp or airing count. Multi-region refreshes continue healthy regions before returning failure for failed regions. The public guide shows a generic failure warning but never exposes stored exception details.
