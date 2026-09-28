@@ -117,7 +117,7 @@ TMDB_READ_ACCESS_TOKEN=your_read_token_here
 
 Provider context is ordered Free → Free with ads → Subscription → Rent → Buy, then adjusted within that legitimate result set for a signed-in viewer's preferred services. Cards show the first two providers compactly and allow the remaining provider names/access types to be expanded in place.
 
-TMDB failures or missing credentials do not prevent other live sources from loading.
+TMDB failures or missing credentials do not prevent other live sources from loading. TVmaze discovery also degrades to an empty section on upstream failure; the EPG refresh path instead treats transport, HTTP, malformed JSON, and unexpected response-shape failures as failed refresh attempts, not successful zero-airing updates.
 
 ## Live TV EPG refresh
 
