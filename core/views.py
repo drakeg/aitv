@@ -1,4 +1,3 @@
-import os
 from django.contrib.auth import login
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import UserCreationForm
@@ -10,7 +9,7 @@ from django.urls import reverse
 from django.utils import timezone
 from django.views.decorators.http import require_POST
 
-from content.models import Airing, AiringDestination, Channel, ChannelDestination, ChannelFavorite, DiscoveryPreference, EpgRefreshState
+from content.models import Airing, AiringDestination, Channel, ChannelDestination, ChannelFavorite, DiscoveryPreference
 from content.services import (
     fetch_free_archive_movies,
     fetch_live_tv_schedule,
@@ -21,6 +20,7 @@ from content.services import (
 )
 from watchlist.models import Watchlist
 
+from .epg_health import configured_epg_health, epg_region_health
 from .forms import AccountProfileForm
 
 DISCOVERY_GENRES = (
@@ -64,24 +64,6 @@ def _provider_match_key(value):
 
 
 
-def _configured_epg_regions():
-    raw = os.getenv('EPG_REGIONS', 'US')
-    regions = []
-    for value in str(raw).split(','):
-        region = value.strip().upper()
-        if len(region) == 2 and region.isalpha() and region not in regions:
-            regions.append(region)
-    return regions or ['US']
-
-
-def _epg_stale_after_seconds():
-    try:
-        value = int(os.getenv('EPG_STALE_AFTER_SECONDS', '7200'))
-    except ValueError:
-        return 7200
-    return max(1, value)
-
-
 def health_live(request):
     try:
         with connection.cursor() as cursor:
@@ -100,42 +82,19 @@ def health_ready(request):
     except DatabaseError:
         return JsonResponse({'status': 'unhealthy', 'database': 'unavailable', 'epg': []}, status=503)
 
-    now = timezone.now()
-    stale_before = now - timezone.timedelta(seconds=_epg_stale_after_seconds())
-    states = {
-        state.region: state
-        for state in EpgRefreshState.objects.filter(
-            source='tvmaze',
-            region__in=_configured_epg_regions(),
-        )
-    }
-
     epg = []
     ready = True
-    for region in _configured_epg_regions():
-        state = states.get(region)
-        if state is None:
+    for region, state, health in configured_epg_health():
+        if health != 'ok':
             ready = False
-            epg.append({'source': 'tvmaze', 'region': region, 'status': 'missing'})
-            continue
-
-        if state.status == EpgRefreshState.Status.FAILURE:
-            health = 'failed'
-            ready = False
-        elif state.refreshed_at is None or state.refreshed_at < stale_before:
-            health = 'stale'
-            ready = False
-        else:
-            health = 'ok'
-
-        epg.append({
-            'source': state.source,
-            'region': state.region,
-            'status': health,
-            'airing_count': state.airing_count,
-            'last_success_at': state.refreshed_at.isoformat() if state.refreshed_at else None,
-            'last_attempt_at': state.attempted_at.isoformat() if state.attempted_at else None,
-        })
+        item = {'source': 'tvmaze', 'region': region, 'status': health}
+        if state is not None:
+            item.update({
+                'airing_count': state.airing_count,
+                'last_success_at': state.refreshed_at.isoformat() if state.refreshed_at else None,
+                'last_attempt_at': state.attempted_at.isoformat() if state.attempted_at else None,
+            })
+        epg.append(item)
 
     return JsonResponse(
         {'status': 'ready' if ready else 'degraded', 'database': 'ok', 'epg': epg},
@@ -473,16 +432,7 @@ def live_tv_guide(request):
         )
         row['destination'] = current_destination or playable_destinations.get(row['channel'].id)
 
-    refresh_state = EpgRefreshState.objects.filter(source='tvmaze', region=region).first()
-    try:
-        stale_after_seconds = int(os.getenv('EPG_STALE_AFTER_SECONDS', '7200'))
-    except ValueError:
-        stale_after_seconds = 7200
-    stale_after_seconds = max(1, stale_after_seconds)
-    guide_is_stale = bool(
-        refresh_state
-        and refresh_state.refreshed_at < now - timezone.timedelta(seconds=stale_after_seconds)
-    )
+    refresh_state, refresh_health = epg_region_health(region, now=now)
 
     return render(request, 'live_tv/guide.html', {
         'guide_rows': guide_rows,
@@ -491,8 +441,8 @@ def live_tv_guide(request):
         'guide_query': query,
         'show_favorites_only': show_favorites_only,
         'epg_refresh_state': refresh_state,
-        'epg_is_stale': guide_is_stale,
-        'epg_refresh_failed': bool(refresh_state and refresh_state.status == EpgRefreshState.Status.FAILURE),
+        'epg_is_stale': refresh_health == 'stale',
+        'epg_refresh_failed': refresh_health == 'failed',
     })
 
 
