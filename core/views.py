@@ -443,6 +443,7 @@ def live_tv_guide(request):
         'epg_refresh_state': refresh_state,
         'epg_is_stale': refresh_health == 'stale',
         'epg_refresh_failed': refresh_health == 'failed',
+        'epg_refresh_missing': refresh_health == 'missing',
     })
 
 

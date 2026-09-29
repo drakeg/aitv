@@ -13,6 +13,8 @@
                 <div class="alert alert-danger py-2 px-3 mt-2 mb-0" role="alert">The latest EPG refresh attempt failed. Previously refreshed guide data may still be shown.</div>
             {% elif epg_is_stale %}
                 <div class="alert alert-warning py-2 px-3 mt-2 mb-0" role="alert">Guide data may be stale because the last completed EPG refresh is older than the configured freshness threshold.</div>
+            {% elif epg_refresh_missing %}
+                <div class="alert alert-warning py-2 px-3 mt-2 mb-0" role="alert">Guide refresh status is not available yet. Schedule data may not have completed its first tracked EPG refresh.</div>
             {% endif %}
         </div>
         <div class="d-flex gap-2 flex-wrap">
