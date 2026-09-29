@@ -72,6 +72,10 @@ Each source integration must define its provenance, region semantics, access typ
 
 **Implemented in Sprint 71:** `/health/live/` verifies the Django/database path and is suitable for container liveness. `/health/ready/` verifies the same database path plus each configured `EPG_REGIONS` refresh state; missing, failed, or older-than-`EPG_STALE_AFTER_SECONDS` regions return HTTP 503 with sanitized structured status. Docker Compose uses liveness only, so an upstream schedule outage does not trigger a restart loop while external monitoring can still alert on degraded readiness.
 
+## Shared EPG health policy
+
+**Implemented in Sprint 72:** configured-region parsing, stale-threshold normalization, and `missing`/`failed`/`stale`/`ok` evaluation live in one shared policy module. Both the Live TV guide and `/health/ready/` consume that policy, preventing user-facing freshness warnings from drifting away from operational readiness semantics.
+
 ## Airing-specific destinations
 
 **Implemented in Sprint 66:** trusted provider URLs supplied by the TVmaze schedule path are normalized into source-owned AiringDestination records rather than ChannelDestination records. Each refresh revalidates the URL through the existing provider detector and removes a stale source destination if upstream no longer supplies a trusted URL. The Live TV guide prefers the current airing's destination over a broader channel destination, while future/other airings remain unaffected.
