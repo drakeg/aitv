@@ -2,7 +2,9 @@ import os
 from django.contrib.auth import login
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import UserCreationForm
+from django.db import DatabaseError, connection
 from django.db.models import Q
+from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils import timezone
@@ -60,6 +62,85 @@ def _provider_match_key(value):
     normalized = str(value or '').strip().casefold()
     return PROVIDER_MATCH_ALIASES.get(normalized, normalized)
 
+
+
+def _configured_epg_regions():
+    raw = os.getenv('EPG_REGIONS', 'US')
+    regions = []
+    for value in str(raw).split(','):
+        region = value.strip().upper()
+        if len(region) == 2 and region.isalpha() and region not in regions:
+            regions.append(region)
+    return regions or ['US']
+
+
+def _epg_stale_after_seconds():
+    try:
+        value = int(os.getenv('EPG_STALE_AFTER_SECONDS', '7200'))
+    except ValueError:
+        return 7200
+    return max(1, value)
+
+
+def health_live(request):
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute('SELECT 1')
+            cursor.fetchone()
+    except DatabaseError:
+        return JsonResponse({'status': 'unhealthy', 'database': 'unavailable'}, status=503)
+    return JsonResponse({'status': 'ok', 'database': 'ok'})
+
+
+def health_ready(request):
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute('SELECT 1')
+            cursor.fetchone()
+    except DatabaseError:
+        return JsonResponse({'status': 'unhealthy', 'database': 'unavailable', 'epg': []}, status=503)
+
+    now = timezone.now()
+    stale_before = now - timezone.timedelta(seconds=_epg_stale_after_seconds())
+    states = {
+        state.region: state
+        for state in EpgRefreshState.objects.filter(
+            source='tvmaze',
+            region__in=_configured_epg_regions(),
+        )
+    }
+
+    epg = []
+    ready = True
+    for region in _configured_epg_regions():
+        state = states.get(region)
+        if state is None:
+            ready = False
+            epg.append({'source': 'tvmaze', 'region': region, 'status': 'missing'})
+            continue
+
+        if state.status == EpgRefreshState.Status.FAILURE:
+            health = 'failed'
+            ready = False
+        elif state.refreshed_at is None or state.refreshed_at < stale_before:
+            health = 'stale'
+            ready = False
+        else:
+            health = 'ok'
+
+        epg.append({
+            'source': state.source,
+            'region': state.region,
+            'status': health,
+            'airing_count': state.airing_count,
+            'last_success_at': state.refreshed_at.isoformat() if state.refreshed_at else None,
+            'last_attempt_at': state.attempted_at.isoformat() if state.attempted_at else None,
+        })
+
+    return JsonResponse(
+        {'status': 'ready' if ready else 'degraded', 'database': 'ok', 'epg': epg},
+        status=200 if ready else 503,
+    )
 
 
 def register(request):
