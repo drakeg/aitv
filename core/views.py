@@ -346,6 +346,7 @@ def live_tv_guide(request):
         show_favorites_only = request.GET.get('favorites') == '1'
 
     query = request.GET.get('q', '').strip()
+    category = request.GET.get('category', '').strip()
     now = timezone.now()
     upcoming = Airing.objects.filter(channel__region=region, ends_at__gt=now)
 
@@ -361,11 +362,32 @@ def live_tv_guide(request):
         )
         upcoming = upcoming.filter(channel_id__in=matching_channel_ids)
 
-    upcoming = (
+    category_choices = sorted({
+        str(value).strip()
+        for values in (
+            Channel.objects
+            .filter(region=region, airings__ends_at__gt=now)
+            .distinct()
+            .values_list('categories', flat=True)
+        )
+        for value in (values or [])
+        if str(value).strip()
+    }, key=str.casefold)
+
+    upcoming = list(
         upcoming
         .select_related('channel', 'program')
         .order_by('channel__name', 'starts_at')
     )
+    if category:
+        wanted_category = category.casefold()
+        upcoming = [
+            airing for airing in upcoming
+            if any(
+                str(value).strip().casefold() == wanted_category
+                for value in (airing.channel.categories or [])
+            )
+        ]
 
     channels = {}
     for airing in upcoming:
@@ -439,6 +461,8 @@ def live_tv_guide(request):
         'guide_region': region,
         'guide_now': now,
         'guide_query': query,
+        'guide_category': category,
+        'guide_category_choices': category_choices,
         'show_favorites_only': show_favorites_only,
         'epg_refresh_state': refresh_state,
         'epg_is_stale': refresh_health == 'stale',
@@ -462,6 +486,9 @@ def toggle_channel_favorite(request, channel_id):
     query = request.POST.get('q', '').strip()
     if query:
         params.append(f'q={quote_plus(query)}')
+    category = request.POST.get('category', '').strip()
+    if category:
+        params.append(f'category={quote_plus(category)}')
     if params:
         target = f"{target}?{'&'.join(params)}"
     return redirect(target)
