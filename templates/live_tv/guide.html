@@ -20,9 +20,9 @@
         <div class="d-flex gap-2 flex-wrap">
             {% if user.is_authenticated %}
                 {% if show_favorites_only %}
-                    <a class="btn btn-outline-light" href="{% url 'live_tv_guide' %}{% if guide_query %}?q={{ guide_query|urlencode }}{% endif %}">Show all channels</a>
+                    <a class="btn btn-outline-light" href="{% url 'live_tv_guide' %}?{% if guide_query %}q={{ guide_query|urlencode }}&amp;{% endif %}{% if guide_category %}category={{ guide_category|urlencode }}{% endif %}">Show all channels</a>
                 {% else %}
-                    <a class="btn btn-outline-warning" href="{% url 'live_tv_guide' %}?favorites=1{% if guide_query %}&amp;q={{ guide_query|urlencode }}{% endif %}">★ Favorites only</a>
+                    <a class="btn btn-outline-warning" href="{% url 'live_tv_guide' %}?favorites=1{% if guide_query %}&amp;q={{ guide_query|urlencode }}{% endif %}{% if guide_category %}&amp;category={{ guide_category|urlencode }}{% endif %}">★ Favorites only</a>
                 {% endif %}
             {% endif %}
             <a class="btn btn-outline-light" href="{% url 'home' %}">Back to discovery</a>
@@ -32,9 +32,15 @@
     <form class="browse-bar guide-search mb-3 d-flex gap-2 flex-wrap" method="get" action="{% url 'live_tv_guide' %}">
         {% if show_favorites_only %}<input type="hidden" name="favorites" value="1">{% endif %}
         <input type="search" name="q" value="{{ guide_query }}" placeholder="Search channels or programs" aria-label="Search Live TV channels or programs">
-        <button class="btn btn-primary" type="submit">Search guide</button>
-        {% if guide_query %}
-            <a class="btn btn-outline-light" href="{% url 'live_tv_guide' %}{% if show_favorites_only %}?favorites=1{% endif %}">Clear search</a>
+        <select name="category" aria-label="Filter Live TV by category">
+            <option value="">All categories</option>
+            {% for category in guide_category_choices %}
+                <option value="{{ category }}"{% if category == guide_category %} selected{% endif %}>{{ category }}</option>
+            {% endfor %}
+        </select>
+        <button class="btn btn-primary" type="submit">Filter guide</button>
+        {% if guide_query or guide_category %}
+            <a class="btn btn-outline-light" href="{% url 'live_tv_guide' %}{% if show_favorites_only %}?favorites=1{% endif %}">Clear filters</a>
         {% endif %}
     </form>
 
@@ -50,6 +56,7 @@
                                     {% csrf_token %}
                                     {% if show_favorites_only %}<input type="hidden" name="favorites" value="1">{% endif %}
                                     {% if guide_query %}<input type="hidden" name="q" value="{{ guide_query }}">{% endif %}
+                                    {% if guide_category %}<input type="hidden" name="category" value="{{ guide_category }}">{% endif %}
                                     <button class="guide-favorite{% if row.is_favorite %} is-favorite{% endif %}" type="submit" aria-label="{% if row.is_favorite %}Remove{% else %}Add{% endif %} {{ row.channel.name }} {% if row.is_favorite %}from{% else %}to{% endif %} favorites" title="{% if row.is_favorite %}Remove from favorites{% else %}Add to favorites{% endif %}">
                                         {% if row.is_favorite %}★{% else %}☆{% endif %}
                                     </button>
@@ -84,9 +91,9 @@
         </div>
     {% else %}
         <div class="empty-state">
-            {% if guide_query %}
-                <strong>No channels or upcoming programs match “{{ guide_query }}” for {{ guide_region }}.</strong>
-                <div class="text-muted mt-1">Search matches channel names and normalized upcoming program titles.</div>
+            {% if guide_query or guide_category %}
+                <strong>No channels match the active Live TV filters for {{ guide_region }}.</strong>
+                <div class="text-muted mt-1">Search matches channel names and normalized upcoming program titles; category filtering uses normalized channel categories.</div>
             {% elif show_favorites_only %}
                 <strong>No favorite channels currently have guide data for {{ guide_region }}.</strong>
                 <div class="text-muted mt-1">Favorite channels from other accounts are never included.</div>
