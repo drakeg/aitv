@@ -39,6 +39,7 @@ This ledger is the durable project record for sprint-sized development. Git hist
 | 70 | #94 | Distinguish failed TVmaze requests from legitimate empty schedules during EPG refresh without breaking fail-soft home discovery. |
 | 71 | #95 | Add database liveness and EPG-aware readiness endpoints plus a Docker liveness healthcheck. |
 | 72 | #96 | Centralize EPG region/staleness health policy for consistent guide and readiness behavior. |
+| 73 | pending | Surface missing EPG refresh state in the Live TV guide so user-facing warnings match readiness semantics. |
 
 ## Earlier development
 
