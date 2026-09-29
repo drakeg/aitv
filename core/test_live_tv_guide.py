@@ -137,6 +137,25 @@ class LiveTvGuideTests(TestCase):
 
         self.assertContains(response, 'No current guide data is available for US.')
 
+    def test_guide_warns_when_refresh_state_is_missing(self):
+        channel = Channel.objects.create(
+            name='Untracked Network', slug='untracked-network', region='US',
+            source='tvmaze', external_id='untracked-network',
+        )
+        program = Program.objects.create(
+            title='Untracked Show', source='tvmaze', external_id='untracked-show',
+        )
+        self._airing(
+            channel, program, timedelta(minutes=-5), timedelta(minutes=25), 'untracked-airing',
+        )
+
+        response = self.client.get(reverse('live_tv_guide'))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Guide refresh status is not available yet')
+        self.assertNotContains(response, 'The latest EPG refresh attempt failed')
+        self.assertNotContains(response, 'Guide data may be stale because')
+
     def test_guide_shows_refresh_age_and_stale_warning(self):
         channel = Channel.objects.create(
             name='Freshness Network', slug='freshness-network', region='US',
