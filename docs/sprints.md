@@ -43,6 +43,7 @@ This ledger is the durable project record for sprint-sized development. Git hist
 | 74 | #98 | Add normalized channel-category filtering to the Live TV guide while preserving search and Favorites state. |
 | 75 | #100 | Prioritize signed-in viewers' Favorite channels in the normal Live TV guide while preserving alphabetical order within groups. |
 | 76 | #101 | Rank multiple current-airing destinations by scope first and viewer preferred provider within scope. |
+| 77 | pending | Show episode-vs-show scope for selected airing destinations without mislabeling channel-wide playback. |
 
 ## Earlier development
 
