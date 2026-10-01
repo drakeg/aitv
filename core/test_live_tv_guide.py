@@ -181,6 +181,85 @@ class LiveTvGuideTests(TestCase):
         self.assertContains(response, 'https://abc.com/episode/scope')
         self.assertNotContains(response, 'https://example.com/show/prime')
 
+    def test_episode_destination_scope_is_visible_in_guide(self):
+        channel = Channel.objects.create(
+            name='Episode Scope Network', slug='episode-scope-network', region='US',
+            source='tvmaze', external_id='episode-scope-network',
+        )
+        program = Program.objects.create(
+            title='Episode Scope Show', source='tvmaze', external_id='episode-scope-show',
+        )
+        airing = self._airing(
+            channel, program, timedelta(minutes=-5), timedelta(minutes=25),
+            'episode-scope-airing',
+        )
+        AiringDestination.objects.create(
+            airing=airing,
+            provider='ABC',
+            url='https://abc.com/episode/scope-visible',
+            access_type='other',
+            scope=AiringDestination.Scope.EPISODE,
+            source='fixture',
+        )
+
+        response = self.client.get(reverse('live_tv_guide'))
+
+        self.assertContains(response, 'Episode destination')
+        self.assertContains(response, 'This destination applies to the current episode only.')
+
+    def test_show_destination_scope_is_visible_in_guide(self):
+        channel = Channel.objects.create(
+            name='Show Scope Network', slug='show-scope-network', region='US',
+            source='tvmaze', external_id='show-scope-network',
+        )
+        program = Program.objects.create(
+            title='Show Scope Show', source='tvmaze', external_id='show-scope-show',
+        )
+        airing = self._airing(
+            channel, program, timedelta(minutes=-5), timedelta(minutes=25),
+            'show-scope-airing',
+        )
+        AiringDestination.objects.create(
+            airing=airing,
+            provider='Prime Video',
+            url='https://example.com/show/scope-visible',
+            access_type='subscription',
+            scope=AiringDestination.Scope.SHOW,
+            source='fixture',
+        )
+
+        response = self.client.get(reverse('live_tv_guide'))
+
+        self.assertContains(response, 'Show destination')
+        self.assertContains(response, "This destination applies to the current show's provider page.")
+
+    def test_channel_destination_does_not_claim_airing_scope(self):
+        channel = Channel.objects.create(
+            name='Channel Scope Network', slug='channel-scope-network', region='US',
+            source='tvmaze', external_id='channel-scope-network',
+        )
+        program = Program.objects.create(
+            title='Channel Scope Show', source='tvmaze', external_id='channel-scope-show',
+        )
+        self._airing(
+            channel, program, timedelta(minutes=-5), timedelta(minutes=25),
+            'channel-scope-airing',
+        )
+        ChannelDestination.objects.create(
+            channel=channel,
+            provider='Channel Provider',
+            url='https://example.com/channel/scope',
+            access_type='free',
+            destination_type=ChannelDestination.DestinationType.DIRECT,
+            source='fixture',
+        )
+
+        response = self.client.get(reverse('live_tv_guide'))
+
+        self.assertContains(response, 'Watch on Channel Provider')
+        self.assertNotContains(response, 'Episode destination')
+        self.assertNotContains(response, 'Show destination')
+
     def test_metadata_destination_does_not_create_watch_action(self):
         channel = Channel.objects.create(
             name='Metadata Network', slug='metadata-network', region='US',
