@@ -471,6 +471,7 @@ def live_tv_guide(request):
             if row['current'] is not None else None
         )
         row['destination'] = current_destination or playable_destinations.get(row['channel'].id)
+        row['destination_scope'] = current_destination.scope if current_destination else ''
 
     refresh_state, refresh_health = epg_region_health(region, now=now)
 
