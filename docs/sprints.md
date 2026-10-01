@@ -41,7 +41,7 @@ This ledger is the durable project record for sprint-sized development. Git hist
 | 72 | #96 | Centralize EPG region/staleness health policy for consistent guide and readiness behavior. |
 | 73 | #97 | Surface missing EPG refresh state in the Live TV guide so user-facing warnings match readiness semantics. |
 | 74 | #98 | Add normalized channel-category filtering to the Live TV guide while preserving search and Favorites state. |
-| 75 | pending | Prioritize signed-in viewers' Favorite channels in the normal Live TV guide while preserving alphabetical order within groups. |
+| 75 | #100 | Prioritize signed-in viewers' Favorite channels in the normal Live TV guide while preserving alphabetical order within groups. |
 
 ## Earlier development
 
