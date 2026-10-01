@@ -96,6 +96,10 @@ Each source integration must define its provenance, region semantics, access typ
 
 **Implemented in Sprint 76:** when the current airing has multiple trusted destinations, episode scope ranks ahead of show scope. Within the same scope, a signed-in viewer's preferred providers rank ahead of other legitimate destinations using the same provider-alias normalization already used for channel destinations. Provider preference never promotes a broader show destination over a matching episode-specific destination.
 
+## Airing destination scope visibility
+
+**Implemented in Sprint 77:** the Live TV guide visibly labels the selected AiringDestination as episode-specific or show-level. ChannelDestination actions remain unlabeled by airing scope, avoiding any implication that a channel-wide destination is tied to one episode or show. This is presentation-only and does not change destination selection or trust rules.
+
 ## Operator destination management
 
 **Implemented in Sprint 65:** Django admin provides an operator surface for the normalized EPG domain. Source-owned Channels, Programs, and Airings plus account-owned Channel Favorites are inspect-only for add/delete operations. Existing Channels expose editable ChannelDestination rows so an operator can deliberately record a provider, URL, access type, destination type, and provenance source without modifying schedule identities. Playable destinations entered through this surface must use HTTP(S), and the guide still renders Watch actions only for explicit direct/tuner destination types.
