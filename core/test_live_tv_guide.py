@@ -235,6 +235,67 @@ class LiveTvGuideTests(TestCase):
         self.assertEqual(response.status_code, 405)
         self.assertFalse(ChannelFavorite.objects.exists())
 
+    def test_signed_in_guide_prioritizes_favorite_channels(self):
+        alpha_channel = Channel.objects.create(
+            name='Alpha Network', slug='alpha-priority-network', region='US',
+            source='tvmaze', external_id='alpha-priority-network',
+        )
+        zulu_channel = Channel.objects.create(
+            name='Zulu Network', slug='zulu-priority-network', region='US',
+            source='tvmaze', external_id='zulu-priority-network',
+        )
+        alpha_program = Program.objects.create(
+            title='Alpha Show', source='tvmaze', external_id='alpha-priority-show',
+        )
+        zulu_program = Program.objects.create(
+            title='Zulu Show', source='tvmaze', external_id='zulu-priority-show',
+        )
+        self._airing(
+            alpha_channel, alpha_program, timedelta(minutes=-5), timedelta(minutes=25),
+            'alpha-priority-airing',
+        )
+        self._airing(
+            zulu_channel, zulu_program, timedelta(minutes=-5), timedelta(minutes=25),
+            'zulu-priority-airing',
+        )
+        user = get_user_model().objects.create_user(username='priority-viewer', password='password')
+        ChannelFavorite.objects.create(user=user, channel=zulu_channel)
+        self.client.force_login(user)
+
+        response = self.client.get(reverse('live_tv_guide'))
+
+        content = response.content.decode()
+        self.assertLess(content.index('Zulu Network'), content.index('Alpha Network'))
+
+    def test_anonymous_guide_keeps_alphabetical_channel_order(self):
+        alpha_channel = Channel.objects.create(
+            name='Alpha Public', slug='alpha-public-network', region='US',
+            source='tvmaze', external_id='alpha-public-network',
+        )
+        zulu_channel = Channel.objects.create(
+            name='Zulu Public', slug='zulu-public-network', region='US',
+            source='tvmaze', external_id='zulu-public-network',
+        )
+        alpha_program = Program.objects.create(
+            title='Alpha Public Show', source='tvmaze', external_id='alpha-public-show',
+        )
+        zulu_program = Program.objects.create(
+            title='Zulu Public Show', source='tvmaze', external_id='zulu-public-show',
+        )
+        self._airing(
+            alpha_channel, alpha_program, timedelta(minutes=-5), timedelta(minutes=25),
+            'alpha-public-airing',
+        )
+        self._airing(
+            zulu_channel, zulu_program, timedelta(minutes=-5), timedelta(minutes=25),
+            'zulu-public-airing',
+        )
+
+        response = self.client.get(reverse('live_tv_guide'))
+
+        content = response.content.decode()
+        self.assertLess(content.index('Alpha Public'), content.index('Zulu Public'))
+
     def test_favorites_only_filter_is_scoped_to_signed_in_user(self):
         favorite_channel = Channel.objects.create(
             name='My Network', slug='my-network', region='US',

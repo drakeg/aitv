@@ -434,6 +434,11 @@ def live_tv_guide(request):
         row for row in channels.values()
         if row['current'] is not None or row['next'] is not None
     ]
+    if request.user.is_authenticated and not show_favorites_only:
+        guide_rows.sort(key=lambda row: (
+            0 if row['is_favorite'] else 1,
+            row['channel'].name.casefold(),
+        ))
     current_airing_ids = [
         row['current'].id for row in guide_rows if row['current'] is not None
     ]
