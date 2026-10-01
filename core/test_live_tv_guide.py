@@ -267,6 +267,72 @@ class LiveTvGuideTests(TestCase):
         self.assertNotContains(response, 'Other Show')
         self.assertContains(response, 'Show all channels')
 
+    def test_category_filter_uses_normalized_channel_categories(self):
+        drama_channel = Channel.objects.create(
+            name='Drama Network', slug='drama-filter-network', region='US',
+            source='tvmaze', external_id='drama-filter-network', categories=['Drama', 'Crime'],
+        )
+        comedy_channel = Channel.objects.create(
+            name='Comedy Network', slug='comedy-filter-network', region='US',
+            source='tvmaze', external_id='comedy-filter-network', categories=['Comedy'],
+        )
+        drama_program = Program.objects.create(
+            title='Drama Program', source='tvmaze', external_id='drama-filter-program',
+        )
+        comedy_program = Program.objects.create(
+            title='Comedy Program', source='tvmaze', external_id='comedy-filter-program',
+        )
+        self._airing(
+            drama_channel, drama_program, timedelta(minutes=-5), timedelta(minutes=25),
+            'drama-filter-airing',
+        )
+        self._airing(
+            comedy_channel, comedy_program, timedelta(minutes=-5), timedelta(minutes=25),
+            'comedy-filter-airing',
+        )
+
+        response = self.client.get(reverse('live_tv_guide'), {'category': 'Drama'})
+
+        self.assertContains(response, 'Drama Network')
+        self.assertContains(response, 'Drama Program')
+        self.assertNotContains(response, 'Comedy Network')
+        self.assertNotContains(response, 'Comedy Program')
+        self.assertContains(response, '<option value="Drama" selected>', html=True)
+        self.assertContains(response, '<option value="Comedy">Comedy</option>', html=True)
+
+    def test_category_filter_combines_with_search(self):
+        crime_channel = Channel.objects.create(
+            name='Crime Network', slug='crime-category-network', region='US',
+            source='tvmaze', external_id='crime-category-network', categories=['Drama'],
+        )
+        other_channel = Channel.objects.create(
+            name='Other Drama', slug='other-drama-network', region='US',
+            source='tvmaze', external_id='other-drama-network', categories=['Drama'],
+        )
+        crime_program = Program.objects.create(
+            title='Crime Hour', source='tvmaze', external_id='crime-category-program',
+        )
+        other_program = Program.objects.create(
+            title='Romance Hour', source='tvmaze', external_id='other-drama-program',
+        )
+        self._airing(
+            crime_channel, crime_program, timedelta(minutes=-5), timedelta(minutes=25),
+            'crime-category-airing',
+        )
+        self._airing(
+            other_channel, other_program, timedelta(minutes=-5), timedelta(minutes=25),
+            'other-drama-airing',
+        )
+
+        response = self.client.get(
+            reverse('live_tv_guide'),
+            {'category': 'Drama', 'q': 'Crime'},
+        )
+
+        self.assertContains(response, 'Crime Network')
+        self.assertNotContains(response, 'Other Drama')
+        self.assertContains(response, 'value="Crime"', html=False)
+
     def test_guide_search_matches_channel_name_and_keeps_now_next_context(self):
         channel = Channel.objects.create(
             name='Mystery Network', slug='mystery-network', region='US',
@@ -353,12 +419,12 @@ class LiveTvGuideTests(TestCase):
 
         response = self.client.post(
             reverse('toggle_channel_favorite', args=[channel.pk]),
-            {'favorites': '1', 'q': 'Crime Drama'},
+            {'favorites': '1', 'q': 'Crime Drama', 'category': 'Drama'},
         )
 
         self.assertRedirects(
             response,
-            f"{reverse('live_tv_guide')}?favorites=1&q=Crime+Drama",
+            f"{reverse('live_tv_guide')}?favorites=1&q=Crime+Drama&category=Drama",
             fetch_redirect_response=False,
         )
 
