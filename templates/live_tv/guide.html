@@ -65,7 +65,14 @@
                         </div>
                         <span>{{ row.channel.region }}</span>
                         {% if row.destination %}
-                            <a class="btn btn-sm btn-success guide-watch-action" href="{{ row.destination.url }}" target="_blank" rel="noopener noreferrer">{{ row.destination.action_label }}</a>
+                            <div class="d-flex align-items-center gap-2 flex-wrap">
+                                {% if row.destination_scope == 'episode' %}
+                                    <span class="badge text-bg-success" title="This destination applies to the current episode only.">Episode destination</span>
+                                {% elif row.destination_scope == 'show' %}
+                                    <span class="badge text-bg-secondary" title="This destination applies to the current show's provider page.">Show destination</span>
+                                {% endif %}
+                                <a class="btn btn-sm btn-success guide-watch-action" href="{{ row.destination.url }}" target="_blank" rel="noopener noreferrer">{{ row.destination.action_label }}</a>
+                            </div>
                         {% endif %}
                     </div>
                     <div class="guide-program guide-program-now">
