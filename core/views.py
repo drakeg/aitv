@@ -444,11 +444,24 @@ def live_tv_guide(request):
     ]
     airing_destinations = {}
     if current_airing_ids:
-        destinations = (
+        destinations = list(
             AiringDestination.objects
             .filter(airing_id__in=current_airing_ids)
-            .order_by('airing_id', 'scope', 'provider', 'url')
         )
+        preferred_provider_order = {
+            _provider_match_key(provider): index
+            for index, provider in enumerate(preferred_providers)
+        }
+        destinations.sort(key=lambda destination: (
+            destination.airing_id,
+            0 if destination.scope == AiringDestination.Scope.EPISODE else 1,
+            preferred_provider_order.get(
+                _provider_match_key(destination.provider),
+                len(preferred_provider_order),
+            ),
+            destination.provider.casefold(),
+            destination.url,
+        ))
         for destination in destinations:
             airing_destinations.setdefault(destination.airing_id, destination)
 
