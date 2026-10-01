@@ -92,6 +92,10 @@ Each source integration must define its provenance, region semantics, access typ
 
 **Implemented in Sprint 66:** trusted provider URLs supplied by the TVmaze schedule path are normalized into source-owned AiringDestination records rather than ChannelDestination records. Each refresh revalidates the URL through the existing provider detector and removes a stale source destination if upstream no longer supplies a trusted URL. The Live TV guide prefers the current airing's destination over a broader channel destination, while future/other airings remain unaffected.
 
+## Airing destination ranking
+
+**Implemented in Sprint 76:** when the current airing has multiple trusted destinations, episode scope ranks ahead of show scope. Within the same scope, a signed-in viewer's preferred providers rank ahead of other legitimate destinations using the same provider-alias normalization already used for channel destinations. Provider preference never promotes a broader show destination over a matching episode-specific destination.
+
 ## Operator destination management
 
 **Implemented in Sprint 65:** Django admin provides an operator surface for the normalized EPG domain. Source-owned Channels, Programs, and Airings plus account-owned Channel Favorites are inspect-only for add/delete operations. Existing Channels expose editable ChannelDestination rows so an operator can deliberately record a provider, URL, access type, destination type, and provenance source without modifying schedule identities. Playable destinations entered through this surface must use HTTP(S), and the guide still renders Watch actions only for explicit direct/tuner destination types.
