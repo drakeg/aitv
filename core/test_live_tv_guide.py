@@ -93,6 +93,94 @@ class LiveTvGuideTests(TestCase):
         self.assertContains(response, 'https://abc.com/episode/example')
         self.assertNotContains(response, 'https://example.com/channel')
 
+    def test_preferred_provider_ranks_multiple_episode_destinations(self):
+        channel = Channel.objects.create(
+            name='Preferred Airing Network', slug='preferred-airing-network', region='US',
+            source='tvmaze', external_id='preferred-airing-network',
+        )
+        program = Program.objects.create(
+            title='Preferred Airing Show', source='tvmaze', external_id='preferred-airing-show',
+        )
+        airing = self._airing(
+            channel, program, timedelta(minutes=-5), timedelta(minutes=25),
+            'preferred-airing-destination',
+        )
+        AiringDestination.objects.create(
+            airing=airing,
+            provider='Other Provider',
+            url='https://example.com/episode/other',
+            access_type='free',
+            scope=AiringDestination.Scope.EPISODE,
+            source='fixture',
+        )
+        AiringDestination.objects.create(
+            airing=airing,
+            provider='Prime Video',
+            url='https://example.com/episode/prime',
+            access_type='subscription',
+            scope=AiringDestination.Scope.EPISODE,
+            source='fixture',
+        )
+        user = get_user_model().objects.create_user(
+            username='airing-provider-viewer', password='password',
+        )
+        DiscoveryPreference.objects.create(
+            user=user,
+            region='US',
+            preferred_providers=['Amazon Prime Video'],
+        )
+        self.client.force_login(user)
+
+        response = self.client.get(reverse('live_tv_guide'))
+
+        self.assertContains(response, 'Prime Video · Subscription')
+        self.assertContains(response, 'https://example.com/episode/prime')
+        self.assertNotContains(response, 'https://example.com/episode/other')
+
+    def test_episode_scope_precedes_preferred_show_destination(self):
+        channel = Channel.objects.create(
+            name='Scope Network', slug='scope-network', region='US',
+            source='tvmaze', external_id='scope-network',
+        )
+        program = Program.objects.create(
+            title='Scope Show', source='tvmaze', external_id='scope-show',
+        )
+        airing = self._airing(
+            channel, program, timedelta(minutes=-5), timedelta(minutes=25),
+            'scope-airing-destination',
+        )
+        AiringDestination.objects.create(
+            airing=airing,
+            provider='ABC',
+            url='https://abc.com/episode/scope',
+            access_type='other',
+            scope=AiringDestination.Scope.EPISODE,
+            source='fixture',
+        )
+        AiringDestination.objects.create(
+            airing=airing,
+            provider='Prime Video',
+            url='https://example.com/show/prime',
+            access_type='subscription',
+            scope=AiringDestination.Scope.SHOW,
+            source='fixture',
+        )
+        user = get_user_model().objects.create_user(
+            username='scope-viewer', password='password',
+        )
+        DiscoveryPreference.objects.create(
+            user=user,
+            region='US',
+            preferred_providers=['Amazon Prime Video'],
+        )
+        self.client.force_login(user)
+
+        response = self.client.get(reverse('live_tv_guide'))
+
+        self.assertContains(response, 'Watch on ABC')
+        self.assertContains(response, 'https://abc.com/episode/scope')
+        self.assertNotContains(response, 'https://example.com/show/prime')
+
     def test_metadata_destination_does_not_create_watch_action(self):
         channel = Channel.objects.create(
             name='Metadata Network', slug='metadata-network', region='US',
