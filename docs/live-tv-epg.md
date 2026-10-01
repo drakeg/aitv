@@ -84,6 +84,10 @@ Each source integration must define its provenance, region semantics, access typ
 
 **Implemented in Sprint 74:** the Live TV guide can filter by normalized channel categories already stored with EPG channels. Category filtering composes with channel/program search and Favorites-only mode, and favorite toggle actions preserve the active search/category filter state.
 
+## Favorite-first guide ordering
+
+**Implemented in Sprint 75:** signed-in viewers see Favorite channels before non-Favorites in the normal Live TV guide, with alphabetical ordering preserved inside each group. Anonymous guide ordering remains alphabetical, and Favorites-only mode remains unchanged.
+
 ## Airing-specific destinations
 
 **Implemented in Sprint 66:** trusted provider URLs supplied by the TVmaze schedule path are normalized into source-owned AiringDestination records rather than ChannelDestination records. Each refresh revalidates the URL through the existing provider detector and removes a stale source destination if upstream no longer supplies a trusted URL. The Live TV guide prefers the current airing's destination over a broader channel destination, while future/other airings remain unaffected.
