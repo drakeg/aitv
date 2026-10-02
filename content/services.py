@@ -236,7 +236,7 @@ class ScheduleFetchError(RuntimeError):
     """Upstream schedule unavailable; do not report an EPG refresh success."""
 
 
-def fetch_live_tv_schedule(limit=100, country='US', *, strict=False):
+def fetch_live_tv_schedule(limit=100, country='US', *, strict=False, deduplicate_shows=True):
     country = str(country or 'US').strip().upper()
     if len(country) != 2 or not country.isalpha():
         country = 'US'
@@ -261,7 +261,9 @@ def fetch_live_tv_schedule(limit=100, country='US', *, strict=False):
             continue
         show = episode.get('show') or {}
         show_id = show.get('id')
-        if not show_id or show_id in seen:
+        if not show_id:
+            continue
+        if deduplicate_shows and show_id in seen:
             continue
         official_url = (show.get('officialSite') or '').strip()
         episode_url = (episode.get('url') or '').strip()
@@ -307,7 +309,8 @@ def fetch_live_tv_schedule(limit=100, country='US', *, strict=False):
             'airtime': episode.get('airtime') or '', 'airstamp': episode.get('airstamp') or '', 'runtime': episode.get('runtime'),
             'show_type': show_type, 'is_news': is_news,
         })
-        seen.add(show_id)
+        if deduplicate_shows:
+            seen.add(show_id)
         if len(items) >= limit:
             break
     return items
@@ -439,7 +442,12 @@ def refresh_epg_source(adapter, region='US', retention_hours=6):
 def refresh_tvmaze_epg(country='US', retention_hours=6):
     """Persist today's trustworthy TVmaze schedule through the shared adapter contract."""
     def fetch_schedule(*, limit, country):
-        return fetch_live_tv_schedule(limit=limit, country=country, strict=True)
+        return fetch_live_tv_schedule(
+            limit=limit,
+            country=country,
+            strict=True,
+            deduplicate_shows=False,
+        )
 
     adapter = TvmazeScheduleAdapter(fetch_schedule=fetch_schedule)
     return refresh_epg_source(adapter, region=country, retention_hours=retention_hours)
