@@ -44,6 +44,7 @@ This ledger is the durable project record for sprint-sized development. Git hist
 | 75 | #100 | Prioritize signed-in viewers' Favorite channels in the normal Live TV guide while preserving alphabetical order within groups. |
 | 76 | #101 | Rank multiple current-airing destinations by scope first and viewer preferred provider within scope. |
 | 77 | #102 | Show episode-vs-show scope for selected airing destinations without mislabeling channel-wide playback. |
+| 78 | pending | Preserve every distinct TVmaze scheduled episode for EPG refresh while keeping home discovery deduplicated by show. |
 
 ## Earlier development
 
