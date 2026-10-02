@@ -48,6 +48,10 @@ Airing data and playback destinations must not be conflated. Knowing that a prog
 
 Each source integration must define its provenance, region semantics, access type, refresh behavior, failure behavior, and whether its URL is metadata, provider discovery, or direct playback.
 
+## Discovery deduplication versus EPG completeness
+
+**Implemented in Sprint 78:** TVmaze home discovery continues to collapse repeated same-day airings of the same show into one discovery card. The normalized EPG refresh uses the same source fetcher in full-schedule mode instead, preserving every distinct TVmaze episode/schedule identity so back-to-back or repeated airings are not silently dropped before persistence.
+
 ## Authoritative schedule timestamps
 
 **Sprint 67:** TVmaze's episode `airstamp` supplies a dated, timezone-aware instant. EPG normalization preserves that timestamp, including post-midnight broadcasts and offsets; a bare `airtime` is no longer promoted to a guessed server-date airing. Missing, malformed, or timezone-naive airstamps are skipped rather than fabricating current/next guide timing. The existing Live TV home cards can still show their source-supplied airtime label.

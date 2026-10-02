@@ -47,6 +47,55 @@ class TvmazeScheduleCoverageTests(SimpleTestCase):
         self.assertEqual(item['action_label'], '')
 
     @patch('content.services.requests.get')
+    def test_home_discovery_deduplicates_repeated_show_airings(self, mock_get):
+        response = Mock()
+        response.raise_for_status.return_value = None
+        show = {
+            'id': 501,
+            'name': 'Repeated Show',
+            'url': 'https://www.tvmaze.com/shows/501/repeated-show',
+            'officialSite': None,
+            'type': 'Scripted',
+            'genres': ['Drama'],
+            'network': {'id': 17, 'name': 'Example Network'},
+            'rating': {'average': 7.0},
+        }
+        response.json.return_value = [
+            {'id': 1001, 'season': 1, 'number': 1, 'airtime': '20:00', 'airstamp': '2026-10-01T20:00:00-04:00', 'runtime': 30, 'show': show},
+            {'id': 1002, 'season': 1, 'number': 2, 'airtime': '20:30', 'airstamp': '2026-10-01T20:30:00-04:00', 'runtime': 30, 'show': show},
+        ]
+        mock_get.return_value = response
+
+        items = fetch_live_tv_schedule(country='US')
+
+        self.assertEqual(len(items), 1)
+        self.assertEqual(items[0]['schedule_external_id'], '1001')
+
+    @patch('content.services.requests.get')
+    def test_epg_fetch_mode_preserves_repeated_show_airings(self, mock_get):
+        response = Mock()
+        response.raise_for_status.return_value = None
+        show = {
+            'id': 502,
+            'name': 'Repeated EPG Show',
+            'url': 'https://www.tvmaze.com/shows/502/repeated-epg-show',
+            'officialSite': None,
+            'type': 'Scripted',
+            'genres': ['Drama'],
+            'network': {'id': 18, 'name': 'EPG Network'},
+            'rating': {'average': 7.0},
+        }
+        response.json.return_value = [
+            {'id': 2001, 'season': 1, 'number': 1, 'airtime': '21:00', 'airstamp': '2026-10-01T21:00:00-04:00', 'runtime': 30, 'show': show},
+            {'id': 2002, 'season': 1, 'number': 2, 'airtime': '21:30', 'airstamp': '2026-10-01T21:30:00-04:00', 'runtime': 30, 'show': show},
+        ]
+        mock_get.return_value = response
+
+        items = fetch_live_tv_schedule(country='US', deduplicate_shows=False)
+
+        self.assertEqual([item['schedule_external_id'] for item in items], ['2001', '2002'])
+
+    @patch('content.services.requests.get')
     def test_unknown_official_site_is_details_only_not_direct_watch(self, mock_get):
         response = Mock()
         response.raise_for_status.return_value = None
