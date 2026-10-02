@@ -43,6 +43,27 @@ class TvmazeEpgIngestionTests(TestCase):
         self.assertGreater(airing.ends_at, airing.starts_at)
 
     @patch('content.services.fetch_live_tv_schedule')
+    def test_refresh_requests_full_schedule_without_show_deduplication(self, fetch_schedule):
+        fetch_schedule.return_value = [
+            self._item(schedule_external_id='episode-101'),
+            self._item(
+                schedule_external_id='episode-102',
+                airstamp=(timezone.now() + timezone.timedelta(hours=2)).isoformat(),
+            ),
+        ]
+
+        count = refresh_tvmaze_epg(country='US')
+
+        self.assertEqual(count, 2)
+        self.assertEqual(Airing.objects.count(), 2)
+        fetch_schedule.assert_called_once_with(
+            limit=1000,
+            country='US',
+            strict=True,
+            deduplicate_shows=False,
+        )
+
+    @patch('content.services.fetch_live_tv_schedule')
     def test_refresh_preserves_source_airstamp_in_database(self, fetch_schedule):
         airstamp = (timezone.now() + timezone.timedelta(hours=2)).replace(
             minute=35, second=0, microsecond=0,
