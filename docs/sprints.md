@@ -45,7 +45,7 @@ This ledger is the durable project record for sprint-sized development. Git hist
 | 76 | #101 | Rank multiple current-airing destinations by scope first and viewer preferred provider within scope. |
 | 77 | #102 | Show episode-vs-show scope for selected airing destinations without mislabeling channel-wide playback. |
 | 78 | #103 | Preserve every distinct TVmaze scheduled episode for EPG refresh while keeping home discovery deduplicated by show. |
-| 79 | pending | Reconcile complete EPG snapshots so cancelled/removed current or future airings do not linger, while preserving retention history. |
+| 79 | #104 | Reconcile complete EPG snapshots so cancelled/removed current or future airings do not linger, while preserving retention history. |
 
 ## Earlier development
 
