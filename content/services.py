@@ -311,7 +311,7 @@ def fetch_live_tv_schedule(limit=100, country='US', *, strict=False, deduplicate
         })
         if deduplicate_shows:
             seen.add(show_id)
-        if len(items) >= limit:
+        if limit is not None and len(items) >= limit:
             break
     return items
 
@@ -355,7 +355,8 @@ def refresh_epg_source(adapter, region='US', retention_hours=6):
     if len(region) != 2 or not region.isalpha():
         region = 'US'
 
-    rows = adapter.fetch_airings(region=region, limit=1000)
+    fetch_limit = None if getattr(adapter, 'complete_snapshot', False) else 1000
+    rows = adapter.fetch_airings(region=region, limit=fetch_limit)
     now = timezone.now()
     refreshed_airing_ids = []
 

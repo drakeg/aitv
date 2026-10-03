@@ -57,7 +57,7 @@ class TvmazeEpgIngestionTests(TestCase):
         self.assertEqual(count, 2)
         self.assertEqual(Airing.objects.count(), 2)
         fetch_schedule.assert_called_once_with(
-            limit=1000,
+            limit=None,
             country='US',
             strict=True,
             deduplicate_shows=False,

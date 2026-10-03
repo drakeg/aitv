@@ -64,6 +64,10 @@ Each source integration must define its provenance, region semantics, access typ
 
 **Implemented in Sprint 79:** schedule adapters can explicitly declare that a successful refresh is a complete regional snapshot. TVmaze does so. For those adapters, current/future source airings missing from the latest successful snapshot are removed for that source and region, preventing cancelled or withdrawn schedule rows from lingering in the guide. Recent expired airings are still retained according to `EPG_RETENTION_HOURS`, and adapters that do not declare complete-snapshot semantics are never reconciled this way.
 
+## Complete-snapshot fetch completeness
+
+**Implemented in Sprint 80:** adapters that declare complete-snapshot semantics are fetched without the normal row cap before reconciliation. TVmaze therefore cannot be treated as a complete regional snapshot after an application-side truncation. Partial adapters retain the bounded fetch contract and are not reconciled as complete snapshots.
+
 ## Refresh freshness observability
 
 **Implemented in Sprint 68:** each completed TVmaze refresh records source, region, completion time, and normalized airing count. The Live TV guide displays the refresh age and warns when the most recent completed refresh exceeds `EPG_STALE_AFTER_SECONDS` (default 7200). Refresh state is read-only in Django admin, so a stopped worker can be distinguished from ordinary schedule gaps.

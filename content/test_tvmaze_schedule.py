@@ -96,6 +96,39 @@ class TvmazeScheduleCoverageTests(SimpleTestCase):
         self.assertEqual([item['schedule_external_id'] for item in items], ['2001', '2002'])
 
     @patch('content.services.requests.get')
+    def test_unbounded_schedule_mode_does_not_truncate_results(self, mock_get):
+        response = Mock()
+        response.raise_for_status.return_value = None
+        response.json.return_value = [
+            {
+                'id': episode_id,
+                'season': 1,
+                'number': episode_id,
+                'airtime': '20:00',
+                'airstamp': f'2026-10-0{episode_id}T20:00:00-04:00',
+                'runtime': 30,
+                'show': {
+                    'id': 600 + episode_id,
+                    'name': f'Show {episode_id}',
+                    'url': f'https://www.tvmaze.com/shows/{600 + episode_id}/show-{episode_id}',
+                    'officialSite': None,
+                    'type': 'Scripted',
+                    'genres': ['Drama'],
+                    'network': {'id': 30 + episode_id, 'name': f'Network {episode_id}'},
+                    'rating': {'average': 7.0},
+                },
+            }
+            for episode_id in range(1, 4)
+        ]
+        mock_get.return_value = response
+
+        limited = fetch_live_tv_schedule(limit=1, country='US', deduplicate_shows=False)
+        unbounded = fetch_live_tv_schedule(limit=None, country='US', deduplicate_shows=False)
+
+        self.assertEqual(len(limited), 1)
+        self.assertEqual(len(unbounded), 3)
+
+    @patch('content.services.requests.get')
     def test_unknown_official_site_is_details_only_not_direct_watch(self, mock_get):
         response = Mock()
         response.raise_for_status.return_value = None
