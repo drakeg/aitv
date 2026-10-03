@@ -97,6 +97,13 @@ class EpgSourceAdapterContractTests(TestCase):
         self.assertTrue(Airing.objects.filter(source='other').exists())
         self.assertFalse(Airing.objects.filter(source='fixture').exists())
 
+    def test_complete_snapshot_requests_unbounded_source_fetch(self):
+        adapter = FixtureScheduleAdapter([], complete_snapshot=True)
+
+        refresh_epg_source(adapter, region='US')
+
+        self.assertEqual(adapter.calls, [('US', None)])
+
     def test_complete_snapshot_removes_missing_current_and_future_airings_for_region(self):
         now = timezone.now()
         channel = Channel.objects.create(
