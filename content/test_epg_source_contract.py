@@ -314,6 +314,37 @@ class EpgSourceAdapterContractTests(TestCase):
         with self.assertRaises(ScheduleNormalizationError):
             adapter.fetch_airings(region='US', limit=None)
 
+    def test_tvmaze_complete_snapshot_rejects_missing_stable_identity(self):
+        def fetch_schedule(*, limit, country):
+            return [
+                {
+                    'schedule_external_id': '',
+                    'channel_external_id': 'network',
+                    'external_id': 'show',
+                    'airstamp': '2026-10-03T20:00:00-04:00',
+                    'runtime': 60,
+                },
+                {
+                    'schedule_external_id': 'episode-2',
+                    'channel_external_id': '',
+                    'external_id': 'show',
+                    'airstamp': '2026-10-03T21:00:00-04:00',
+                    'runtime': 60,
+                },
+                {
+                    'schedule_external_id': 'episode-3',
+                    'channel_external_id': 'network',
+                    'external_id': '',
+                    'airstamp': '2026-10-03T22:00:00-04:00',
+                    'runtime': 60,
+                },
+            ]
+
+        adapter = TvmazeScheduleAdapter(fetch_schedule=fetch_schedule)
+
+        with self.assertRaises(ScheduleNormalizationError):
+            adapter.fetch_airings(region='US', limit=None)
+
     def test_tvmaze_legitimate_empty_snapshot_remains_valid(self):
         adapter = TvmazeScheduleAdapter(fetch_schedule=lambda **kwargs: [])
 
