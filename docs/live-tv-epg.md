@@ -76,6 +76,10 @@ Each source integration must define its provenance, region semantics, access typ
 
 **Implemented in Sprint 82:** complete TVmaze snapshots now require every returned source row to normalize successfully. If even one row is malformed, the refresh fails before persistence and reconciliation, so valid rows from that same partial snapshot are not applied and existing current/future guide data is preserved. This extends Sprint 81's zero-valid-row protection to mixed valid/invalid responses.
 
+## Complete snapshot identity requirements
+
+**Implemented in Sprint 83:** every TVmaze row in a complete snapshot must carry stable airing/episode, channel, and program/show identities before the snapshot is eligible for persistence or reconciliation. Identity-incomplete rows fail the refresh closed, preventing later persistence-layer skipping from silently turning a complete snapshot into a partial authoritative one.
+
 ## Refresh freshness observability
 
 **Implemented in Sprint 68:** each completed TVmaze refresh records source, region, completion time, and normalized airing count. The Live TV guide displays the refresh age and warns when the most recent completed refresh exceeds `EPG_STALE_AFTER_SECONDS` (default 7200). Refresh state is read-only in Django admin, so a stopped worker can be distinguished from ordinary schedule gaps.
