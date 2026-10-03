@@ -50,6 +50,13 @@ class TvmazeScheduleAdapter:
                 rejected_rows += 1
                 continue
 
+            airing_external_id = str(item.get('schedule_external_id') or '').strip()
+            channel_external_id = str(item.get('channel_external_id') or '').strip()
+            program_external_id = str(item.get('external_id') or '').strip()
+            if not airing_external_id or not channel_external_id or not program_external_id:
+                rejected_rows += 1
+                continue
+
             runtime = item.get('runtime')
             try:
                 runtime_minutes = int(runtime)
@@ -59,9 +66,9 @@ class TvmazeScheduleAdapter:
                 runtime_minutes = 30
 
             rows.append({
-                'airing_external_id': str(item.get('schedule_external_id') or ''),
-                'channel_external_id': str(item.get('channel_external_id') or ''),
-                'program_external_id': str(item.get('external_id') or ''),
+                'airing_external_id': airing_external_id,
+                'channel_external_id': channel_external_id,
+                'program_external_id': program_external_id,
                 'channel_name': item.get('network') or 'TV',
                 'channel_categories': item.get('genres') or [],
                 'program_title': item.get('title') or 'Untitled',
