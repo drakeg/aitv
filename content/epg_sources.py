@@ -10,7 +10,7 @@ class ScheduleSourceAdapter(Protocol):
     source: str
     complete_snapshot: bool
 
-    def fetch_airings(self, *, region: str, limit: int = 1000) -> list[dict]:
+    def fetch_airings(self, *, region: str, limit: int | None = 1000) -> list[dict]:
         """Return normalized airing rows for one region."""
 
 
@@ -22,7 +22,7 @@ class TvmazeScheduleAdapter:
     source: str = 'tvmaze'
     complete_snapshot: bool = True
 
-    def fetch_airings(self, *, region: str, limit: int = 1000) -> list[dict]:
+    def fetch_airings(self, *, region: str, limit: int | None = 1000) -> list[dict]:
         items = self.fetch_schedule(limit=limit, country=region)
         rows = []
 
