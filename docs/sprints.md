@@ -48,6 +48,7 @@ This ledger is the durable project record for sprint-sized development. Git hist
 | 79 | #104 | Reconcile complete EPG snapshots so cancelled/removed current or future airings do not linger, while preserving retention history. |
 | 80 | #105 | Fetch complete-snapshot EPG sources without an artificial row cap before reconciliation. |
 | 81 | #106 | Fail closed when a non-empty complete snapshot yields zero valid normalized airings, preserving the prior guide. |
+| 82 | pending | Reject partially malformed complete TVmaze snapshots before persistence or reconciliation. |
 
 ## Earlier development
 
