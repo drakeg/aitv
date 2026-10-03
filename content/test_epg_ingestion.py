@@ -4,6 +4,7 @@ from django.test import TestCase
 from django.utils import timezone
 
 from content.models import Airing, AiringDestination, Channel, Program
+from content.epg_sources import ScheduleNormalizationError
 from content.services import refresh_tvmaze_epg
 
 
@@ -139,6 +140,34 @@ class TvmazeEpgIngestionTests(TestCase):
 
         self.assertEqual(refresh_tvmaze_epg(country='US'), 0)
         self.assertFalse(Airing.objects.exists())
+
+    @patch('content.services.fetch_live_tv_schedule')
+    def test_malformed_nonempty_snapshot_preserves_existing_current_schedule(self, fetch_schedule):
+        now = timezone.now()
+        channel = Channel.objects.create(
+            name='Preserved Network', slug='preserved-network', region='US',
+            source='tvmaze', external_id='preserved-network',
+        )
+        program = Program.objects.create(
+            title='Preserved Show', source='tvmaze', external_id='preserved-show',
+        )
+        airing = Airing.objects.create(
+            channel=channel,
+            program=program,
+            starts_at=now - timezone.timedelta(minutes=10),
+            ends_at=now + timezone.timedelta(minutes=50),
+            source='tvmaze',
+            external_id='preserved-airing',
+        )
+        fetch_schedule.return_value = [self._item(
+            schedule_external_id='broken-airing',
+            airstamp='not-a-date',
+        )]
+
+        with self.assertRaises(ScheduleNormalizationError):
+            refresh_tvmaze_epg(country='US')
+
+        self.assertTrue(Airing.objects.filter(pk=airing.pk).exists())
 
     @patch('content.services.fetch_live_tv_schedule')
     def test_refresh_removes_only_expired_tvmaze_airings(self, fetch_schedule):

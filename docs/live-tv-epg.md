@@ -68,6 +68,10 @@ Each source integration must define its provenance, region semantics, access typ
 
 **Implemented in Sprint 80:** adapters that declare complete-snapshot semantics are fetched without the normal row cap before reconciliation. TVmaze therefore cannot be treated as a complete regional snapshot after an application-side truncation. Partial adapters retain the bounded fetch contract and are not reconciled as complete snapshots.
 
+## Malformed snapshot protection
+
+**Implemented in Sprint 81:** an authoritative source returning a genuinely empty schedule remains a successful empty snapshot. However, if TVmaze returns a non-empty schedule and every row fails normalization, the refresh fails closed before reconciliation. The previous current/future schedule remains intact, and normal refresh-failure observability records the failed attempt instead of treating malformed data as an authoritative empty schedule.
+
 ## Refresh freshness observability
 
 **Implemented in Sprint 68:** each completed TVmaze refresh records source, region, completion time, and normalized airing count. The Live TV guide displays the refresh age and warns when the most recent completed refresh exceeds `EPG_STALE_AFTER_SECONDS` (default 7200). Refresh state is read-only in Django admin, so a stopped worker can be distinguished from ordinary schedule gaps.

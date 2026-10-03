@@ -3,7 +3,7 @@ from datetime import timedelta
 from django.test import TestCase
 from django.utils import timezone
 
-from content.epg_sources import TvmazeScheduleAdapter
+from content.epg_sources import ScheduleNormalizationError, TvmazeScheduleAdapter
 from content.models import Airing, Channel, Program
 from content.services import refresh_epg_source
 
@@ -257,7 +257,7 @@ class EpgSourceAdapterContractTests(TestCase):
         self.assertEqual(rows[0]['starts_at'].isoformat(), '2026-09-27T00:35:00-04:00')
         self.assertEqual(rows[0]['ends_at'].isoformat(), '2026-09-27T01:35:00-04:00')
 
-    def test_tvmaze_adapter_requires_dated_timezone_aware_airstamp(self):
+    def test_tvmaze_adapter_rejects_snapshot_with_only_invalid_airstamps(self):
         def fetch_schedule(*, limit, country):
             return [
                 {'airstamp': '', 'airtime': '20:00'},
@@ -265,7 +265,35 @@ class EpgSourceAdapterContractTests(TestCase):
                 {'airstamp': 'not-a-date', 'airtime': '20:00'},
             ]
 
-        rows = TvmazeScheduleAdapter(fetch_schedule=fetch_schedule).fetch_airings(region='US')
+        with self.assertRaises(ScheduleNormalizationError):
+            TvmazeScheduleAdapter(fetch_schedule=fetch_schedule).fetch_airings(region='US')
+
+    def test_tvmaze_nonempty_snapshot_with_no_normalizable_rows_fails_closed(self):
+        def fetch_schedule(*, limit, country):
+            return [
+                {
+                    'schedule_external_id': 'broken-1',
+                    'channel_external_id': 'network',
+                    'external_id': 'show',
+                    'airstamp': '',
+                },
+                {
+                    'schedule_external_id': 'broken-2',
+                    'channel_external_id': 'network',
+                    'external_id': 'show',
+                    'airstamp': 'not-a-date',
+                },
+            ]
+
+        adapter = TvmazeScheduleAdapter(fetch_schedule=fetch_schedule)
+
+        with self.assertRaises(ScheduleNormalizationError):
+            adapter.fetch_airings(region='US', limit=None)
+
+    def test_tvmaze_legitimate_empty_snapshot_remains_valid(self):
+        adapter = TvmazeScheduleAdapter(fetch_schedule=lambda **kwargs: [])
+
+        rows = adapter.fetch_airings(region='US', limit=None)
 
         self.assertEqual(rows, [])
 
