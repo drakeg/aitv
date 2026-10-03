@@ -132,13 +132,15 @@ class TvmazeEpgIngestionTests(TestCase):
         self.assertEqual(int((airing.ends_at - airing.starts_at).total_seconds() / 60), 30)
 
     @patch('content.services.fetch_live_tv_schedule')
-    def test_refresh_skips_rows_without_stable_airing_or_channel_identity(self, fetch_schedule):
+    def test_refresh_rejects_rows_without_stable_airing_or_channel_identity(self, fetch_schedule):
         fetch_schedule.return_value = [
             self._item(schedule_external_id=''),
             self._item(channel_external_id=''),
         ]
 
-        self.assertEqual(refresh_tvmaze_epg(country='US'), 0)
+        with self.assertRaises(ScheduleNormalizationError):
+            refresh_tvmaze_epg(country='US')
+
         self.assertFalse(Airing.objects.exists())
 
     @patch('content.services.fetch_live_tv_schedule')
