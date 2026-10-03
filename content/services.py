@@ -433,6 +433,16 @@ def refresh_epg_source(adapter, region='US', retention_hours=6):
 
             refreshed_airing_ids.append(airing.pk)
 
+        if getattr(adapter, 'complete_snapshot', False):
+            stale_current = Airing.objects.filter(
+                source=adapter.source,
+                channel__region=region,
+                ends_at__gte=now,
+            )
+            if refreshed_airing_ids:
+                stale_current = stale_current.exclude(pk__in=refreshed_airing_ids)
+            stale_current.delete()
+
         stale_before = now - timedelta(hours=max(0, retention_hours))
         Airing.objects.filter(source=adapter.source, ends_at__lt=stale_before).delete()
 
