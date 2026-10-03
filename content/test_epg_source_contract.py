@@ -290,6 +290,30 @@ class EpgSourceAdapterContractTests(TestCase):
         with self.assertRaises(ScheduleNormalizationError):
             adapter.fetch_airings(region='US', limit=None)
 
+    def test_tvmaze_partial_malformed_snapshot_fails_closed(self):
+        def fetch_schedule(*, limit, country):
+            return [
+                {
+                    'schedule_external_id': 'good-1',
+                    'channel_external_id': 'network',
+                    'external_id': 'show',
+                    'airstamp': '2026-10-03T20:00:00-04:00',
+                    'runtime': 60,
+                },
+                {
+                    'schedule_external_id': 'bad-1',
+                    'channel_external_id': 'network',
+                    'external_id': 'show',
+                    'airstamp': 'not-a-date',
+                    'runtime': 60,
+                },
+            ]
+
+        adapter = TvmazeScheduleAdapter(fetch_schedule=fetch_schedule)
+
+        with self.assertRaises(ScheduleNormalizationError):
+            adapter.fetch_airings(region='US', limit=None)
+
     def test_tvmaze_legitimate_empty_snapshot_remains_valid(self):
         adapter = TvmazeScheduleAdapter(fetch_schedule=lambda **kwargs: [])
 
