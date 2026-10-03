@@ -3,7 +3,7 @@ from datetime import timedelta
 from django.test import TestCase
 from django.utils import timezone
 
-from content.epg_sources import TvmazeScheduleAdapter
+from content.epg_sources import ScheduleNormalizationError, TvmazeScheduleAdapter
 from content.models import Airing, Channel, Program
 from content.services import refresh_epg_source
 
@@ -266,6 +266,35 @@ class EpgSourceAdapterContractTests(TestCase):
             ]
 
         rows = TvmazeScheduleAdapter(fetch_schedule=fetch_schedule).fetch_airings(region='US')
+
+        self.assertEqual(rows, [])
+
+    def test_tvmaze_nonempty_snapshot_with_no_normalizable_rows_fails_closed(self):
+        def fetch_schedule(*, limit, country):
+            return [
+                {
+                    'schedule_external_id': 'broken-1',
+                    'channel_external_id': 'network',
+                    'external_id': 'show',
+                    'airstamp': '',
+                },
+                {
+                    'schedule_external_id': 'broken-2',
+                    'channel_external_id': 'network',
+                    'external_id': 'show',
+                    'airstamp': 'not-a-date',
+                },
+            ]
+
+        adapter = TvmazeScheduleAdapter(fetch_schedule=fetch_schedule)
+
+        with self.assertRaises(ScheduleNormalizationError):
+            adapter.fetch_airings(region='US', limit=None)
+
+    def test_tvmaze_legitimate_empty_snapshot_remains_valid(self):
+        adapter = TvmazeScheduleAdapter(fetch_schedule=lambda **kwargs: [])
+
+        rows = adapter.fetch_airings(region='US', limit=None)
 
         self.assertEqual(rows, [])
 
