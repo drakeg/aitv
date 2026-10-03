@@ -3,6 +3,9 @@ from datetime import datetime, timedelta
 from typing import Callable, Protocol
 
 
+class ScheduleNormalizationError(RuntimeError):
+    """A non-empty source snapshot could not produce any valid normalized airings."""
+
 
 class ScheduleSourceAdapter(Protocol):
     """Contract for a trusted schedule source normalized before persistence."""
@@ -66,5 +69,10 @@ class TvmazeScheduleAdapter:
                 'destination_access_type': item.get('access_type') or '',
                 'destination_scope': item.get('watch_scope') or '',
             })
+
+        if items and not rows:
+            raise ScheduleNormalizationError(
+                'TVmaze returned schedule rows but none could be normalized'
+            )
 
         return rows
