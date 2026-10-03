@@ -132,13 +132,15 @@ class TvmazeEpgIngestionTests(TestCase):
         self.assertEqual(int((airing.ends_at - airing.starts_at).total_seconds() / 60), 30)
 
     @patch('content.services.fetch_live_tv_schedule')
-    def test_refresh_skips_rows_without_stable_airing_or_channel_identity(self, fetch_schedule):
+    def test_refresh_rejects_rows_without_stable_airing_or_channel_identity(self, fetch_schedule):
         fetch_schedule.return_value = [
             self._item(schedule_external_id=''),
             self._item(channel_external_id=''),
         ]
 
-        self.assertEqual(refresh_tvmaze_epg(country='US'), 0)
+        with self.assertRaises(ScheduleNormalizationError):
+            refresh_tvmaze_epg(country='US')
+
         self.assertFalse(Airing.objects.exists())
 
     @patch('content.services.fetch_live_tv_schedule')
@@ -203,6 +205,36 @@ class TvmazeEpgIngestionTests(TestCase):
 
         self.assertTrue(Airing.objects.filter(pk=airing.pk).exists())
         self.assertFalse(Airing.objects.filter(external_id='valid-new-airing').exists())
+
+    @patch('content.services.fetch_live_tv_schedule')
+    def test_missing_identity_snapshot_preserves_existing_current_schedule(self, fetch_schedule):
+        now = timezone.now()
+        channel = Channel.objects.create(
+            name='Identity Preserve Network', slug='identity-preserve-network', region='US',
+            source='tvmaze', external_id='identity-preserve-network',
+        )
+        program = Program.objects.create(
+            title='Identity Preserve Show', source='tvmaze', external_id='identity-preserve-show',
+        )
+        airing = Airing.objects.create(
+            channel=channel,
+            program=program,
+            starts_at=now - timezone.timedelta(minutes=10),
+            ends_at=now + timezone.timedelta(minutes=50),
+            source='tvmaze',
+            external_id='identity-preserve-airing',
+        )
+        fetch_schedule.return_value = [
+            self._item(
+                schedule_external_id='',
+                airstamp=(now + timezone.timedelta(hours=2)).isoformat(),
+            ),
+        ]
+
+        with self.assertRaises(ScheduleNormalizationError):
+            refresh_tvmaze_epg(country='US')
+
+        self.assertTrue(Airing.objects.filter(pk=airing.pk).exists())
 
     @patch('content.services.fetch_live_tv_schedule')
     def test_refresh_removes_only_expired_tvmaze_airings(self, fetch_schedule):
