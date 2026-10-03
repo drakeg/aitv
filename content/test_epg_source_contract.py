@@ -11,9 +11,10 @@ from content.services import refresh_epg_source
 class FixtureScheduleAdapter:
     source = 'fixture'
 
-    def __init__(self, rows):
+    def __init__(self, rows, *, complete_snapshot=False):
         self.rows = rows
         self.calls = []
+        self.complete_snapshot = complete_snapshot
 
     def fetch_airings(self, *, region, limit=1000):
         self.calls.append((region, limit))
@@ -95,6 +96,115 @@ class EpgSourceAdapterContractTests(TestCase):
 
         self.assertTrue(Airing.objects.filter(source='other').exists())
         self.assertFalse(Airing.objects.filter(source='fixture').exists())
+
+    def test_complete_snapshot_removes_missing_current_and_future_airings_for_region(self):
+        now = timezone.now()
+        channel = Channel.objects.create(
+            name='Fixture Current', slug='fixture-current', region='US',
+            source='fixture', external_id='channel-current',
+        )
+        program = Program.objects.create(
+            title='Fixture Current', source='fixture', external_id='program-current',
+        )
+        Airing.objects.create(
+            channel=channel,
+            program=program,
+            starts_at=now - timedelta(minutes=10),
+            ends_at=now + timedelta(minutes=50),
+            source='fixture',
+            external_id='airing-current',
+        )
+        future_channel = Channel.objects.create(
+            name='Fixture Future', slug='fixture-future', region='US',
+            source='fixture', external_id='channel-future',
+        )
+        future_program = Program.objects.create(
+            title='Fixture Future', source='fixture', external_id='program-future',
+        )
+        Airing.objects.create(
+            channel=future_channel,
+            program=future_program,
+            starts_at=now + timedelta(hours=1),
+            ends_at=now + timedelta(hours=2),
+            source='fixture',
+            external_id='airing-future',
+        )
+
+        refresh_epg_source(
+            FixtureScheduleAdapter([], complete_snapshot=True),
+            region='US',
+            retention_hours=6,
+        )
+
+        self.assertFalse(Airing.objects.filter(source='fixture', channel__region='US').exists())
+
+    def test_complete_snapshot_reconciliation_is_scoped_by_region_and_source(self):
+        now = timezone.now()
+        ca_channel = Channel.objects.create(
+            name='CA Fixture', slug='ca-fixture', region='CA',
+            source='fixture', external_id='ca-channel',
+        )
+        ca_program = Program.objects.create(
+            title='CA Fixture', source='fixture', external_id='ca-program',
+        )
+        Airing.objects.create(
+            channel=ca_channel,
+            program=ca_program,
+            starts_at=now,
+            ends_at=now + timedelta(hours=1),
+            source='fixture',
+            external_id='ca-airing',
+        )
+        other_channel = Channel.objects.create(
+            name='Other Source', slug='other-source', region='US',
+            source='other', external_id='other-channel',
+        )
+        other_program = Program.objects.create(
+            title='Other Source', source='other', external_id='other-program',
+        )
+        Airing.objects.create(
+            channel=other_channel,
+            program=other_program,
+            starts_at=now,
+            ends_at=now + timedelta(hours=1),
+            source='other',
+            external_id='other-airing',
+        )
+
+        refresh_epg_source(
+            FixtureScheduleAdapter([], complete_snapshot=True),
+            region='US',
+            retention_hours=6,
+        )
+
+        self.assertTrue(Airing.objects.filter(source='fixture', channel__region='CA').exists())
+        self.assertTrue(Airing.objects.filter(source='other', channel__region='US').exists())
+
+    def test_complete_snapshot_preserves_recent_expired_airings_until_retention(self):
+        now = timezone.now()
+        channel = Channel.objects.create(
+            name='Recent Fixture', slug='recent-fixture', region='US',
+            source='fixture', external_id='recent-channel',
+        )
+        program = Program.objects.create(
+            title='Recent Fixture', source='fixture', external_id='recent-program',
+        )
+        Airing.objects.create(
+            channel=channel,
+            program=program,
+            starts_at=now - timedelta(hours=2),
+            ends_at=now - timedelta(hours=1),
+            source='fixture',
+            external_id='recent-airing',
+        )
+
+        refresh_epg_source(
+            FixtureScheduleAdapter([], complete_snapshot=True),
+            region='US',
+            retention_hours=6,
+        )
+
+        self.assertTrue(Airing.objects.filter(source='fixture', external_id='recent-airing').exists())
 
     def test_tvmaze_adapter_normalizes_source_specific_schedule_shape(self):
         def fetch_schedule(*, limit, country):
