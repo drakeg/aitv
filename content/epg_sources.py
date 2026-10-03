@@ -8,6 +8,7 @@ class ScheduleSourceAdapter(Protocol):
     """Contract for a trusted schedule source normalized before persistence."""
 
     source: str
+    complete_snapshot: bool
 
     def fetch_airings(self, *, region: str, limit: int = 1000) -> list[dict]:
         """Return normalized airing rows for one region."""
@@ -19,6 +20,7 @@ class TvmazeScheduleAdapter:
 
     fetch_schedule: Callable
     source: str = 'tvmaze'
+    complete_snapshot: bool = True
 
     def fetch_airings(self, *, region: str, limit: int = 1000) -> list[dict]:
         items = self.fetch_schedule(limit=limit, country=region)
