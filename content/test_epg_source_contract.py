@@ -257,7 +257,7 @@ class EpgSourceAdapterContractTests(TestCase):
         self.assertEqual(rows[0]['starts_at'].isoformat(), '2026-09-27T00:35:00-04:00')
         self.assertEqual(rows[0]['ends_at'].isoformat(), '2026-09-27T01:35:00-04:00')
 
-    def test_tvmaze_adapter_requires_dated_timezone_aware_airstamp(self):
+    def test_tvmaze_adapter_rejects_snapshot_with_only_invalid_airstamps(self):
         def fetch_schedule(*, limit, country):
             return [
                 {'airstamp': '', 'airtime': '20:00'},
@@ -265,9 +265,8 @@ class EpgSourceAdapterContractTests(TestCase):
                 {'airstamp': 'not-a-date', 'airtime': '20:00'},
             ]
 
-        rows = TvmazeScheduleAdapter(fetch_schedule=fetch_schedule).fetch_airings(region='US')
-
-        self.assertEqual(rows, [])
+        with self.assertRaises(ScheduleNormalizationError):
+            TvmazeScheduleAdapter(fetch_schedule=fetch_schedule).fetch_airings(region='US')
 
     def test_tvmaze_nonempty_snapshot_with_no_normalizable_rows_fails_closed(self):
         def fetch_schedule(*, limit, country):
