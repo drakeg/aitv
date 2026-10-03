@@ -72,6 +72,10 @@ Each source integration must define its provenance, region semantics, access typ
 
 **Implemented in Sprint 81:** an authoritative source returning a genuinely empty schedule remains a successful empty snapshot. However, if TVmaze returns a non-empty schedule and every row fails normalization, the refresh fails closed before reconciliation. The previous current/future schedule remains intact, and normal refresh-failure observability records the failed attempt instead of treating malformed data as an authoritative empty schedule.
 
+## Partial snapshot protection
+
+**Implemented in Sprint 82:** complete TVmaze snapshots now require every returned source row to normalize successfully. If even one row is malformed, the refresh fails before persistence and reconciliation, so valid rows from that same partial snapshot are not applied and existing current/future guide data is preserved. This extends Sprint 81's zero-valid-row protection to mixed valid/invalid responses.
+
 ## Refresh freshness observability
 
 **Implemented in Sprint 68:** each completed TVmaze refresh records source, region, completion time, and normalized airing count. The Live TV guide displays the refresh age and warns when the most recent completed refresh exceeds `EPG_STALE_AFTER_SECONDS` (default 7200). Refresh state is read-only in Django admin, so a stopped worker can be distinguished from ordinary schedule gaps.
