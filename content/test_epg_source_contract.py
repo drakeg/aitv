@@ -290,6 +290,30 @@ class EpgSourceAdapterContractTests(TestCase):
         with self.assertRaises(ScheduleNormalizationError):
             adapter.fetch_airings(region='US', limit=None)
 
+    def test_tvmaze_partial_malformed_snapshot_fails_closed(self):
+        def fetch_schedule(*, limit, country):
+            return [
+                {
+                    'schedule_external_id': 'good-1',
+                    'channel_external_id': 'network',
+                    'external_id': 'show',
+                    'airstamp': '2026-10-03T20:00:00-04:00',
+                    'runtime': 60,
+                },
+                {
+                    'schedule_external_id': 'bad-1',
+                    'channel_external_id': 'network',
+                    'external_id': 'show',
+                    'airstamp': 'not-a-date',
+                    'runtime': 60,
+                },
+            ]
+
+        adapter = TvmazeScheduleAdapter(fetch_schedule=fetch_schedule)
+
+        with self.assertRaises(ScheduleNormalizationError):
+            adapter.fetch_airings(region='US', limit=None)
+
     def test_tvmaze_legitimate_empty_snapshot_remains_valid(self):
         adapter = TvmazeScheduleAdapter(fetch_schedule=lambda **kwargs: [])
 
@@ -297,7 +321,7 @@ class EpgSourceAdapterContractTests(TestCase):
 
         self.assertEqual(rows, [])
 
-    def test_tvmaze_adapter_skips_bad_airtime_and_defaults_bad_runtime(self):
+    def test_tvmaze_partial_invalid_timing_rejects_complete_snapshot(self):
         def fetch_schedule(*, limit, country):
             return [
                 {'schedule_external_id': 'bad-time', 'airtime': 'not-a-time', 'airstamp': 'bad-time'},
@@ -310,6 +334,20 @@ class EpgSourceAdapterContractTests(TestCase):
                     'runtime': 0,
                 },
             ]
+
+        with self.assertRaises(ScheduleNormalizationError):
+            TvmazeScheduleAdapter(fetch_schedule=fetch_schedule).fetch_airings(region='US')
+
+    def test_tvmaze_adapter_defaults_nonpositive_runtime_for_valid_snapshot(self):
+        def fetch_schedule(*, limit, country):
+            return [{
+                'schedule_external_id': 'good-time',
+                'channel_external_id': 'network',
+                'external_id': 'show',
+                'airtime': '10:00',
+                'airstamp': '2026-09-26T10:00:00+02:00',
+                'runtime': 0,
+            }]
 
         rows = TvmazeScheduleAdapter(fetch_schedule=fetch_schedule).fetch_airings(region='US')
 

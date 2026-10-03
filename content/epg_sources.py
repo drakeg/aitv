@@ -28,21 +28,26 @@ class TvmazeScheduleAdapter:
     def fetch_airings(self, *, region: str, limit: int | None = 1000) -> list[dict]:
         items = self.fetch_schedule(limit=limit, country=region)
         rows = []
+        rejected_rows = 0
 
         for item in items:
             if not isinstance(item, dict):
+                rejected_rows += 1
                 continue
 
             # TVmaze's airstamp includes the actual calendar date and UTC offset.
             # A bare airtime cannot represent midnight or a different network timezone.
             airstamp = item.get('airstamp')
             if not isinstance(airstamp, str) or not airstamp.strip():
+                rejected_rows += 1
                 continue
             try:
                 starts_at = datetime.fromisoformat(airstamp.strip())
             except ValueError:
+                rejected_rows += 1
                 continue
             if starts_at.tzinfo is None or starts_at.utcoffset() is None:
+                rejected_rows += 1
                 continue
 
             runtime = item.get('runtime')
@@ -70,9 +75,9 @@ class TvmazeScheduleAdapter:
                 'destination_scope': item.get('watch_scope') or '',
             })
 
-        if items and not rows:
+        if rejected_rows:
             raise ScheduleNormalizationError(
-                'TVmaze returned schedule rows but none could be normalized'
+                'TVmaze returned schedule rows that could not all be normalized'
             )
 
         return rows
