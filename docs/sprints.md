@@ -47,7 +47,7 @@ This ledger is the durable project record for sprint-sized development. Git hist
 | 78 | #103 | Preserve every distinct TVmaze scheduled episode for EPG refresh while keeping home discovery deduplicated by show. |
 | 79 | #104 | Reconcile complete EPG snapshots so cancelled/removed current or future airings do not linger, while preserving retention history. |
 | 80 | #105 | Fetch complete-snapshot EPG sources without an artificial row cap before reconciliation. |
-| 81 | pending | Fail closed when a non-empty complete snapshot yields zero valid normalized airings, preserving the prior guide. |
+| 81 | #106 | Fail closed when a non-empty complete snapshot yields zero valid normalized airings, preserving the prior guide. |
 
 ## Earlier development
 
