@@ -237,6 +237,45 @@ class TvmazeEpgIngestionTests(TestCase):
         self.assertTrue(Airing.objects.filter(pk=airing.pk).exists())
 
     @patch('content.services.fetch_live_tv_schedule')
+    def test_conflicting_duplicate_airing_snapshot_preserves_existing_schedule(self, fetch_schedule):
+        now = timezone.now()
+        channel = Channel.objects.create(
+            name='Conflict Preserve Network', slug='conflict-preserve-network', region='US',
+            source='tvmaze', external_id='conflict-preserve-network',
+        )
+        program = Program.objects.create(
+            title='Conflict Preserve Show', source='tvmaze', external_id='conflict-preserve-show',
+        )
+        airing = Airing.objects.create(
+            channel=channel,
+            program=program,
+            starts_at=now - timezone.timedelta(minutes=10),
+            ends_at=now + timezone.timedelta(minutes=50),
+            source='tvmaze',
+            external_id='conflict-preserve-airing',
+        )
+        fetch_schedule.return_value = [
+            self._item(
+                schedule_external_id='duplicate-airing',
+                channel_external_id='network-a',
+                external_id='show-a',
+                airstamp=(now + timezone.timedelta(hours=2)).isoformat(),
+            ),
+            self._item(
+                schedule_external_id='duplicate-airing',
+                channel_external_id='network-b',
+                external_id='show-b',
+                airstamp=(now + timezone.timedelta(hours=2)).isoformat(),
+            ),
+        ]
+
+        with self.assertRaises(ScheduleNormalizationError):
+            refresh_tvmaze_epg(country='US')
+
+        self.assertTrue(Airing.objects.filter(pk=airing.pk).exists())
+        self.assertFalse(Airing.objects.filter(external_id='duplicate-airing').exists())
+
+    @patch('content.services.fetch_live_tv_schedule')
     def test_refresh_removes_only_expired_tvmaze_airings(self, fetch_schedule):
         fetch_schedule.return_value = []
         channel = Channel.objects.create(name='Old', slug='old', region='US', source='other', external_id='c1')
