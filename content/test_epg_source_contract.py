@@ -390,7 +390,31 @@ class EpgSourceAdapterContractTests(TestCase):
 
         rows = TvmazeScheduleAdapter(fetch_schedule=fetch_schedule).fetch_airings(region='US', limit=None)
 
-        self.assertEqual(len(rows), 2)
+        self.assertEqual(len(rows), 1)
+
+    def test_tvmaze_complete_snapshot_rejects_duplicate_airing_with_conflicting_time(self):
+        def fetch_schedule(*, limit, country):
+            return [
+                {
+                    'schedule_external_id': 'episode-79',
+                    'channel_external_id': 'network-a',
+                    'external_id': 'show-a',
+                    'airstamp': '2026-10-04T20:00:00-04:00',
+                    'runtime': 60,
+                },
+                {
+                    'schedule_external_id': 'episode-79',
+                    'channel_external_id': 'network-a',
+                    'external_id': 'show-a',
+                    'airstamp': '2026-10-04T21:00:00-04:00',
+                    'runtime': 60,
+                },
+            ]
+
+        adapter = TvmazeScheduleAdapter(fetch_schedule=fetch_schedule)
+
+        with self.assertRaises(ScheduleNormalizationError):
+            adapter.fetch_airings(region='US', limit=None)
 
     def test_tvmaze_legitimate_empty_snapshot_remains_valid(self):
         adapter = TvmazeScheduleAdapter(fetch_schedule=lambda **kwargs: [])
