@@ -66,10 +66,11 @@ class TvmazeScheduleAdapter:
             if runtime_minutes <= 0:
                 runtime_minutes = 30
 
-            identity = (channel_external_id, program_external_id)
+            identity = (channel_external_id, program_external_id, starts_at, starts_at + timedelta(minutes=runtime_minutes))
             previous_identity = seen_airings.get(airing_external_id)
-            if previous_identity is not None and previous_identity != identity:
-                rejected_rows += 1
+            if previous_identity is not None:
+                if previous_identity != identity:
+                    rejected_rows += 1
                 continue
             seen_airings[airing_external_id] = identity
 
