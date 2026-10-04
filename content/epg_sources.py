@@ -29,6 +29,7 @@ class TvmazeScheduleAdapter:
         items = self.fetch_schedule(limit=limit, country=region)
         rows = []
         rejected_rows = 0
+        seen_airings = {}
 
         for item in items:
             if not isinstance(item, dict):
@@ -64,6 +65,13 @@ class TvmazeScheduleAdapter:
                 runtime_minutes = 30
             if runtime_minutes <= 0:
                 runtime_minutes = 30
+
+            identity = (channel_external_id, program_external_id)
+            previous_identity = seen_airings.get(airing_external_id)
+            if previous_identity is not None and previous_identity != identity:
+                rejected_rows += 1
+                continue
+            seen_airings[airing_external_id] = identity
 
             rows.append({
                 'airing_external_id': airing_external_id,
