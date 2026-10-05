@@ -260,6 +260,115 @@ class LiveTvGuideTests(TestCase):
         self.assertNotContains(response, 'Episode destination')
         self.assertNotContains(response, 'Show destination')
 
+    def test_playable_only_filter_includes_explicit_channel_destination(self):
+        playable_channel = Channel.objects.create(
+            name='Playable Filter Network', slug='playable-filter-network', region='US',
+            source='tvmaze', external_id='playable-filter-network',
+        )
+        metadata_channel = Channel.objects.create(
+            name='Metadata Filter Network', slug='metadata-filter-network', region='US',
+            source='tvmaze', external_id='metadata-filter-network',
+        )
+        playable_program = Program.objects.create(
+            title='Playable Filter Show', source='tvmaze', external_id='playable-filter-show',
+        )
+        metadata_program = Program.objects.create(
+            title='Metadata Filter Show', source='tvmaze', external_id='metadata-filter-show',
+        )
+        self._airing(
+            playable_channel, playable_program, timedelta(minutes=-5), timedelta(minutes=25),
+            'playable-filter-airing',
+        )
+        self._airing(
+            metadata_channel, metadata_program, timedelta(minutes=-5), timedelta(minutes=25),
+            'metadata-filter-airing',
+        )
+        ChannelDestination.objects.create(
+            channel=playable_channel,
+            provider='Playable Provider',
+            url='https://example.com/playable-filter',
+            access_type='free',
+            destination_type=ChannelDestination.DestinationType.DIRECT,
+            source='fixture',
+        )
+        ChannelDestination.objects.create(
+            channel=metadata_channel,
+            provider='Metadata Provider',
+            url='https://example.com/metadata-filter',
+            access_type='other',
+            destination_type=ChannelDestination.DestinationType.DETAILS,
+            source='fixture',
+        )
+
+        response = self.client.get(reverse('live_tv_guide'), {'playable': '1'})
+
+        self.assertContains(response, 'Playable Filter Network')
+        self.assertContains(response, 'Watch on Playable Provider')
+        self.assertNotContains(response, 'Metadata Filter Network')
+        self.assertNotContains(response, 'Metadata Filter Show')
+        self.assertContains(response, 'name="playable" value="1" checked', html=False)
+
+    def test_playable_only_filter_includes_current_airing_destination(self):
+        channel = Channel.objects.create(
+            name='Airing Playable Filter Network', slug='airing-playable-filter-network', region='US',
+            source='tvmaze', external_id='airing-playable-filter-network',
+        )
+        program = Program.objects.create(
+            title='Airing Playable Filter Show', source='tvmaze',
+            external_id='airing-playable-filter-show',
+        )
+        airing = self._airing(
+            channel, program, timedelta(minutes=-5), timedelta(minutes=25),
+            'airing-playable-filter-airing',
+        )
+        AiringDestination.objects.create(
+            airing=airing,
+            provider='ABC',
+            url='https://abc.com/episode/playable-filter',
+            access_type='other',
+            scope=AiringDestination.Scope.EPISODE,
+            source='tvmaze',
+        )
+
+        response = self.client.get(reverse('live_tv_guide'), {'playable': '1'})
+
+        self.assertContains(response, 'Airing Playable Filter Network')
+        self.assertContains(response, 'Episode destination')
+        self.assertContains(response, 'Watch on ABC')
+
+    def test_playable_only_filter_does_not_treat_next_airing_destination_as_playable_now(self):
+        channel = Channel.objects.create(
+            name='Future Destination Network', slug='future-destination-network', region='US',
+            source='tvmaze', external_id='future-destination-network',
+        )
+        current = Program.objects.create(
+            title='Current Metadata Show', source='tvmaze', external_id='current-metadata-show',
+        )
+        future = Program.objects.create(
+            title='Future Destination Show', source='tvmaze', external_id='future-destination-show',
+        )
+        self._airing(
+            channel, current, timedelta(minutes=-5), timedelta(minutes=25),
+            'current-metadata-airing',
+        )
+        future_airing = self._airing(
+            channel, future, timedelta(minutes=25), timedelta(minutes=85),
+            'future-destination-airing',
+        )
+        AiringDestination.objects.create(
+            airing=future_airing,
+            provider='ABC',
+            url='https://abc.com/episode/future-only',
+            access_type='other',
+            scope=AiringDestination.Scope.EPISODE,
+            source='tvmaze',
+        )
+
+        response = self.client.get(reverse('live_tv_guide'), {'playable': '1'})
+
+        self.assertNotContains(response, 'Future Destination Network')
+        self.assertContains(response, 'No channels match the active Live TV filters for US.')
+
     def test_metadata_destination_does_not_create_watch_action(self):
         channel = Channel.objects.create(
             name='Metadata Network', slug='metadata-network', region='US',
@@ -383,6 +492,23 @@ class LiveTvGuideTests(TestCase):
         response = self.client.post(url)
         self.assertRedirects(response, reverse('live_tv_guide'))
         self.assertFalse(ChannelFavorite.objects.filter(user=user, channel=channel).exists())
+
+    def test_channel_favorite_action_preserves_playable_filter(self):
+        channel = Channel.objects.create(
+            name='Playable Favorite Network', slug='playable-favorite-network', region='US',
+            source='tvmaze', external_id='playable-favorite-network',
+        )
+        user = get_user_model().objects.create_user(
+            username='playable-favorite-viewer', password='password',
+        )
+        self.client.force_login(user)
+
+        response = self.client.post(
+            reverse('toggle_channel_favorite', args=[channel.pk]),
+            {'playable': '1'},
+        )
+
+        self.assertRedirects(response, f"{reverse('live_tv_guide')}?playable=1")
 
     def test_channel_favorite_action_requires_authentication_and_post(self):
         channel = Channel.objects.create(
