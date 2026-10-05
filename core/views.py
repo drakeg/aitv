@@ -354,15 +354,6 @@ def live_tv_guide(request):
     if show_favorites_only:
         upcoming = upcoming.filter(channel_id__in=favorite_channel_ids)
 
-    if query:
-        matching_channel_ids = (
-            upcoming
-            .filter(Q(channel__name__icontains=query) | Q(program__title__icontains=query))
-            .values_list('channel_id', flat=True)
-            .distinct()
-        )
-        upcoming = upcoming.filter(channel_id__in=matching_channel_ids)
-
     category_choices = sorted({
         str(value).strip()
         for values in (
@@ -438,6 +429,17 @@ def live_tv_guide(request):
         row for row in channels.values()
         if row['current'] is not None or row['next'] is not None
     ]
+    if query:
+        wanted_query = query.casefold()
+        guide_rows = [
+            row for row in guide_rows
+            if wanted_query in row['channel'].name.casefold()
+            or any(
+                wanted_query in airing.program.title.casefold()
+                for airing in (row['current'], row['next'], row['later'])
+                if airing is not None
+            )
+        ]
     if request.user.is_authenticated and not show_favorites_only:
         guide_rows.sort(key=lambda row: (
             0 if row['is_favorite'] else 1,
