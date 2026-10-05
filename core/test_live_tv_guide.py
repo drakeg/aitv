@@ -375,6 +375,33 @@ class LiveTvGuideTests(TestCase):
         self.assertNotContains(response, 'Metadata Filter Show')
         self.assertContains(response, 'name="playable" value="1" checked', html=False)
 
+    def test_playable_only_filter_excludes_channel_destination_without_current_airing(self):
+        channel = Channel.objects.create(
+            name='Future Only Playable Network', slug='future-only-playable-network', region='US',
+            source='tvmaze', external_id='future-only-playable-network',
+        )
+        program = Program.objects.create(
+            title='Future Only Playable Show', source='tvmaze', external_id='future-only-playable-show',
+        )
+        self._airing(
+            channel, program, timedelta(minutes=20), timedelta(minutes=80),
+            'future-only-playable-airing',
+        )
+        ChannelDestination.objects.create(
+            channel=channel,
+            provider='Future Channel Provider',
+            url='https://example.com/future-only-playable',
+            access_type='free',
+            destination_type=ChannelDestination.DestinationType.DIRECT,
+            source='fixture',
+        )
+
+        response = self.client.get(reverse('live_tv_guide'), {'playable': '1'})
+
+        self.assertNotContains(response, 'Future Only Playable Network')
+        self.assertNotContains(response, 'Future Only Playable Show')
+        self.assertContains(response, 'No channels match the active Live TV filters for US.')
+
     def test_playable_only_filter_includes_current_airing_destination(self):
         channel = Channel.objects.create(
             name='Airing Playable Filter Network', slug='airing-playable-filter-network', region='US',
