@@ -108,6 +108,10 @@ Each source integration must define its provenance, region semantics, access typ
 
 **Implemented in Sprint 73:** the Live TV guide now surfaces the shared `missing` EPG health state as a warning instead of silently presenting schedule rows with no tracked refresh history. This keeps guide messaging aligned with `/health/ready/`, which already treats missing refresh state as degraded readiness.
 
+## Now / Next / Later guide context
+
+**Implemented in Sprint 86:** each Live TV channel row now shows the current airing plus the next two future normalized airings as **Now**, **Next**, and **Later**. The guide remains schedule-only unless an explicit trusted destination is present, and the existing responsive layout stacks the added program slot on narrow screens.
+
 ## Live TV category filtering
 
 **Implemented in Sprint 74:** the Live TV guide can filter by normalized channel categories already stored with EPG channels. Category filtering composes with channel/program search and Favorites-only mode, and favorite toggle actions preserve the active search/category filter state.
