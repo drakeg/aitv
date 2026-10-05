@@ -396,12 +396,15 @@ def live_tv_guide(request):
             'channel': airing.channel,
             'current': None,
             'next': None,
+            'later': None,
             'is_favorite': airing.channel_id in favorite_channel_ids,
         })
         if airing.starts_at <= now < airing.ends_at and row['current'] is None:
             row['current'] = airing
         elif airing.starts_at > now and row['next'] is None:
             row['next'] = airing
+        elif airing.starts_at > now and row['later'] is None:
+            row['later'] = airing
 
     playable_destinations = {}
     if channels:
