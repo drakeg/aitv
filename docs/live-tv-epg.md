@@ -126,7 +126,7 @@ Each source integration must define its provenance, region semantics, access typ
 
 ## Playable-now filtering
 
-**Implemented in Sprint 85:** the Live TV guide can restrict results to channels with an explicit trusted playback destination available for the current view. A channel qualifies when its current airing has a trusted `AiringDestination` or the channel has a playable direct/tuner `ChannelDestination`. Future-airing destinations, metadata/details URLs, and schedule presence alone do not qualify. The filter composes with search, category, and account-scoped Favorites state.
+**Implemented in Sprint 85:** the Live TV guide can restrict results to channels with an explicit trusted playback destination available for the current view. A channel qualifies when its current airing has a trusted `AiringDestination` or the channel has a playable direct/tuner `ChannelDestination`. Future-airing destinations, metadata/details URLs, schedule presence alone, and channels with only future guide data do not qualify; a current airing must be present. The filter composes with search, category, and account-scoped Favorites state.
 
 ## Airing-specific destinations
 
