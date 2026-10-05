@@ -50,6 +50,7 @@ This ledger is the durable project record for sprint-sized development. Git hist
 | 81 | #106 | Fail closed when a non-empty complete snapshot yields zero valid normalized airings, preserving the prior guide. |
 | 82 | #107 | Reject partially malformed complete TVmaze snapshots before persistence or reconciliation. |
 | 83 | #108 | Require stable airing/channel/program identities for every complete TVmaze snapshot row before reconciliation. |
+| 84 | #109 | Reject conflicting duplicate airing identities/timing in complete TVmaze snapshots and collapse exact duplicates. |
 
 ## Earlier development
 

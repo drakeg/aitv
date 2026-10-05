@@ -80,6 +80,10 @@ Each source integration must define its provenance, region semantics, access typ
 
 **Implemented in Sprint 83:** every TVmaze row in a complete snapshot must carry stable airing/episode, channel, and program/show identities before the snapshot is eligible for persistence or reconciliation. Identity-incomplete rows fail the refresh closed, preventing later persistence-layer skipping from silently turning a complete snapshot into a partial authoritative one.
 
+## Duplicate airing consistency
+
+**Implemented in Sprint 84:** a complete TVmaze snapshot may not assign one airing/episode ID to conflicting channel, program, or normalized start/end timing. Conflicting duplicates fail the refresh closed before persistence or reconciliation. Exact duplicate rows with the same identity and timing are collapsed so one upstream duplication does not double-count or repeatedly rewrite the same normalized airing.
+
 ## Refresh freshness observability
 
 **Implemented in Sprint 68:** each completed TVmaze refresh records source, region, completion time, and normalized airing count. The Live TV guide displays the refresh age and warns when the most recent completed refresh exceeds `EPG_STALE_AFTER_SECONDS` (default 7200). Refresh state is read-only in Django admin, so a stopped worker can be distinguished from ordinary schedule gaps.
