@@ -54,6 +54,7 @@ This ledger is the durable project record for sprint-sized development. Git hist
 | 85 | #110 | Add a trusted playable-now-only Live TV guide filter that composes with search/category/Favorites state. |
 | 86 | #111 | Extend the Live TV guide from Now/Next to Now/Next/Later using the next two normalized future airings. |
 | 87 | #112 | Scope Live TV search to channel names and visible Now/Next/Later program slots so every match is visible. |
+| 88 | #113 | Require a current airing as well as a trusted destination for the playable-now Live TV filter. |
 
 ## Earlier development
 

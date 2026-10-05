@@ -480,7 +480,10 @@ def live_tv_guide(request):
         row['destination_scope'] = current_destination.scope if current_destination else ''
 
     if show_playable_only:
-        guide_rows = [row for row in guide_rows if row['destination'] is not None]
+        guide_rows = [
+            row for row in guide_rows
+            if row['current'] is not None and row['destination'] is not None
+        ]
 
     refresh_state, refresh_health = epg_region_health(region, now=now)
 
