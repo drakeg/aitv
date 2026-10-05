@@ -117,7 +117,7 @@
                 <div class="text-muted mt-1">Search is limited to the channel name and the program slots currently visible in the compact guide.</div>
             {% elif guide_query or guide_category or show_playable_only %}
                 <strong>No channels match the active Live TV filters for {{ guide_region }}.</strong>
-                <div class="text-muted mt-1">Search matches channel names and visible Now / Next / Later program titles; category filtering uses normalized channel categories; playable-only requires an explicit trusted destination for the current airing or channel.</div>
+                <div class="text-muted mt-1">Search matches channel names and visible Now / Next / Later program titles; category filtering uses normalized channel categories; playable-only requires a current airing plus an explicit trusted destination for that airing or channel.</div>
             {% elif show_favorites_only %}
                 <strong>No favorite channels currently have guide data for {{ guide_region }}.</strong>
                 <div class="text-muted mt-1">Favorite channels from other accounts are never included.</div>
