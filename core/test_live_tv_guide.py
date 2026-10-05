@@ -787,6 +787,78 @@ class LiveTvGuideTests(TestCase):
         self.assertContains(response, 'Current Comedy')
         self.assertContains(response, 'Crime Hour')
 
+    def test_guide_search_matches_visible_later_program(self):
+        channel = Channel.objects.create(
+            name='Visible Search Network', slug='visible-search-network', region='US',
+            source='tvmaze', external_id='visible-search-network',
+        )
+        current = Program.objects.create(
+            title='Current Visible Show', source='tvmaze', external_id='current-visible-show',
+        )
+        next_program = Program.objects.create(
+            title='Next Visible Show', source='tvmaze', external_id='next-visible-show',
+        )
+        later_program = Program.objects.create(
+            title='Later Mystery Match', source='tvmaze', external_id='later-mystery-match',
+        )
+        self._airing(
+            channel, current, timedelta(minutes=-5), timedelta(minutes=25),
+            'visible-search-current',
+        )
+        self._airing(
+            channel, next_program, timedelta(minutes=25), timedelta(minutes=55),
+            'visible-search-next',
+        )
+        self._airing(
+            channel, later_program, timedelta(minutes=55), timedelta(minutes=85),
+            'visible-search-later',
+        )
+
+        response = self.client.get(reverse('live_tv_guide'), {'q': 'Mystery'})
+
+        self.assertContains(response, 'Visible Search Network')
+        self.assertContains(response, 'Later Mystery Match')
+
+    def test_guide_search_does_not_match_hidden_future_program_beyond_later(self):
+        channel = Channel.objects.create(
+            name='Hidden Search Network', slug='hidden-search-network', region='US',
+            source='tvmaze', external_id='hidden-search-network',
+        )
+        current = Program.objects.create(
+            title='Current Plain Show', source='tvmaze', external_id='current-plain-show',
+        )
+        next_program = Program.objects.create(
+            title='Next Plain Show', source='tvmaze', external_id='next-plain-show',
+        )
+        later_program = Program.objects.create(
+            title='Later Plain Show', source='tvmaze', external_id='later-plain-show',
+        )
+        hidden_program = Program.objects.create(
+            title='Hidden Mystery Match', source='tvmaze', external_id='hidden-mystery-match',
+        )
+        self._airing(
+            channel, current, timedelta(minutes=-5), timedelta(minutes=25),
+            'hidden-search-current',
+        )
+        self._airing(
+            channel, next_program, timedelta(minutes=25), timedelta(minutes=55),
+            'hidden-search-next',
+        )
+        self._airing(
+            channel, later_program, timedelta(minutes=55), timedelta(minutes=85),
+            'hidden-search-later',
+        )
+        self._airing(
+            channel, hidden_program, timedelta(minutes=85), timedelta(minutes=115),
+            'hidden-search-fourth',
+        )
+
+        response = self.client.get(reverse('live_tv_guide'), {'q': 'Mystery'})
+
+        self.assertNotContains(response, 'Hidden Search Network')
+        self.assertNotContains(response, 'Hidden Mystery Match')
+        self.assertContains(response, 'No channels or upcoming programs match “Mystery” for US.')
+
     def test_guide_search_empty_state_is_specific(self):
         response = self.client.get(reverse('live_tv_guide'), {'q': 'Nothing Here'})
 
