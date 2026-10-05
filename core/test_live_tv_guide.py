@@ -40,6 +40,73 @@ class LiveTvGuideTests(TestCase):
         self.assertContains(response, 'schedule data does not imply playback availability')
         self.assertNotContains(response, '>Watch<', html=False)
 
+    def test_guide_shows_now_next_and_later_programs(self):
+        channel = Channel.objects.create(
+            name='Three Slot Network', slug='three-slot-network', region='US',
+            source='tvmaze', external_id='three-slot-network',
+        )
+        current = Program.objects.create(
+            title='Current Slot Show', source='tvmaze', external_id='current-slot-show',
+        )
+        next_program = Program.objects.create(
+            title='Next Slot Show', source='tvmaze', external_id='next-slot-show',
+        )
+        later_program = Program.objects.create(
+            title='Later Slot Show', source='tvmaze', external_id='later-slot-show',
+        )
+        self._airing(
+            channel, current, timedelta(minutes=-10), timedelta(minutes=20),
+            'three-slot-current',
+        )
+        self._airing(
+            channel, next_program, timedelta(minutes=20), timedelta(minutes=80),
+            'three-slot-next',
+        )
+        self._airing(
+            channel, later_program, timedelta(minutes=80), timedelta(minutes=140),
+            'three-slot-later',
+        )
+
+        response = self.client.get(reverse('live_tv_guide'))
+
+        self.assertContains(response, 'Current Slot Show')
+        self.assertContains(response, 'Next Slot Show')
+        self.assertContains(response, 'Later Slot Show')
+        self.assertContains(response, '<span class="guide-label">Later</span>', html=True)
+
+    def test_guide_later_slot_uses_second_future_airing_only(self):
+        channel = Channel.objects.create(
+            name='Later Ordering Network', slug='later-ordering-network', region='US',
+            source='tvmaze', external_id='later-ordering-network',
+        )
+        first = Program.objects.create(
+            title='First Future', source='tvmaze', external_id='first-future',
+        )
+        second = Program.objects.create(
+            title='Second Future', source='tvmaze', external_id='second-future',
+        )
+        third = Program.objects.create(
+            title='Third Future', source='tvmaze', external_id='third-future',
+        )
+        self._airing(
+            channel, first, timedelta(minutes=10), timedelta(minutes=40),
+            'later-order-first',
+        )
+        self._airing(
+            channel, second, timedelta(minutes=40), timedelta(minutes=70),
+            'later-order-second',
+        )
+        self._airing(
+            channel, third, timedelta(minutes=70), timedelta(minutes=100),
+            'later-order-third',
+        )
+
+        response = self.client.get(reverse('live_tv_guide'))
+
+        self.assertContains(response, 'First Future')
+        self.assertContains(response, 'Second Future')
+        self.assertNotContains(response, 'Third Future')
+
     def test_guide_shows_only_explicit_playable_channel_destination(self):
         channel = Channel.objects.create(
             name='Playable Network', slug='playable-network', region='US',
