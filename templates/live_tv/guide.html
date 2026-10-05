@@ -98,6 +98,15 @@
                             <span class="text-muted">No next program listed</span>
                         {% endif %}
                     </div>
+                    <div class="guide-program">
+                        <span class="guide-label">Later</span>
+                        {% if row.later %}
+                            <strong>{{ row.later.program.title }}</strong>
+                            <span>{{ row.later.starts_at|date:"g:i A" }}–{{ row.later.ends_at|date:"g:i A" }}</span>
+                        {% else %}
+                            <span class="text-muted">No later program listed</span>
+                        {% endif %}
+                    </div>
                 </article>
             {% endfor %}
         </div>
