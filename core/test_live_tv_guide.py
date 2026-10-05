@@ -857,12 +857,12 @@ class LiveTvGuideTests(TestCase):
 
         self.assertNotContains(response, 'Hidden Search Network')
         self.assertNotContains(response, 'Hidden Mystery Match')
-        self.assertContains(response, 'No channels or upcoming programs match “Mystery” for US.')
+        self.assertContains(response, 'No channels or visible Now / Next / Later programs match “Mystery” for US.')
 
     def test_guide_search_empty_state_is_specific(self):
         response = self.client.get(reverse('live_tv_guide'), {'q': 'Nothing Here'})
 
-        self.assertContains(response, 'No channels or upcoming programs match “Nothing Here” for US.')
+        self.assertContains(response, 'No channels or visible Now / Next / Later programs match “Nothing Here” for US.')
 
     def test_preferred_provider_ranks_playable_channel_destination(self):
         channel = Channel.objects.create(
