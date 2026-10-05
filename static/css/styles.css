@@ -60,7 +60,7 @@ input::placeholder { color: #aaa; }
 ========================= */
 .live-guide { max-width: 1400px; margin: 0 auto; }
 .guide-list { display: flex; flex-direction: column; gap: 6px; }
-.guide-row { display: grid; grid-template-columns: minmax(150px, 0.7fr) minmax(240px, 1.4fr) minmax(240px, 1.4fr); background: #1c1c1c; border: 1px solid #333; border-radius: 7px; overflow: hidden; }
+.guide-row { display: grid; grid-template-columns: minmax(150px, 0.7fr) repeat(3, minmax(210px, 1.2fr)); background: #1c1c1c; border: 1px solid #333; border-radius: 7px; overflow: hidden; }
 .guide-channel, .guide-program { min-width: 0; padding: 11px 13px; display: flex; flex-direction: column; gap: 3px; }
 .guide-channel { background: #151515; justify-content: center; }
 .guide-channel-heading { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
