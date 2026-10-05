@@ -112,6 +112,10 @@ Each source integration must define its provenance, region semantics, access typ
 
 **Implemented in Sprint 86:** each Live TV channel row now shows the current airing plus the next two future normalized airings as **Now**, **Next**, and **Later**. The guide remains schedule-only unless an explicit trusted destination is present, and the existing responsive layout stacks the added program slot on narrow screens.
 
+## Visible guide search scope
+
+**Implemented in Sprint 87:** Live TV search now matches channel names plus only the program titles visible in the compact **Now / Next / Later** row. Programs farther in the future no longer make a channel appear without showing the matching title, keeping search results explainable and aligned with the visible guide context.
+
 ## Live TV category filtering
 
 **Implemented in Sprint 74:** the Live TV guide can filter by normalized channel categories already stored with EPG channels. Category filtering composes with channel/program search and Favorites-only mode, and favorite toggle actions preserve the active search/category filter state.
