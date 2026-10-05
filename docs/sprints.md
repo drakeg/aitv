@@ -53,6 +53,7 @@ This ledger is the durable project record for sprint-sized development. Git hist
 | 84 | #109 | Reject conflicting duplicate airing identities/timing in complete TVmaze snapshots and collapse exact duplicates. |
 | 85 | #110 | Add a trusted playable-now-only Live TV guide filter that composes with search/category/Favorites state. |
 | 86 | #111 | Extend the Live TV guide from Now/Next to Now/Next/Later using the next two normalized future airings. |
+| 87 | pending | Scope Live TV search to channel names and visible Now/Next/Later program slots so every match is visible. |
 
 ## Earlier development
 
