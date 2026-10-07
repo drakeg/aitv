@@ -55,7 +55,7 @@ This ledger is the durable project record for sprint-sized development. Git hist
 | 86 | #111 | Extend the Live TV guide from Now/Next to Now/Next/Later using the next two normalized future airings. |
 | 87 | #112 | Scope Live TV search to channel names and visible Now/Next/Later program slots so every match is visible. |
 | 88 | #113 | Require a current airing as well as a trusted destination for the playable-now Live TV filter. |
-| 89 | pending | Fix Live TV Favorite-toggle redirect encoding so preserved search/category filters cannot crash the request. |
+| 89 | #115 | Fix Live TV Favorite-toggle redirect encoding so preserved search/category filters cannot crash the request. |
 
 ## Earlier development
 
