@@ -948,6 +948,27 @@ class LiveTvGuideTests(TestCase):
             fetch_redirect_response=False,
         )
 
+    def test_favorite_toggle_url_encodes_preserved_filters(self):
+        channel = Channel.objects.create(
+            name='Encoded Favorite Network', slug='encoded-favorite-network', region='US',
+            source='tvmaze', external_id='encoded-favorite-network',
+        )
+        user = get_user_model().objects.create_user(
+            username='encoded-favorite-viewer', password='password',
+        )
+        self.client.force_login(user)
+
+        response = self.client.post(
+            reverse('toggle_channel_favorite', args=[channel.pk]),
+            {'q': 'Sci-Fi & Fantasy', 'category': 'News & Talk'},
+        )
+
+        self.assertRedirects(
+            response,
+            f"{reverse('live_tv_guide')}?q=Sci-Fi+%26+Fantasy&category=News+%26+Talk",
+            fetch_redirect_response=False,
+        )
+
     def test_favorites_filter_empty_state_is_truthful(self):
         user = get_user_model().objects.create_user(username='empty-favorites-viewer', password='password')
         self.client.force_login(user)
