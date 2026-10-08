@@ -120,6 +120,10 @@ Each source integration must define its provenance, region semantics, access typ
 
 **Implemented in Sprint 89:** guide rows with no current airing now show an explicit future-only state instead of looking like an incomplete live row. If the next airing begins within one hour the row is labeled **Starts soon**; otherwise it is labeled **Upcoming**. These labels describe schedule timing only and do not imply playback availability.
 
+## Starts soon filtering
+
+**Implemented in Sprint 90:** the Live TV guide can restrict results to future-only channels whose next normalized airing begins within one hour. The filter excludes channels already airing a program and channels whose next airing is farther out, and it composes with search, category, and account-scoped Favorites state without implying playback availability.
+
 ## Live TV category filtering
 
 **Implemented in Sprint 74:** the Live TV guide can filter by normalized channel categories already stored with EPG channels. Category filtering composes with channel/program search and Favorites-only mode, and favorite toggle actions preserve the active search/category filter state.
