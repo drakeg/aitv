@@ -20,9 +20,9 @@
         <div class="d-flex gap-2 flex-wrap">
             {% if user.is_authenticated %}
                 {% if show_favorites_only %}
-                    <a class="btn btn-outline-light" href="{% url 'live_tv_guide' %}{% if guide_query or guide_category or show_playable_only %}?{% if guide_query %}q={{ guide_query|urlencode }}{% endif %}{% if guide_category %}{% if guide_query %}&amp;{% endif %}category={{ guide_category|urlencode }}{% endif %}{% if show_playable_only %}{% if guide_query or guide_category %}&amp;{% endif %}playable=1{% endif %}{% endif %}">Show all channels</a>
+                    <a class="btn btn-outline-light" href="{% url 'live_tv_guide' %}{% if guide_query or guide_category or show_playable_only %}?{% if guide_query %}q={{ guide_query|urlencode }}{% endif %}{% if guide_category %}{% if guide_query %}&amp;{% endif %}category={{ guide_category|urlencode }}{% endif %}{% if show_playable_only %}{% if guide_query or guide_category %}&amp;{% endif %}playable=1{% endif %}{% if show_starts_soon_only %}{% if guide_query or guide_category or show_playable_only %}&amp;{% endif %}starts_soon=1{% endif %}{% endif %}">Show all channels</a>
                 {% else %}
-                    <a class="btn btn-outline-warning" href="{% url 'live_tv_guide' %}?favorites=1{% if guide_query %}&amp;q={{ guide_query|urlencode }}{% endif %}{% if guide_category %}&amp;category={{ guide_category|urlencode }}{% endif %}{% if show_playable_only %}&amp;playable=1{% endif %}">★ Favorites only</a>
+                    <a class="btn btn-outline-warning" href="{% url 'live_tv_guide' %}?favorites=1{% if guide_query %}&amp;q={{ guide_query|urlencode }}{% endif %}{% if guide_category %}&amp;category={{ guide_category|urlencode }}{% endif %}{% if show_playable_only %}&amp;playable=1{% endif %}{% if show_starts_soon_only %}&amp;starts_soon=1{% endif %}">★ Favorites only</a>
                 {% endif %}
             {% endif %}
             <a class="btn btn-outline-light" href="{% url 'home' %}">Back to discovery</a>
