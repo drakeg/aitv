@@ -169,6 +169,69 @@ class LiveTvGuideTests(TestCase):
         self.assertNotContains(response, 'Live Filter Network')
         self.assertContains(response, 'name="starts_soon" value="1" checked', html=False)
 
+    def test_starts_soon_filter_orders_soonest_start_first(self):
+        later_channel = Channel.objects.create(
+            name='Alpha Later Soon', slug='alpha-later-soon', region='US',
+            source='tvmaze', external_id='alpha-later-soon',
+        )
+        sooner_channel = Channel.objects.create(
+            name='Zulu Sooner Soon', slug='zulu-sooner-soon', region='US',
+            source='tvmaze', external_id='zulu-sooner-soon',
+        )
+        later_program = Program.objects.create(
+            title='Later Soon Show', source='tvmaze', external_id='later-soon-show',
+        )
+        sooner_program = Program.objects.create(
+            title='Sooner Soon Show', source='tvmaze', external_id='sooner-soon-show',
+        )
+        self._airing(
+            later_channel, later_program, timedelta(minutes=45), timedelta(minutes=105),
+            'later-soon-airing',
+        )
+        self._airing(
+            sooner_channel, sooner_program, timedelta(minutes=15), timedelta(minutes=75),
+            'sooner-soon-airing',
+        )
+
+        response = self.client.get(reverse('live_tv_guide'), {'starts_soon': '1'})
+
+        content = response.content.decode()
+        self.assertLess(content.index('Zulu Sooner Soon'), content.index('Alpha Later Soon'))
+
+    def test_starts_soon_filter_prioritizes_favorites_before_start_time(self):
+        favorite_channel = Channel.objects.create(
+            name='Favorite Later Soon', slug='favorite-later-soon', region='US',
+            source='tvmaze', external_id='favorite-later-soon',
+        )
+        sooner_channel = Channel.objects.create(
+            name='Sooner Nonfavorite', slug='sooner-nonfavorite', region='US',
+            source='tvmaze', external_id='sooner-nonfavorite',
+        )
+        favorite_program = Program.objects.create(
+            title='Favorite Later Show', source='tvmaze', external_id='favorite-later-show',
+        )
+        sooner_program = Program.objects.create(
+            title='Sooner Nonfavorite Show', source='tvmaze', external_id='sooner-nonfavorite-show',
+        )
+        self._airing(
+            favorite_channel, favorite_program, timedelta(minutes=45), timedelta(minutes=105),
+            'favorite-later-airing',
+        )
+        self._airing(
+            sooner_channel, sooner_program, timedelta(minutes=15), timedelta(minutes=75),
+            'sooner-nonfavorite-airing',
+        )
+        user = get_user_model().objects.create_user(
+            username='starts-soon-priority-viewer', password='password',
+        )
+        ChannelFavorite.objects.create(user=user, channel=favorite_channel)
+        self.client.force_login(user)
+
+        response = self.client.get(reverse('live_tv_guide'), {'starts_soon': '1'})
+
+        content = response.content.decode()
+        self.assertLess(content.index('Favorite Later Soon'), content.index('Sooner Nonfavorite'))
+
     def test_future_only_channel_beyond_hour_shows_upcoming(self):
         channel = Channel.objects.create(
             name='Upcoming Network', slug='upcoming-network', region='US',
