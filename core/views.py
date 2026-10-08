@@ -497,6 +497,11 @@ def live_tv_guide(request):
 
     if show_starts_soon_only:
         guide_rows = [row for row in guide_rows if row['starts_soon']]
+        guide_rows.sort(key=lambda row: (
+            0 if row['is_favorite'] else 1,
+            row['next'].starts_at,
+            row['channel'].name.casefold(),
+        ))
 
     refresh_state, refresh_health = epg_region_health(region, now=now)
 
