@@ -107,6 +107,44 @@ class LiveTvGuideTests(TestCase):
         self.assertContains(response, 'Second Future')
         self.assertNotContains(response, 'Third Future')
 
+    def test_future_only_channel_with_next_airing_within_hour_shows_starts_soon(self):
+        channel = Channel.objects.create(
+            name='Soon Network', slug='soon-network', region='US',
+            source='tvmaze', external_id='soon-network',
+        )
+        program = Program.objects.create(
+            title='Soon Show', source='tvmaze', external_id='soon-show',
+        )
+        self._airing(
+            channel, program, timedelta(minutes=30), timedelta(minutes=90),
+            'soon-airing',
+        )
+
+        response = self.client.get(reverse('live_tv_guide'))
+
+        self.assertContains(response, 'Soon Network')
+        self.assertContains(response, 'Starts soon')
+        self.assertContains(response, 'No program airing now')
+
+    def test_future_only_channel_beyond_hour_shows_upcoming(self):
+        channel = Channel.objects.create(
+            name='Upcoming Network', slug='upcoming-network', region='US',
+            source='tvmaze', external_id='upcoming-network',
+        )
+        program = Program.objects.create(
+            title='Upcoming Show', source='tvmaze', external_id='upcoming-show',
+        )
+        self._airing(
+            channel, program, timedelta(minutes=90), timedelta(minutes=150),
+            'upcoming-airing',
+        )
+
+        response = self.client.get(reverse('live_tv_guide'))
+
+        self.assertContains(response, 'Upcoming Network')
+        self.assertContains(response, 'Upcoming')
+        self.assertNotContains(response, 'Starts soon')
+
     def test_guide_shows_only_explicit_playable_channel_destination(self):
         channel = Channel.objects.create(
             name='Playable Network', slug='playable-network', region='US',
