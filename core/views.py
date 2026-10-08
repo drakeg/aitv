@@ -350,6 +350,7 @@ def live_tv_guide(request):
     query = request.GET.get('q', '').strip()
     category = request.GET.get('category', '').strip()
     show_playable_only = request.GET.get('playable') == '1'
+    show_starts_soon_only = request.GET.get('starts_soon') == '1'
     now = timezone.now()
     upcoming = Airing.objects.filter(channel__region=region, ends_at__gt=now)
 
@@ -494,6 +495,9 @@ def live_tv_guide(request):
             if row['current'] is not None and row['destination'] is not None
         ]
 
+    if show_starts_soon_only:
+        guide_rows = [row for row in guide_rows if row['starts_soon']]
+
     refresh_state, refresh_health = epg_region_health(region, now=now)
 
     return render(request, 'live_tv/guide.html', {
@@ -505,6 +509,7 @@ def live_tv_guide(request):
         'guide_category_choices': category_choices,
         'show_favorites_only': show_favorites_only,
         'show_playable_only': show_playable_only,
+        'show_starts_soon_only': show_starts_soon_only,
         'epg_refresh_state': refresh_state,
         'epg_is_stale': refresh_health == 'stale',
         'epg_refresh_failed': refresh_health == 'failed',
@@ -532,6 +537,8 @@ def toggle_channel_favorite(request, channel_id):
         params.append(f'category={quote_plus(category)}')
     if request.POST.get('playable') == '1':
         params.append('playable=1')
+    if request.POST.get('starts_soon') == '1':
+        params.append('starts_soon=1')
     if params:
         target = f"{target}?{'&'.join(params)}"
     return redirect(target)

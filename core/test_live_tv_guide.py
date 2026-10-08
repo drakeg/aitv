@@ -126,6 +126,49 @@ class LiveTvGuideTests(TestCase):
         self.assertContains(response, 'Starts soon')
         self.assertContains(response, 'No program airing now')
 
+    def test_starts_soon_filter_includes_only_future_only_channels_within_hour(self):
+        soon_channel = Channel.objects.create(
+            name='Soon Filter Network', slug='soon-filter-network', region='US',
+            source='tvmaze', external_id='soon-filter-network',
+        )
+        later_channel = Channel.objects.create(
+            name='Later Filter Network', slug='later-filter-network', region='US',
+            source='tvmaze', external_id='later-filter-network',
+        )
+        live_channel = Channel.objects.create(
+            name='Live Filter Network', slug='live-filter-network', region='US',
+            source='tvmaze', external_id='live-filter-network',
+        )
+        soon_program = Program.objects.create(
+            title='Soon Filter Show', source='tvmaze', external_id='soon-filter-show',
+        )
+        later_program = Program.objects.create(
+            title='Later Filter Show', source='tvmaze', external_id='later-filter-show',
+        )
+        live_program = Program.objects.create(
+            title='Live Filter Show', source='tvmaze', external_id='live-filter-show',
+        )
+        self._airing(
+            soon_channel, soon_program, timedelta(minutes=30), timedelta(minutes=90),
+            'soon-filter-airing',
+        )
+        self._airing(
+            later_channel, later_program, timedelta(minutes=90), timedelta(minutes=150),
+            'later-filter-airing',
+        )
+        self._airing(
+            live_channel, live_program, timedelta(minutes=-5), timedelta(minutes=25),
+            'live-filter-airing',
+        )
+
+        response = self.client.get(reverse('live_tv_guide'), {'starts_soon': '1'})
+
+        self.assertContains(response, 'Soon Filter Network')
+        self.assertContains(response, 'Starts soon')
+        self.assertNotContains(response, 'Later Filter Network')
+        self.assertNotContains(response, 'Live Filter Network')
+        self.assertContains(response, 'name="starts_soon" value="1" checked', html=False)
+
     def test_future_only_channel_beyond_hour_shows_upcoming(self):
         channel = Channel.objects.create(
             name='Upcoming Network', slug='upcoming-network', region='US',
@@ -624,6 +667,23 @@ class LiveTvGuideTests(TestCase):
         response = self.client.post(url)
         self.assertRedirects(response, reverse('live_tv_guide'))
         self.assertFalse(ChannelFavorite.objects.filter(user=user, channel=channel).exists())
+
+    def test_channel_favorite_action_preserves_starts_soon_filter(self):
+        channel = Channel.objects.create(
+            name='Soon Favorite Network', slug='soon-favorite-network', region='US',
+            source='tvmaze', external_id='soon-favorite-network',
+        )
+        user = get_user_model().objects.create_user(
+            username='soon-favorite-viewer', password='password',
+        )
+        self.client.force_login(user)
+
+        response = self.client.post(
+            reverse('toggle_channel_favorite', args=[channel.pk]),
+            {'starts_soon': '1'},
+        )
+
+        self.assertRedirects(response, f"{reverse('live_tv_guide')}?starts_soon=1")
 
     def test_channel_favorite_action_preserves_playable_filter(self):
         channel = Channel.objects.create(
