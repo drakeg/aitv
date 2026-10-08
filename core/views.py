@@ -442,6 +442,13 @@ def live_tv_guide(request):
                 if airing is not None
             )
         ]
+    for row in guide_rows:
+        row['upcoming_only'] = row['current'] is None and row['next'] is not None
+        row['starts_soon'] = (
+            row['upcoming_only']
+            and row['next'].starts_at <= now + timezone.timedelta(hours=1)
+        )
+
     if request.user.is_authenticated and not show_favorites_only:
         guide_rows.sort(key=lambda row: (
             0 if row['is_favorite'] else 1,
