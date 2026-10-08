@@ -57,6 +57,7 @@ This ledger is the durable project record for sprint-sized development. Git hist
 | 88 | #113 | Require a current airing as well as a trusted destination for the playable-now Live TV filter. |
 | 89 | #116 | Add explicit Starts soon / Upcoming states for Live TV channels with future guide data but no current airing. |
 | 90 | #117 | Add a Starts soon-only Live TV filter for future-only channels beginning within one hour. |
+| 91 | pending | Order the Starts soon-only Live TV view by Favorites first, then soonest start time. |
 | 89 | #115 | Fix Live TV Favorite-toggle redirect encoding so preserved search/category filters cannot crash the request. |
 
 ## Earlier development
