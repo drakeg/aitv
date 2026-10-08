@@ -116,6 +116,10 @@ Each source integration must define its provenance, region semantics, access typ
 
 **Implemented in Sprint 87:** Live TV search now matches channel names plus only the program titles visible in the compact **Now / Next / Later** row. Programs farther in the future no longer make a channel appear without showing the matching title, keeping search results explainable and aligned with the visible guide context.
 
+## Future-only channel states
+
+**Implemented in Sprint 89:** guide rows with no current airing now show an explicit future-only state instead of looking like an incomplete live row. If the next airing begins within one hour the row is labeled **Starts soon**; otherwise it is labeled **Upcoming**. These labels describe schedule timing only and do not imply playback availability.
+
 ## Live TV category filtering
 
 **Implemented in Sprint 74:** the Live TV guide can filter by normalized channel categories already stored with EPG channels. Category filtering composes with channel/program search and Favorites-only mode, and favorite toggle actions preserve the active search/category filter state.
