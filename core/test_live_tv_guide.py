@@ -123,7 +123,7 @@ class LiveTvGuideTests(TestCase):
         response = self.client.get(reverse('live_tv_guide'))
 
         self.assertContains(response, 'Soon Network')
-        self.assertContains(response, 'Starts soon')
+        self.assertContains(response, 'Starts in 30 min')
         self.assertContains(response, 'No program airing now')
 
     def test_starts_soon_filter_includes_only_future_only_channels_within_hour(self):
@@ -164,7 +164,7 @@ class LiveTvGuideTests(TestCase):
         response = self.client.get(reverse('live_tv_guide'), {'starts_soon': '1'})
 
         self.assertContains(response, 'Soon Filter Network')
-        self.assertContains(response, 'Starts soon')
+        self.assertContains(response, 'Starts in 30 min')
         self.assertNotContains(response, 'Later Filter Network')
         self.assertNotContains(response, 'Live Filter Network')
         self.assertContains(response, 'name="starts_soon" value="1" checked', html=False)
@@ -231,6 +231,28 @@ class LiveTvGuideTests(TestCase):
 
         content = response.content.decode()
         self.assertLess(content.index('Favorite Later Soon'), content.index('Sooner Nonfavorite'))
+
+    def test_starts_soon_countdown_rounds_up_to_next_minute(self):
+        channel = Channel.objects.create(
+            name='Countdown Network', slug='countdown-network', region='US',
+            source='tvmaze', external_id='countdown-network',
+        )
+        program = Program.objects.create(
+            title='Countdown Show', source='tvmaze', external_id='countdown-show',
+        )
+        now = timezone.now()
+        Airing.objects.create(
+            channel=channel,
+            program=program,
+            starts_at=now + timedelta(minutes=5, seconds=10),
+            ends_at=now + timedelta(minutes=65, seconds=10),
+            source='tvmaze',
+            external_id='countdown-airing',
+        )
+
+        response = self.client.get(reverse('live_tv_guide'))
+
+        self.assertContains(response, 'Starts in 6 min')
 
     def test_future_only_channel_beyond_hour_shows_upcoming(self):
         channel = Channel.objects.create(
