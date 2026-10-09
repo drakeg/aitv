@@ -449,6 +449,10 @@ def live_tv_guide(request):
             row['upcoming_only']
             and row['next'].starts_at <= now + timezone.timedelta(hours=1)
         )
+        row['starts_in_minutes'] = None
+        if row['starts_soon']:
+            seconds_until_start = max(0, (row['next'].starts_at - now).total_seconds())
+            row['starts_in_minutes'] = max(1, int((seconds_until_start + 59) // 60))
 
     if request.user.is_authenticated and not show_favorites_only:
         guide_rows.sort(key=lambda row: (
