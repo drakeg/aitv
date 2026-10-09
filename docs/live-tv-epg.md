@@ -118,7 +118,7 @@ Each source integration must define its provenance, region semantics, access typ
 
 ## Future-only channel states
 
-**Implemented in Sprint 89:** guide rows with no current airing now show an explicit future-only state instead of looking like an incomplete live row. If the next airing begins within one hour the row is labeled **Starts soon**; otherwise it is labeled **Upcoming**. These labels describe schedule timing only and do not imply playback availability.
+**Implemented in Sprint 89:** guide rows with no current airing now show an explicit future-only state instead of looking like an incomplete live row. If the next airing begins within one hour the row shows a **Starts in X min** countdown, rounded up to the next minute; otherwise it is labeled **Upcoming**. These labels describe schedule timing only and do not imply playback availability.
 
 ## Starts soon filtering
 
