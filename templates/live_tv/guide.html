@@ -92,7 +92,7 @@
                             <span>{{ row.current.starts_at|date:"g:i A" }}–{{ row.current.ends_at|date:"g:i A" }}</span>
                         {% elif row.upcoming_only %}
                             {% if row.starts_soon %}
-                                <span class="badge text-bg-info align-self-start">Starts soon</span>
+                                <span class="badge text-bg-info align-self-start">Starts in {{ row.starts_in_minutes }} min</span>
                             {% else %}
                                 <span class="badge text-bg-secondary align-self-start">Upcoming</span>
                             {% endif %}
