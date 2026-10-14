@@ -59,6 +59,7 @@ This ledger is the durable project record for sprint-sized development. Git hist
 | 90 | #117 | Add a Starts soon-only Live TV filter for future-only channels beginning within one hour. |
 | 91 | #118 | Order the Starts soon-only Live TV view by Favorites first, then soonest start time. |
 | 92 | #119 | Show a minute countdown for future-only Live TV channels beginning within one hour. |
+| 93 | pending | Show an Ends in X min countdown for the current Live TV airing. |
 | 89 | #115 | Fix Live TV Favorite-toggle redirect encoding so preserved search/category filters cannot crash the request. |
 
 ## Earlier development
