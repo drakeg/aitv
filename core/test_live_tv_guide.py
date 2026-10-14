@@ -273,6 +273,47 @@ class LiveTvGuideTests(TestCase):
         self.assertContains(response, 'Upcoming')
         self.assertNotContains(response, 'Starts soon')
 
+    def test_current_airing_shows_ends_in_countdown(self):
+        channel = Channel.objects.create(
+            name='Ending Network', slug='ending-network', region='US',
+            source='tvmaze', external_id='ending-network',
+        )
+        program = Program.objects.create(
+            title='Ending Show', source='tvmaze', external_id='ending-show',
+        )
+        self._airing(
+            channel, program, timedelta(minutes=-30), timedelta(minutes=30),
+            'ending-airing',
+        )
+
+        response = self.client.get(reverse('live_tv_guide'))
+
+        self.assertContains(response, 'Ending Network')
+        self.assertContains(response, 'Ends in 30 min')
+
+    def test_current_airing_countdown_rounds_up_to_next_minute(self):
+        channel = Channel.objects.create(
+            name='Ending Round Network', slug='ending-round-network', region='US',
+            source='tvmaze', external_id='ending-round-network',
+        )
+        program = Program.objects.create(
+            title='Ending Round Show', source='tvmaze', external_id='ending-round-show',
+        )
+        now = timezone.now()
+        Airing.objects.create(
+            channel=channel,
+            program=program,
+            starts_at=now - timedelta(minutes=30),
+            ends_at=now + timedelta(minutes=5, seconds=10),
+            source='tvmaze',
+            external_id='ending-round-airing',
+        )
+
+        response = self.client.get(reverse('live_tv_guide'))
+
+        self.assertContains(response, 'Ends in 6 min')
+        self.assertNotContains(response, 'Ends in 0 min')
+
     def test_guide_shows_only_explicit_playable_channel_destination(self):
         channel = Channel.objects.create(
             name='Playable Network', slug='playable-network', region='US',
