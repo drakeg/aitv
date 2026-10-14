@@ -454,6 +454,11 @@ def live_tv_guide(request):
             seconds_until_start = max(0, (row['next'].starts_at - now).total_seconds())
             row['starts_in_minutes'] = max(1, int((seconds_until_start + 59) // 60))
 
+        row['ends_in_minutes'] = None
+        if row['current'] is not None:
+            seconds_until_end = max(0, (row['current'].ends_at - now).total_seconds())
+            row['ends_in_minutes'] = max(1, int((seconds_until_end + 59) // 60))
+
     if request.user.is_authenticated and not show_favorites_only:
         guide_rows.sort(key=lambda row: (
             0 if row['is_favorite'] else 1,
