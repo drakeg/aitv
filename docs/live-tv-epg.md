@@ -128,6 +128,10 @@ Each source integration must define its provenance, region semantics, access typ
 
 **Implemented in Sprint 91:** the Starts soon-only guide view orders matching channels by account-scoped Favorites first for signed-in viewers, then by the next airing's start time, with channel name as a deterministic tie-breaker. Anonymous viewers therefore see the soonest upcoming channels first instead of ordinary alphabetical ordering.
 
+## Current airing countdown
+
+**Implemented in Sprint 93:** current Live TV airings show an **Ends in X min** countdown derived from the normalized airing end timestamp. The value is rounded up to the next minute so an airing that is still current never displays zero minutes remaining. This is schedule timing only and does not imply playback availability.
+
 ## Live TV category filtering
 
 **Implemented in Sprint 74:** the Live TV guide can filter by normalized channel categories already stored with EPG channels. Category filtering composes with channel/program search and Favorites-only mode, and favorite toggle actions preserve the active search/category filter state.
