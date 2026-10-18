@@ -132,6 +132,10 @@ Each source integration must define its provenance, region semantics, access typ
 
 **Implemented in Sprint 93:** current Live TV airings show an **Ends in X min** countdown derived from the normalized airing end timestamp. The value is rounded up to the next minute so an airing that is still current never displays zero minutes remaining. This is schedule timing only and does not imply playback availability.
 
+## Guide auto-refresh
+
+**Implemented in Sprint 93:** the Live TV page reloads itself every 60 seconds while the tab is visible and no interactive control has focus. The browser reload preserves the current URL and query parameters, so active search/category/Favorites/playable/Starts-soon filters remain intact while Now/Next/Later state and countdowns are recalculated from normalized schedule data.
+
 ## Live TV category filtering
 
 **Implemented in Sprint 74:** the Live TV guide can filter by normalized channel categories already stored with EPG channels. Category filtering composes with channel/program search and Favorites-only mode, and favorite toggle actions preserve the active search/category filter state.
