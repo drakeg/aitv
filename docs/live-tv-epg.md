@@ -136,6 +136,10 @@ Each source integration must define its provenance, region semantics, access typ
 
 **Implemented in Sprint 93:** the Live TV page reloads itself every 60 seconds while the tab is visible and no interactive control has focus. The browser reload preserves the current URL and query parameters, so active search/category/Favorites/playable/Starts-soon filters remain intact while Now/Next/Later state and countdowns are recalculated from normalized schedule data.
 
+## Live now filtering
+
+**Implemented in Sprint 94:** the Live TV guide can restrict results to channels with a normalized current airing, regardless of whether a trusted playback destination exists. This is intentionally broader than **Playable now**, which still requires both a current airing and an explicit trusted airing/channel destination. The filter composes with search, category, Favorites, and account-scoped state without inferring playback availability.
+
 ## Live TV category filtering
 
 **Implemented in Sprint 74:** the Live TV guide can filter by normalized channel categories already stored with EPG channels. Category filtering composes with channel/program search and Favorites-only mode, and favorite toggle actions preserve the active search/category filter state.
