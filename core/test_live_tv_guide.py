@@ -539,6 +539,44 @@ class LiveTvGuideTests(TestCase):
         self.assertNotContains(response, 'Episode destination')
         self.assertNotContains(response, 'Show destination')
 
+    def test_live_now_filter_includes_current_airing_without_playback_destination(self):
+        channel = Channel.objects.create(
+            name='Live Metadata Network', slug='live-metadata-network', region='US',
+            source='tvmaze', external_id='live-metadata-network',
+        )
+        program = Program.objects.create(
+            title='Live Metadata Show', source='tvmaze', external_id='live-metadata-show',
+        )
+        self._airing(
+            channel, program, timedelta(minutes=-5), timedelta(minutes=25),
+            'live-metadata-airing',
+        )
+
+        response = self.client.get(reverse('live_tv_guide'), {'live_now': '1'})
+
+        self.assertContains(response, 'Live Metadata Network')
+        self.assertContains(response, 'Live Metadata Show')
+        self.assertNotContains(response, 'guide-watch-action')
+        self.assertContains(response, 'name="live_now" value="1" checked', html=False)
+
+    def test_live_now_filter_excludes_future_only_channel(self):
+        channel = Channel.objects.create(
+            name='Future Live Filter Network', slug='future-live-filter-network', region='US',
+            source='tvmaze', external_id='future-live-filter-network',
+        )
+        program = Program.objects.create(
+            title='Future Live Filter Show', source='tvmaze', external_id='future-live-filter-show',
+        )
+        self._airing(
+            channel, program, timedelta(minutes=20), timedelta(minutes=80),
+            'future-live-filter-airing',
+        )
+
+        response = self.client.get(reverse('live_tv_guide'), {'live_now': '1'})
+
+        self.assertNotContains(response, 'Future Live Filter Network')
+        self.assertContains(response, 'No channels match the active Live TV filters for US.')
+
     def test_playable_only_filter_includes_explicit_channel_destination(self):
         playable_channel = Channel.objects.create(
             name='Playable Filter Network', slug='playable-filter-network', region='US',
@@ -815,6 +853,23 @@ class LiveTvGuideTests(TestCase):
         )
 
         self.assertRedirects(response, f"{reverse('live_tv_guide')}?starts_soon=1")
+
+    def test_channel_favorite_action_preserves_live_now_filter(self):
+        channel = Channel.objects.create(
+            name='Live Favorite Network', slug='live-favorite-network', region='US',
+            source='tvmaze', external_id='live-favorite-network',
+        )
+        user = get_user_model().objects.create_user(
+            username='live-favorite-viewer', password='password',
+        )
+        self.client.force_login(user)
+
+        response = self.client.post(
+            reverse('toggle_channel_favorite', args=[channel.pk]),
+            {'live_now': '1'},
+        )
+
+        self.assertRedirects(response, f"{reverse('live_tv_guide')}?live_now=1")
 
     def test_channel_favorite_action_preserves_playable_filter(self):
         channel = Channel.objects.create(
