@@ -60,6 +60,7 @@ This ledger is the durable project record for sprint-sized development. Git hist
 | 91 | #118 | Order the Starts soon-only Live TV view by Favorites first, then soonest start time. |
 | 92 | #119 | Show a minute countdown for future-only Live TV channels beginning within one hour. |
 | 93 | #122 | Auto-refresh the Live TV guide every minute while visible and idle so countdowns and schedule state stay current. |
+| 94 | pending | Add a Live now-only guide filter for channels with a current airing, independent of playback availability. |
 | 93 | #121 | Show an Ends in X min countdown for the current Live TV airing. |
 | 89 | #115 | Fix Live TV Favorite-toggle redirect encoding so preserved search/category filters cannot crash the request. |
 
