@@ -21,7 +21,7 @@
         <div class="d-flex gap-2 flex-wrap">
             {% if user.is_authenticated %}
                 {% if show_favorites_only %}
-                    <a class="btn btn-outline-light" href="{% url 'live_tv_guide' %}{% if guide_query or guide_category or show_playable_only %}?{% if guide_query %}q={{ guide_query|urlencode }}{% endif %}{% if guide_category %}{% if guide_query %}&amp;{% endif %}category={{ guide_category|urlencode }}{% endif %}{% if show_live_now_only %}&amp;live_now=1{% endif %}{% if show_playable_only %}{% if guide_query or guide_category %}&amp;{% endif %}playable=1{% endif %}{% if show_starts_soon_only %}{% if guide_query or guide_category or show_playable_only %}&amp;{% endif %}starts_soon=1{% endif %}{% endif %}">Show all channels</a>
+                    <a class="btn btn-outline-light" href="{% url 'live_tv_guide' %}{% if guide_query or guide_category or show_live_now_only or show_playable_only or show_starts_soon_only %}?{% if guide_query %}q={{ guide_query|urlencode }}{% endif %}{% if guide_category %}{% if guide_query %}&amp;{% endif %}category={{ guide_category|urlencode }}{% endif %}{% if show_live_now_only %}{% if guide_query or guide_category %}&amp;{% endif %}live_now=1{% endif %}{% if show_playable_only %}{% if guide_query or guide_category or show_live_now_only %}&amp;{% endif %}playable=1{% endif %}{% if show_starts_soon_only %}{% if guide_query or guide_category or show_live_now_only or show_playable_only %}&amp;{% endif %}starts_soon=1{% endif %}{% endif %}">Show all channels</a>
                 {% else %}
                     <a class="btn btn-outline-warning" href="{% url 'live_tv_guide' %}?favorites=1{% if guide_query %}&amp;q={{ guide_query|urlencode }}{% endif %}{% if guide_category %}&amp;category={{ guide_category|urlencode }}{% endif %}{% if show_live_now_only %}&amp;live_now=1{% endif %}{% if show_playable_only %}&amp;playable=1{% endif %}{% if show_starts_soon_only %}&amp;starts_soon=1{% endif %}">★ Favorites only</a>
                 {% endif %}
@@ -37,7 +37,7 @@
             <span>Live now only</span>
         </label>
         <label class="d-flex align-items-center gap-2 px-2">
-            <input type="checkbox" name="playable" value="1"{% if show_live_now_only %}&amp;live_now=1{% endif %}{% if show_playable_only %} checked{% endif %}>
+            <input type="checkbox" name="playable" value="1"{% if show_playable_only %} checked{% endif %}>
             <span>Playable now only</span>
         </label>
         <label class="d-flex align-items-center gap-2 px-2">
@@ -71,7 +71,7 @@
                                     {% if guide_query %}<input type="hidden" name="q" value="{{ guide_query }}">{% endif %}
                                     {% if guide_category %}<input type="hidden" name="category" value="{{ guide_category }}">{% endif %}
                                     {% if show_live_now_only %}<input type="hidden" name="live_now" value="1">{% endif %}
-                                    {% if show_live_now_only %}&amp;live_now=1{% endif %}{% if show_playable_only %}<input type="hidden" name="playable" value="1">{% endif %}
+                                    {% if show_playable_only %}<input type="hidden" name="playable" value="1">{% endif %}
                                     {% if show_starts_soon_only %}<input type="hidden" name="starts_soon" value="1">{% endif %}
                                     <button class="guide-favorite{% if row.is_favorite %} is-favorite{% endif %}" type="submit" aria-label="{% if row.is_favorite %}Remove{% else %}Add{% endif %} {{ row.channel.name }} {% if row.is_favorite %}from{% else %}to{% endif %} favorites" title="{% if row.is_favorite %}Remove from favorites{% else %}Add to favorites{% endif %}">
                                         {% if row.is_favorite %}★{% else %}☆{% endif %}
