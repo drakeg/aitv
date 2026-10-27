@@ -539,6 +539,66 @@ class LiveTvGuideTests(TestCase):
         self.assertNotContains(response, 'Episode destination')
         self.assertNotContains(response, 'Show destination')
 
+    def test_ending_soon_filter_includes_current_airings_with_30_minutes_or_less_remaining(self):
+        ending_channel = Channel.objects.create(
+            name='Ending Soon Network', slug='ending-soon-network', region='US',
+            source='tvmaze', external_id='ending-soon-network',
+        )
+        long_channel = Channel.objects.create(
+            name='Long Running Network', slug='long-running-network', region='US',
+            source='tvmaze', external_id='long-running-network',
+        )
+        ending_program = Program.objects.create(
+            title='Ending Soon Show', source='tvmaze', external_id='ending-soon-show',
+        )
+        long_program = Program.objects.create(
+            title='Long Running Show', source='tvmaze', external_id='long-running-show',
+        )
+        self._airing(
+            ending_channel, ending_program, timedelta(minutes=-30), timedelta(minutes=30),
+            'ending-soon-airing',
+        )
+        self._airing(
+            long_channel, long_program, timedelta(minutes=-5), timedelta(minutes=45),
+            'long-running-airing',
+        )
+
+        response = self.client.get(reverse('live_tv_guide'), {'ending_soon': '1'})
+
+        self.assertContains(response, 'Ending Soon Network')
+        self.assertContains(response, 'Ending Soon Show')
+        self.assertNotContains(response, 'Long Running Network')
+        self.assertContains(response, 'name="ending_soon" value="1" checked', html=False)
+
+    def test_ending_soon_filter_orders_earliest_end_first(self):
+        later_channel = Channel.objects.create(
+            name='Alpha Later Ending', slug='alpha-later-ending', region='US',
+            source='tvmaze', external_id='alpha-later-ending',
+        )
+        sooner_channel = Channel.objects.create(
+            name='Zulu Sooner Ending', slug='zulu-sooner-ending', region='US',
+            source='tvmaze', external_id='zulu-sooner-ending',
+        )
+        later_program = Program.objects.create(
+            title='Later Ending Show', source='tvmaze', external_id='later-ending-show',
+        )
+        sooner_program = Program.objects.create(
+            title='Sooner Ending Show', source='tvmaze', external_id='sooner-ending-show',
+        )
+        self._airing(
+            later_channel, later_program, timedelta(minutes=-10), timedelta(minutes=25),
+            'later-ending-airing',
+        )
+        self._airing(
+            sooner_channel, sooner_program, timedelta(minutes=-10), timedelta(minutes=10),
+            'sooner-ending-airing',
+        )
+
+        response = self.client.get(reverse('live_tv_guide'), {'ending_soon': '1'})
+
+        content = response.content.decode()
+        self.assertLess(content.index('Zulu Sooner Ending'), content.index('Alpha Later Ending'))
+
     def test_live_now_filter_includes_current_airing_without_playback_destination(self):
         channel = Channel.objects.create(
             name='Live Metadata Network', slug='live-metadata-network', region='US',
@@ -853,6 +913,23 @@ class LiveTvGuideTests(TestCase):
         )
 
         self.assertRedirects(response, f"{reverse('live_tv_guide')}?starts_soon=1")
+
+    def test_channel_favorite_action_preserves_ending_soon_filter(self):
+        channel = Channel.objects.create(
+            name='Ending Favorite Network', slug='ending-favorite-network', region='US',
+            source='tvmaze', external_id='ending-favorite-network',
+        )
+        user = get_user_model().objects.create_user(
+            username='ending-favorite-viewer', password='password',
+        )
+        self.client.force_login(user)
+
+        response = self.client.post(
+            reverse('toggle_channel_favorite', args=[channel.pk]),
+            {'ending_soon': '1'},
+        )
+
+        self.assertRedirects(response, f"{reverse('live_tv_guide')}?ending_soon=1")
 
     def test_channel_favorite_action_preserves_live_now_filter(self):
         channel = Channel.objects.create(
