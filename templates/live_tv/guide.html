@@ -56,7 +56,7 @@
             {% endfor %}
         </select>
         <button class="btn btn-primary" type="submit">Filter guide</button>
-        {% if guide_query or guide_category or show_live_now_only or show_playable_only or show_starts_soon_only %}
+        {% if guide_query or guide_category or show_live_now_only or show_ending_soon_only or show_playable_only or show_starts_soon_only %}
             <a class="btn btn-outline-light" href="{% url 'live_tv_guide' %}{% if show_favorites_only %}?favorites=1{% endif %}">Clear filters</a>
         {% endif %}
     </form>
