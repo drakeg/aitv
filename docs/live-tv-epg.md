@@ -140,6 +140,10 @@ Each source integration must define its provenance, region semantics, access typ
 
 **Implemented in Sprint 94:** the Live TV guide can restrict results to channels with a normalized current airing, regardless of whether a trusted playback destination exists. This is intentionally broader than **Playable now**, which still requires both a current airing and an explicit trusted airing/channel destination. The filter composes with search, category, Favorites, and account-scoped state without inferring playback availability.
 
+## Ending soon filtering
+
+**Implemented in Sprint 95:** the Live TV guide can restrict results to current airings with 30 minutes or less remaining. Matching rows are ordered by account-scoped Favorites first for signed-in viewers, then by the earliest current-airing end time, with channel name as a deterministic tie-breaker. This filter describes schedule timing only and does not imply playback availability.
+
 ## Live TV category filtering
 
 **Implemented in Sprint 74:** the Live TV guide can filter by normalized channel categories already stored with EPG channels. Category filtering composes with channel/program search and Favorites-only mode, and favorite toggle actions preserve the active search/category filter state.
