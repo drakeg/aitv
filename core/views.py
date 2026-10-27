@@ -351,6 +351,7 @@ def live_tv_guide(request):
     category = request.GET.get('category', '').strip()
     show_playable_only = request.GET.get('playable') == '1'
     show_live_now_only = request.GET.get('live_now') == '1'
+    show_ending_soon_only = request.GET.get('ending_soon') == '1'
     show_starts_soon_only = request.GET.get('starts_soon') == '1'
     now = timezone.now()
     upcoming = Airing.objects.filter(channel__region=region, ends_at__gt=now)
@@ -502,6 +503,17 @@ def live_tv_guide(request):
     if show_live_now_only:
         guide_rows = [row for row in guide_rows if row['current'] is not None]
 
+    if show_ending_soon_only:
+        guide_rows = [
+            row for row in guide_rows
+            if row['current'] is not None and row['ends_in_minutes'] <= 30
+        ]
+        guide_rows.sort(key=lambda row: (
+            0 if row['is_favorite'] else 1,
+            row['current'].ends_at,
+            row['channel'].name.casefold(),
+        ))
+
     if show_playable_only:
         guide_rows = [
             row for row in guide_rows
@@ -528,6 +540,7 @@ def live_tv_guide(request):
         'show_favorites_only': show_favorites_only,
         'show_playable_only': show_playable_only,
         'show_live_now_only': show_live_now_only,
+        'show_ending_soon_only': show_ending_soon_only,
         'show_starts_soon_only': show_starts_soon_only,
         'epg_refresh_state': refresh_state,
         'epg_is_stale': refresh_health == 'stale',
@@ -558,6 +571,8 @@ def toggle_channel_favorite(request, channel_id):
         params.append('playable=1')
     if request.POST.get('live_now') == '1':
         params.append('live_now=1')
+    if request.POST.get('ending_soon') == '1':
+        params.append('ending_soon=1')
     if request.POST.get('starts_soon') == '1':
         params.append('starts_soon=1')
     if params:
