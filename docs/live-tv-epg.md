@@ -144,6 +144,10 @@ Each source integration must define its provenance, region semantics, access typ
 
 **Implemented in Sprint 95:** the Live TV guide can restrict results to current airings with 30 minutes or less remaining. Matching rows are ordered by account-scoped Favorites first for signed-in viewers, then by the earliest current-airing end time, with channel name as a deterministic tie-breaker. This filter describes schedule timing only and does not imply playback availability.
 
+## Channel schedule detail
+
+**Implemented in Sprint 96:** each Live TV guide channel links to a region-scoped schedule detail page showing the current airing plus normalized upcoming airings beginning within the next 12 hours. Expired airings and programs starting beyond the 12-hour window are omitted. The detail page remains schedule metadata only and does not infer or fabricate playback destinations.
+
 ## Live TV category filtering
 
 **Implemented in Sprint 74:** the Live TV guide can filter by normalized channel categories already stored with EPG channels. Category filtering composes with channel/program search and Favorites-only mode, and favorite toggle actions preserve the active search/category filter state.
