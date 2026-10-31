@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
 from typing import Callable, Protocol
 
 
@@ -24,9 +24,13 @@ class TvmazeScheduleAdapter:
     fetch_schedule: Callable
     source: str = 'tvmaze'
     complete_snapshot: bool = True
+    snapshot_date: date | None = None
 
     def fetch_airings(self, *, region: str, limit: int | None = 1000) -> list[dict]:
-        items = self.fetch_schedule(limit=limit, country=region)
+        fetch_kwargs = {'limit': limit, 'country': region}
+        if self.snapshot_date is not None:
+            fetch_kwargs['date'] = self.snapshot_date.isoformat()
+        items = self.fetch_schedule(**fetch_kwargs)
         rows = []
         rejected_rows = 0
         seen_airings = {}
@@ -74,6 +78,22 @@ class TvmazeScheduleAdapter:
                 continue
             seen_airings[airing_external_id] = identity
 
+            source_schedule_date = None
+            airdate = item.get('airdate')
+            if airdate:
+                try:
+                    source_schedule_date = date.fromisoformat(str(airdate))
+                except ValueError:
+                    rejected_rows += 1
+                    continue
+            elif self.snapshot_date is not None:
+                rejected_rows += 1
+                continue
+
+            if self.snapshot_date is not None and source_schedule_date != self.snapshot_date:
+                rejected_rows += 1
+                continue
+
             rows.append({
                 'airing_external_id': airing_external_id,
                 'channel_external_id': channel_external_id,
@@ -85,6 +105,7 @@ class TvmazeScheduleAdapter:
                 'program_type': item.get('show_type') or '',
                 'starts_at': starts_at,
                 'ends_at': starts_at + timedelta(minutes=runtime_minutes),
+                'source_schedule_date': source_schedule_date,
                 'destination_url': item.get('watch_url') or '',
                 'destination_provider': item.get('provider') or '',
                 'destination_access_type': item.get('access_type') or '',
