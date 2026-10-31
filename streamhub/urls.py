@@ -2,7 +2,7 @@ from django.contrib import admin
 from django.contrib.auth import views as auth_views
 from django.urls import include, path
 
-from core.views import health_live, health_ready, home, live_tv_guide, profile, register, toggle_channel_favorite
+from core.views import health_live, health_ready, home, live_tv_channel_schedule, live_tv_guide, profile, register, toggle_channel_favorite
 
 urlpatterns = [
     path('health/live/', health_live, name='health_live'),
@@ -13,6 +13,7 @@ urlpatterns = [
     path('accounts/register/', register, name='register'),
     path('accounts/profile/', profile, name='profile'),
     path('live-tv/', live_tv_guide, name='live_tv_guide'),
+    path('live-tv/channels/<int:channel_id>/', live_tv_channel_schedule, name='live_tv_channel_schedule'),
     path('live-tv/channels/<int:channel_id>/favorite/', toggle_channel_favorite, name='toggle_channel_favorite'),
     path('content/', include('content.urls')),
     path('watchlist/', include('watchlist.urls')),

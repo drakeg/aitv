@@ -16,7 +16,7 @@ The goal is fewer clicks to legitimate content. Direct network/service destinati
 - Independent per-user Watchlist and Favorite state; Favorites are prioritized in discovery and can drive release notifications
 - Paginated in-app Favorite release notifications plus optional SMTP email delivery
 - Optional Docker notification worker for recurring Favorite release checks
-- Tested `refresh_epg` management command plus optional Docker EPG worker for recurring normalized Live TV guide refreshes
+- Tested `refresh_epg` management command plus optional Docker EPG worker for recurring normalized Live TV guide with per-channel 12-hour schedule detail refreshes
 - Live-source-only home discovery: no seeded/sample catalog fallback
 - Configurable Docker host port and persistent SQLite data volume
 - Automated Django checks and tests in GitHub Actions

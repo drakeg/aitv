@@ -67,7 +67,7 @@
                 <article class="guide-row">
                     <div class="guide-channel">
                         <div class="guide-channel-heading">
-                            <strong>{{ row.channel.name }}</strong>
+                            <strong><a class="text-reset text-decoration-none" href="{% url 'live_tv_channel_schedule' row.channel.id %}">{{ row.channel.name }}</a></strong>
                             {% if user.is_authenticated %}
                                 <form method="post" action="{% url 'toggle_channel_favorite' row.channel.id %}">
                                     {% csrf_token %}

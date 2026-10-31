@@ -549,6 +549,34 @@ def live_tv_guide(request):
     })
 
 
+def live_tv_channel_schedule(request, channel_id):
+    region = 'US'
+    if request.user.is_authenticated:
+        preference, _ = DiscoveryPreference.objects.get_or_create(user=request.user)
+        region = preference.region
+
+    channel = get_object_or_404(Channel, pk=channel_id, region=region)
+    now = timezone.now()
+    window_end = now + timezone.timedelta(hours=12)
+    airings = list(
+        Airing.objects
+        .filter(
+            channel=channel,
+            ends_at__gt=now,
+            starts_at__lt=window_end,
+        )
+        .select_related('program')
+        .order_by('starts_at')
+    )
+
+    return render(request, 'live_tv/channel_schedule.html', {
+        'channel': channel,
+        'airings': airings,
+        'schedule_now': now,
+        'schedule_window_end': window_end,
+    })
+
+
 @login_required
 @require_POST
 def toggle_channel_favorite(request, channel_id):
