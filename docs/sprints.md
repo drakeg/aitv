@@ -62,7 +62,7 @@ This ledger is the durable project record for sprint-sized development. Git hist
 | 93 | #122 | Auto-refresh the Live TV guide every minute while visible and idle so countdowns and schedule state stay current. |
 | 94 | #125 | Add a Live now-only guide filter for channels with a current airing, independent of playback availability. |
 | 95 | #128 | Add an Ending soon-only Live TV filter for current programs with 30 minutes or less remaining. |
-| 96 | pending | Add a region-scoped per-channel schedule detail page for the current program and next 12 hours. |
+| 96 | #129 | Add a region-scoped per-channel schedule detail page for the current program and next 12 hours. |
 | 93 | #121 | Show an Ends in X min countdown for the current Live TV airing. |
 | 89 | #115 | Fix Live TV Favorite-toggle redirect encoding so preserved search/category filters cannot crash the request. |
 
