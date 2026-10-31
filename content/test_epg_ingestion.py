@@ -42,6 +42,7 @@ class TvmazeEpgIngestionTests(TestCase):
         self.assertEqual(program.title, 'Example Show')
         self.assertEqual(airing.channel, channel)
         self.assertEqual(airing.program, program)
+        self.assertEqual(airing.source_schedule_date, timezone.localdate())
         self.assertGreater(airing.ends_at, airing.starts_at)
 
     @patch('content.services.fetch_live_tv_schedule')
