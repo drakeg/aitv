@@ -14,6 +14,7 @@ class TvmazeScheduleAirstampTests(SimpleTestCase):
         response.json.return_value = [{
             'id': 42,
             'airtime': '00:35',
+            'airdate': '2026-09-26',
             'airstamp': '2026-09-27T00:35:00-04:00',
             'runtime': 55,
             'show': {
@@ -28,8 +29,20 @@ class TvmazeScheduleAirstampTests(SimpleTestCase):
 
         self.assertEqual(len(rows), 1)
         self.assertEqual(rows[0]['airtime'], '00:35')
+        self.assertEqual(rows[0]['airdate'], '2026-09-26')
         self.assertEqual(rows[0]['airstamp'], '2026-09-27T00:35:00-04:00')
         get.assert_called_once()
+
+    @patch('content.services.requests.get')
+    def test_explicit_schedule_date_is_sent_to_tvmaze(self, get):
+        response = Mock()
+        response.json.return_value = []
+        get.return_value = response
+
+        fetch_live_tv_schedule(country='US', date='2026-10-31')
+
+        _args, kwargs = get.call_args
+        self.assertEqual(kwargs['params'], {'country': 'US', 'date': '2026-10-31'})
 
     @patch('content.services.requests.get')
     def test_transport_failure_is_empty_for_home_but_raises_for_epg(self, get):
