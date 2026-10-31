@@ -20,6 +20,7 @@ class TvmazeEpgIngestionTests(TestCase):
             'network': 'Example Network',
             'genres': ['Drama'],
             'airtime': '20:00',
+            'airdate': timezone.localdate().isoformat(),
             'airstamp': (timezone.now() + timezone.timedelta(hours=1)).isoformat(),
             'runtime': 60,
         }
@@ -41,6 +42,7 @@ class TvmazeEpgIngestionTests(TestCase):
         self.assertEqual(program.title, 'Example Show')
         self.assertEqual(airing.channel, channel)
         self.assertEqual(airing.program, program)
+        self.assertEqual(airing.source_schedule_date, timezone.localdate())
         self.assertGreater(airing.ends_at, airing.starts_at)
 
     @patch('content.services.fetch_live_tv_schedule')
@@ -60,6 +62,7 @@ class TvmazeEpgIngestionTests(TestCase):
         fetch_schedule.assert_called_once_with(
             limit=None,
             country='US',
+            date=timezone.localdate().isoformat(),
             strict=True,
             deduplicate_shows=False,
         )
@@ -274,6 +277,67 @@ class TvmazeEpgIngestionTests(TestCase):
 
         self.assertTrue(Airing.objects.filter(pk=airing.pk).exists())
         self.assertFalse(Airing.objects.filter(external_id='duplicate-airing').exists())
+
+    @patch('content.services.fetch_live_tv_schedule')
+    def test_today_snapshot_does_not_delete_future_airing_from_other_schedule_date(self, fetch_schedule):
+        today = timezone.localdate()
+        tomorrow = today + timezone.timedelta(days=1)
+        channel = Channel.objects.create(
+            name='Future Date Network',
+            slug='future-date-network',
+            region='US',
+            source='tvmaze',
+            external_id='future-date-network',
+        )
+        program = Program.objects.create(
+            title='Tomorrow Show',
+            source='tvmaze',
+            external_id='tomorrow-show',
+        )
+        future_airing = Airing.objects.create(
+            channel=channel,
+            program=program,
+            starts_at=timezone.now() + timezone.timedelta(days=1),
+            ends_at=timezone.now() + timezone.timedelta(days=1, hours=1),
+            source_schedule_date=tomorrow,
+            source='tvmaze',
+            external_id='tomorrow-airing',
+        )
+        fetch_schedule.return_value = []
+
+        refresh_tvmaze_epg(country='US', schedule_date=today)
+
+        self.assertTrue(Airing.objects.filter(pk=future_airing.pk).exists())
+
+    @patch('content.services.fetch_live_tv_schedule')
+    def test_today_snapshot_removes_missing_current_airing_from_same_schedule_date(self, fetch_schedule):
+        today = timezone.localdate()
+        channel = Channel.objects.create(
+            name='Today Date Network',
+            slug='today-date-network',
+            region='US',
+            source='tvmaze',
+            external_id='today-date-network',
+        )
+        program = Program.objects.create(
+            title='Today Missing Show',
+            source='tvmaze',
+            external_id='today-missing-show',
+        )
+        airing = Airing.objects.create(
+            channel=channel,
+            program=program,
+            starts_at=timezone.now() - timezone.timedelta(minutes=10),
+            ends_at=timezone.now() + timezone.timedelta(minutes=50),
+            source_schedule_date=today,
+            source='tvmaze',
+            external_id='today-missing-airing',
+        )
+        fetch_schedule.return_value = []
+
+        refresh_tvmaze_epg(country='US', schedule_date=today)
+
+        self.assertFalse(Airing.objects.filter(pk=airing.pk).exists())
 
     @patch('content.services.fetch_live_tv_schedule')
     def test_refresh_removes_only_expired_tvmaze_airings(self, fetch_schedule):

@@ -236,12 +236,15 @@ class ScheduleFetchError(RuntimeError):
     """Upstream schedule unavailable; do not report an EPG refresh success."""
 
 
-def fetch_live_tv_schedule(limit=100, country='US', *, strict=False, deduplicate_shows=True):
+def fetch_live_tv_schedule(limit=100, country='US', *, date=None, strict=False, deduplicate_shows=True):
     country = str(country or 'US').strip().upper()
     if len(country) != 2 or not country.isalpha():
         country = 'US'
+    params = {'country': country}
+    if date:
+        params['date'] = str(date)
     try:
-        response = requests.get(f'{TVMAZE_API_ROOT}/schedule', params={'country': country}, timeout=_timeout())
+        response = requests.get(f'{TVMAZE_API_ROOT}/schedule', params=params, timeout=_timeout())
         response.raise_for_status()
         episodes = response.json()
     except (requests.RequestException, ValueError) as exc:
@@ -306,7 +309,8 @@ def fetch_live_tv_schedule(limit=100, country='US', *, strict=False, deduplicate
             'provider': provider_name, 'network': network, 'access_type': access_type,
             'action_label': action_label, 'watch_scope': 'episode' if episode_provider else ('show' if show_provider else ''),
             'episode_label': episode_label,
-            'airtime': episode.get('airtime') or '', 'airstamp': episode.get('airstamp') or '', 'runtime': episode.get('runtime'),
+            'airtime': episode.get('airtime') or '', 'airdate': episode.get('airdate') or '',
+            'airstamp': episode.get('airstamp') or '', 'runtime': episode.get('runtime'),
             'show_type': show_type, 'is_news': is_news,
         })
         if deduplicate_shows:
@@ -404,6 +408,7 @@ def refresh_epg_source(adapter, region='US', retention_hours=6):
                     'program': program,
                     'starts_at': starts_at,
                     'ends_at': ends_at,
+                    'source_schedule_date': row.get('source_schedule_date'),
                 },
             )
             destination_url = str(row.get('destination_url') or '').strip()
@@ -440,6 +445,9 @@ def refresh_epg_source(adapter, region='US', retention_hours=6):
                 channel__region=region,
                 ends_at__gte=now,
             )
+            snapshot_date = getattr(adapter, 'snapshot_date', None)
+            if snapshot_date is not None:
+                stale_current = stale_current.filter(source_schedule_date=snapshot_date)
             if refreshed_airing_ids:
                 stale_current = stale_current.exclude(pk__in=refreshed_airing_ids)
             stale_current.delete()
@@ -450,16 +458,22 @@ def refresh_epg_source(adapter, region='US', retention_hours=6):
     return len(refreshed_airing_ids)
 
 
-def refresh_tvmaze_epg(country='US', retention_hours=6):
-    """Persist today's trustworthy TVmaze schedule through the shared adapter contract."""
-    def fetch_schedule(*, limit, country):
+def refresh_tvmaze_epg(country='US', retention_hours=6, schedule_date=None):
+    """Persist one trustworthy TVmaze schedule date through the shared adapter contract."""
+    schedule_date = schedule_date or timezone.localdate()
+
+    def fetch_schedule(*, limit, country, date):
         return fetch_live_tv_schedule(
             limit=limit,
             country=country,
+            date=date,
             strict=True,
             deduplicate_shows=False,
         )
 
-    adapter = TvmazeScheduleAdapter(fetch_schedule=fetch_schedule)
+    adapter = TvmazeScheduleAdapter(
+        fetch_schedule=fetch_schedule,
+        snapshot_date=schedule_date,
+    )
     return refresh_epg_source(adapter, region=country, retention_hours=retention_hours)
 

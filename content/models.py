@@ -285,6 +285,7 @@ class Airing(models.Model):
     program = models.ForeignKey(Program, on_delete=models.CASCADE, related_name='airings')
     starts_at = models.DateTimeField()
     ends_at = models.DateTimeField()
+    source_schedule_date = models.DateField(null=True, blank=True)
     source = models.CharField(max_length=50)
     external_id = models.CharField(max_length=100)
 
