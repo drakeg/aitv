@@ -4,5 +4,5 @@ charset-normalizer==3.5.2
 Django==6.1.2
 idna==3.20
 requests==2.34.2
-sqlparse==0.6.0
+sqlparse==0.6.1
 urllib3==2.8.0
