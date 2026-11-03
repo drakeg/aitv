@@ -21,7 +21,7 @@ class EpgWorkerComposeTests(SimpleTestCase):
 
     def test_epg_worker_recovers_from_failed_refresh(self):
         self.assertIn('if ! python manage.py refresh_epg', self.compose)
-        self.assertIn('EPG refresh failed; retrying after $$interval seconds.', self.compose)
+        self.assertIn('EPG refresh failed; retrying after $interval seconds.', self.compose)
         self.assertIn('restart: unless-stopped', self.compose)
 
     def test_epg_worker_validates_day_horizon(self):
@@ -34,7 +34,7 @@ class EpgWorkerComposeTests(SimpleTestCase):
         self.assertIn('EPG_REFRESH_INTERVAL_SECONDS must be a positive integer; using 1800.', self.compose)
         self.assertIn('EPG_REFRESH_INTERVAL_SECONDS must be greater than zero; using 1800.', self.compose)
         self.assertIn('interval=1800', self.compose)
-        self.assertIn('sleep "$$interval"', self.compose)
+        self.assertIn('sleep "$interval"', self.compose)
 
     def test_epg_defaults_are_documented(self):
         self.assertIn('EPG_REGIONS=US', self.env_example)
