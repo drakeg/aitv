@@ -2,7 +2,7 @@ from django.core.management.base import BaseCommand, CommandError
 from django.utils import timezone
 
 from content.models import EpgRefreshState
-from content.services import refresh_tvmaze_epg
+from content.services import refresh_tvmaze_epg_horizon
 
 
 class Command(BaseCommand):
@@ -26,11 +26,20 @@ class Command(BaseCommand):
             default=6,
             help='Keep expired source airings for this many hours before cleanup. Defaults to 6.',
         )
+        parser.add_argument(
+            '--days',
+            type=int,
+            default=2,
+            help='Refresh this many consecutive TVmaze schedule dates starting today. Defaults to 2.',
+        )
 
     def handle(self, *args, **options):
         retention_hours = options['retention_hours']
         if retention_hours < 0:
             raise CommandError('--retention-hours must be zero or greater.')
+        days = options['days']
+        if days < 1 or days > 7:
+            raise CommandError('--days must be between 1 and 7.')
 
         raw_regions = list(options.get('regions') or [])
         regions_csv = str(options.get('regions_csv') or '').strip()
@@ -52,7 +61,11 @@ class Command(BaseCommand):
         for region in regions:
             attempted_at = timezone.now()
             try:
-                count = refresh_tvmaze_epg(country=region, retention_hours=retention_hours)
+                count = refresh_tvmaze_epg_horizon(
+                    country=region,
+                    retention_hours=retention_hours,
+                    days=days,
+                )
             except Exception as exc:
                 error_text = f'{type(exc).__name__}: {exc}'[:1000]
                 EpgRefreshState.objects.update_or_create(
