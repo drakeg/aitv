@@ -60,6 +60,10 @@ Each source integration must define its provenance, region semantics, access typ
 
 **Implemented in Sprint 64:** normalized EPG persistence now has a supported `refresh_epg` management command and an opt-in Docker `epg` worker. Operators can refresh one or multiple configured regions, control expired-airing retention, and choose the recurring refresh interval through `.env`. Worker failures are surfaced and retried on the next interval; ordinary `docker compose up` does not enable recurring EPG refreshes.
 
+## Multi-day EPG refresh horizon
+
+**Implemented in Sprint 98:** the operational `refresh_epg` command refreshes two consecutive TVmaze schedule dates per region by default (today and tomorrow), configurable from 1 through 7 days with `--days` / `EPG_DAYS`. All dates for one region are wrapped in one outer transaction, so a failure on a later date rolls back earlier dates from the same horizon instead of leaving a partial refresh. Date-scoped reconciliation from Sprint 97 remains intact for each individual country/date snapshot.
+
 ## TVmaze schedule-date reconciliation
 
 **Implemented in Sprint 97:** TVmaze's `/schedule` endpoint is treated as complete only for the explicitly requested country/date pair. Each normalized TVmaze airing persists the source `airdate` separately from the exact timezone-aware `airstamp`, and complete-snapshot deletion is limited to current/future rows carrying that same source schedule date. This prevents a successful refresh for one day from deleting valid airings already stored for another day, including after-midnight broadcasts whose technical timestamp date differs from TVmaze's broadcast `airdate`.
