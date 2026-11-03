@@ -64,7 +64,7 @@ This ledger is the durable project record for sprint-sized development. Git hist
 | 95 | #128 | Add an Ending soon-only Live TV filter for current programs with 30 minutes or less remaining. |
 | 96 | #129 | Add a region-scoped per-channel schedule detail page for the current program and next 12 hours. |
 | 97 | #130 | Scope TVmaze complete-snapshot reconciliation to the explicitly requested source schedule date. |
-| 98 | pending | Refresh TVmaze EPG data across an atomic configurable multi-day horizon, defaulting to today + tomorrow. |
+| 98 | #132 | Refresh TVmaze EPG data across an atomic configurable multi-day horizon, defaulting to today + tomorrow. |
 | 93 | #121 | Show an Ends in X min countdown for the current Live TV airing. |
 | 89 | #115 | Fix Live TV Favorite-toggle redirect encoding so preserved search/category filters cannot crash the request. |
 
