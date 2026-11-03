@@ -1,11 +1,11 @@
-from unittest.mock import patch
+from unittest.mock import call, patch
 
 from django.test import TestCase
 from django.utils import timezone
 
 from content.models import Airing, AiringDestination, Channel, Program
 from content.epg_sources import ScheduleNormalizationError
-from content.services import refresh_tvmaze_epg
+from content.services import ScheduleFetchError, refresh_tvmaze_epg, refresh_tvmaze_epg_horizon
 
 
 class TvmazeEpgIngestionTests(TestCase):
@@ -338,6 +338,52 @@ class TvmazeEpgIngestionTests(TestCase):
         refresh_tvmaze_epg(country='US', schedule_date=today)
 
         self.assertFalse(Airing.objects.filter(pk=airing.pk).exists())
+
+    @patch('content.services.fetch_live_tv_schedule')
+    def test_two_day_horizon_refreshes_today_and_tomorrow(self, fetch_schedule):
+        today = timezone.localdate()
+        tomorrow = today + timezone.timedelta(days=1)
+        fetch_schedule.side_effect = [
+            [self._item(
+                schedule_external_id='today-episode',
+                airdate=today.isoformat(),
+                airstamp=(timezone.now() + timezone.timedelta(hours=1)).isoformat(),
+            )],
+            [self._item(
+                schedule_external_id='tomorrow-episode',
+                airdate=tomorrow.isoformat(),
+                airstamp=(timezone.now() + timezone.timedelta(days=1, hours=1)).isoformat(),
+            )],
+        ]
+
+        count = refresh_tvmaze_epg_horizon(country='US', days=2, start_date=today)
+
+        self.assertEqual(count, 2)
+        self.assertEqual(
+            set(Airing.objects.values_list('source_schedule_date', flat=True)),
+            {today, tomorrow},
+        )
+        self.assertEqual(
+            [call.kwargs['date'] for call in fetch_schedule.call_args_list],
+            [today.isoformat(), tomorrow.isoformat()],
+        )
+
+    @patch('content.services.fetch_live_tv_schedule')
+    def test_two_day_horizon_rolls_back_when_second_date_fails(self, fetch_schedule):
+        today = timezone.localdate()
+        fetch_schedule.side_effect = [
+            [self._item(
+                schedule_external_id='today-episode',
+                airdate=today.isoformat(),
+                airstamp=(timezone.now() + timezone.timedelta(hours=1)).isoformat(),
+            )],
+            ScheduleFetchError('tomorrow failed'),
+        ]
+
+        with self.assertRaises(ScheduleFetchError):
+            refresh_tvmaze_epg_horizon(country='US', days=2, start_date=today)
+
+        self.assertFalse(Airing.objects.filter(external_id='today-episode').exists())
 
     @patch('content.services.fetch_live_tv_schedule')
     def test_refresh_removes_only_expired_tvmaze_airings(self, fetch_schedule):
