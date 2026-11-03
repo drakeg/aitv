@@ -184,6 +184,7 @@ SMTP is optional. Without SMTP, recurring checks can still create in-app notific
 | `EPG_REGIONS` | `US` | Comma-separated two-letter regions refreshed by the opt-in EPG worker. |
 | `EPG_REFRESH_INTERVAL_SECONDS` | `1800` | Positive whole-number interval for recurring EPG refreshes. |
 | `EPG_RETENTION_HOURS` | `6` | Non-negative hours of expired source airings retained during refresh cleanup. |
+| `EPG_DAYS` | `2` | Consecutive TVmaze schedule dates refreshed per region, from 1 through 7. |
 | `RELEASE_CHECK_INTERVAL_SECONDS` | `3600` | Positive whole-number interval for the opt-in notification worker. |
 | `SMTP_HOST` | empty | SMTP server; empty disables release-notification email. |
 | `SMTP_PORT` | `587` | SMTP port. |
