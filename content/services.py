@@ -477,3 +477,20 @@ def refresh_tvmaze_epg(country='US', retention_hours=6, schedule_date=None):
     )
     return refresh_epg_source(adapter, region=country, retention_hours=retention_hours)
 
+
+def refresh_tvmaze_epg_horizon(country='US', retention_hours=6, days=2, start_date=None):
+    """Atomically refresh consecutive TVmaze schedule dates for one region."""
+    if days < 1:
+        raise ValueError('days must be at least 1')
+    start_date = start_date or timezone.localdate()
+
+    total = 0
+    with transaction.atomic():
+        for offset in range(days):
+            total += refresh_tvmaze_epg(
+                country=country,
+                retention_hours=retention_hours,
+                schedule_date=start_date + timedelta(days=offset),
+            )
+    return total
+

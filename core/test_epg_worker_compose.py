@@ -12,7 +12,7 @@ class EpgWorkerComposeTests(SimpleTestCase):
     def test_epg_profile_runs_refresh_command_on_interval(self):
         self.assertIn('  epg:', self.compose)
         self.assertIn('- epg', self.compose)
-        self.assertIn('python manage.py refresh_epg --regions "$$regions" --retention-hours "$$retention"', self.compose)
+        self.assertIn('python manage.py refresh_epg --regions "$regions" --retention-hours "$retention" --days "$days"', self.compose)
         self.assertIn('EPG_REFRESH_INTERVAL_SECONDS', self.compose)
         self.assertIn('EPG_REGIONS', self.compose)
         self.assertIn('EPG_RETENTION_HOURS', self.compose)
@@ -21,16 +21,23 @@ class EpgWorkerComposeTests(SimpleTestCase):
 
     def test_epg_worker_recovers_from_failed_refresh(self):
         self.assertIn('if ! python manage.py refresh_epg', self.compose)
-        self.assertIn('EPG refresh failed; retrying after $$interval seconds.', self.compose)
+        self.assertIn('EPG refresh failed; retrying after $interval seconds.', self.compose)
         self.assertIn('restart: unless-stopped', self.compose)
+
+    def test_epg_worker_validates_day_horizon(self):
+        self.assertIn('days="${EPG_DAYS:-2}"', self.compose)
+        self.assertIn('EPG_DAYS must be an integer from 1 to 7; using 2.', self.compose)
+        self.assertIn('EPG_DAYS must be between 1 and 7; using 2.', self.compose)
+        self.assertIn('EPG_DAYS: "${EPG_DAYS:-2}"', self.compose)
 
     def test_epg_worker_rejects_invalid_or_zero_interval(self):
         self.assertIn('EPG_REFRESH_INTERVAL_SECONDS must be a positive integer; using 1800.', self.compose)
         self.assertIn('EPG_REFRESH_INTERVAL_SECONDS must be greater than zero; using 1800.', self.compose)
         self.assertIn('interval=1800', self.compose)
-        self.assertIn('sleep "$$interval"', self.compose)
+        self.assertIn('sleep "$interval"', self.compose)
 
     def test_epg_defaults_are_documented(self):
         self.assertIn('EPG_REGIONS=US', self.env_example)
         self.assertIn('EPG_REFRESH_INTERVAL_SECONDS=1800', self.env_example)
         self.assertIn('EPG_RETENTION_HOURS=6', self.env_example)
+        self.assertIn('EPG_DAYS=2', self.env_example)
