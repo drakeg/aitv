@@ -1,3 +1,5 @@
+import os
+from datetime import date
 from urllib.parse import quote_plus
 
 from django.contrib.auth import login
@@ -557,13 +559,42 @@ def live_tv_channel_schedule(request, channel_id):
 
     channel = get_object_or_404(Channel, pk=channel_id, region=region)
     now = timezone.now()
-    window_end = now + timezone.timedelta(hours=12)
+    today = timezone.localdate()
+
+    try:
+        horizon_days = int(os.getenv('EPG_DAYS', '2'))
+    except ValueError:
+        horizon_days = 2
+    if horizon_days < 1 or horizon_days > 7:
+        horizon_days = 2
+
+    schedule_days = []
+    for offset in range(horizon_days):
+        schedule_date = today + timezone.timedelta(days=offset)
+        if offset == 0:
+            label = 'Today'
+        elif offset == 1:
+            label = 'Tomorrow'
+        else:
+            label = f'{schedule_date:%b} {schedule_date.day}'
+        schedule_days.append({'date': schedule_date, 'label': label})
+
+    selected_date = today
+    requested_date = request.GET.get('date', '').strip()
+    if requested_date:
+        try:
+            candidate = date.fromisoformat(requested_date)
+        except ValueError:
+            candidate = None
+        allowed_dates = {item['date'] for item in schedule_days}
+        if candidate in allowed_dates:
+            selected_date = candidate
+
     airings = list(
         Airing.objects
         .filter(
             channel=channel,
-            ends_at__gt=now,
-            starts_at__lt=window_end,
+            source_schedule_date=selected_date,
         )
         .select_related('program')
         .order_by('starts_at')
@@ -573,7 +604,8 @@ def live_tv_channel_schedule(request, channel_id):
         'channel': channel,
         'airings': airings,
         'schedule_now': now,
-        'schedule_window_end': window_end,
+        'schedule_days': schedule_days,
+        'schedule_selected_date': selected_date,
     })
 
 
