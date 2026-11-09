@@ -5,9 +5,22 @@
     <div class="d-flex justify-content-between align-items-end flex-wrap gap-2 mb-3">
         <div>
             <h2 class="mb-1">{{ channel.name }}</h2>
-            <div class="text-muted">{{ channel.region }} · next 12 hours of normalized schedule data</div>
+            <div class="text-muted">{{ channel.region }} · normalized schedule by source broadcast date</div>
         </div>
         <a class="btn btn-outline-light" href="{% url 'live_tv_guide' %}">Back to Live TV</a>
+    </div>
+
+    <nav class="d-flex gap-2 flex-wrap mb-3" aria-label="Channel schedule days">
+        {% for item in schedule_days %}
+            <a
+                class="btn {% if item.date == schedule_selected_date %}btn-primary{% else %}btn-outline-light{% endif %}"
+                href="{% url 'live_tv_channel_schedule' channel.id %}?date={{ item.date|date:'Y-m-d' }}"
+            >{{ item.label }}</a>
+        {% endfor %}
+    </nav>
+
+    <div class="text-muted mb-3">
+        Showing {{ schedule_selected_date|date:"l, F j, Y" }} by source schedule date.
     </div>
 
     {% if airings %}
@@ -15,10 +28,12 @@
             {% for airing in airings %}
                 <article class="guide-row">
                     <div class="guide-channel">
-                        {% if airing.starts_at <= schedule_now and schedule_now < airing.ends_at %}
+                        {% if airing.ends_at <= schedule_now %}
+                            <span class="badge text-bg-secondary align-self-start">Aired</span>
+                        {% elif airing.starts_at <= schedule_now and schedule_now < airing.ends_at %}
                             <span class="badge text-bg-success align-self-start">Now</span>
                         {% else %}
-                            <span class="badge text-bg-secondary align-self-start">Upcoming</span>
+                            <span class="badge text-bg-info align-self-start">Upcoming</span>
                         {% endif %}
                         <strong>{{ channel.name }}</strong>
                     </div>
@@ -31,7 +46,7 @@
         </div>
     {% else %}
         <div class="empty-state">
-            <strong>No schedule is available for {{ channel.name }} in the next 12 hours.</strong>
+            <strong>No schedule is available for {{ channel.name }} on {{ schedule_selected_date|date:"F j, Y" }}.</strong>
             <div class="text-muted mt-1">Only normalized schedule data from configured trustworthy sources is shown.</div>
         </div>
     {% endif %}
