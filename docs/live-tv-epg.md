@@ -154,7 +154,7 @@ Each source integration must define its provenance, region semantics, access typ
 
 ## Channel schedule detail
 
-**Implemented in Sprint 96:** each Live TV guide channel links to a region-scoped schedule detail page showing the current airing plus normalized upcoming airings beginning within the next 12 hours. Expired airings and programs starting beyond the 12-hour window are omitted. The detail page remains schedule metadata only and does not infer or fabricate playback destinations.
+**Implemented in Sprint 96 and extended in Sprint 99:** each Live TV guide channel links to a region-scoped schedule detail page. The page now browses normalized airings by persisted source schedule date across the configured `EPG_DAYS` horizon, defaulting to Today and Tomorrow. Past rows are labeled **Aired**, the active row **Now**, and future rows **Upcoming**. TVmaze after-midnight broadcasts remain grouped under their source `airdate` rather than being shifted to the timestamp's calendar date. The detail page remains schedule metadata only and does not infer or fabricate playback destinations.
 
 ## Live TV category filtering
 
