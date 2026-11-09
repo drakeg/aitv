@@ -66,6 +66,7 @@ This ledger is the durable project record for sprint-sized development. Git hist
 | 97 | #130 | Scope TVmaze complete-snapshot reconciliation to the explicitly requested source schedule date. |
 | 98 | #132 | Refresh TVmaze EPG data across an atomic configurable multi-day horizon, defaulting to today + tomorrow. |
 | 99 | #134 | Add source-date day navigation to per-channel schedules across the configured EPG horizon. |
+| 100 | TBD | Preserve filtered Live TV guide state across channel schedule navigation with a safe local return target. |
 | 93 | #121 | Show an Ends in X min countdown for the current Live TV airing. |
 | 89 | #115 | Fix Live TV Favorite-toggle redirect encoding so preserved search/category filters cannot crash the request. |
 
