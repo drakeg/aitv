@@ -1,4 +1,5 @@
 from datetime import timedelta
+from unittest.mock import patch
 
 from django.contrib.auth import get_user_model
 from django.test import TestCase
@@ -184,13 +185,41 @@ class LiveTvChannelScheduleTests(TestCase):
             'bounded-today-airing', schedule_date=today,
         )
 
-        with self.settings():
-            response = self.client.get(
-                reverse('live_tv_channel_schedule', args=[channel.pk]),
-                {'date': (today + timedelta(days=5)).isoformat()},
-            )
+        response = self.client.get(
+            reverse('live_tv_channel_schedule', args=[channel.pk]),
+            {'date': (today + timedelta(days=5)).isoformat()},
+        )
 
         self.assertContains(response, 'Bounded Today Show')
+
+    @patch.dict('os.environ', {'EPG_DAYS': '3'})
+    def test_channel_schedule_exposes_configured_third_day(self):
+        today = timezone.localdate()
+        third_day = today + timedelta(days=2)
+        channel = Channel.objects.create(
+            name='Three Day Network',
+            slug='three-day-network',
+            region='US',
+            source='tvmaze',
+            external_id='three-day-network',
+        )
+        program = Program.objects.create(
+            title='Third Day Show',
+            source='tvmaze',
+            external_id='third-day-show',
+        )
+        self._airing(
+            channel, program, timedelta(days=2, hours=1), timedelta(days=2, hours=2),
+            'third-day-airing', schedule_date=third_day,
+        )
+
+        response = self.client.get(
+            reverse('live_tv_channel_schedule', args=[channel.pk]),
+            {'date': third_day.isoformat()},
+        )
+
+        self.assertContains(response, 'Third Day Show')
+        self.assertContains(response, f'{third_day:%b} {third_day.day}')
 
     def test_channel_schedule_is_scoped_to_signed_in_region(self):
         us_channel = Channel.objects.create(
