@@ -278,3 +278,43 @@ class LiveTvChannelScheduleTests(TestCase):
             response,
             reverse('live_tv_channel_schedule', args=[channel.pk]),
         )
+
+
+    def test_channel_schedule_preserves_filtered_guide_return_path(self):
+        channel = Channel.objects.create(
+            name='Return Path Network',
+            slug='return-path-network',
+            region='US',
+            source='tvmaze',
+            external_id='return-path-network',
+        )
+        return_to = reverse('live_tv_guide') + '?q=news&category=News&live_now=1'
+
+        response = self.client.get(
+            reverse('live_tv_channel_schedule', args=[channel.pk]),
+            {'return_to': return_to},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context['schedule_return_path'], return_to)
+        self.assertContains(response, 'href="' + return_to.replace('&', '&amp;') + '"')
+
+    def test_channel_schedule_rejects_external_return_path(self):
+        channel = Channel.objects.create(
+            name='Safe Return Network',
+            slug='safe-return-network',
+            region='US',
+            source='tvmaze',
+            external_id='safe-return-network',
+        )
+
+        response = self.client.get(
+            reverse('live_tv_channel_schedule', args=[channel.pk]),
+            {'return_to': 'https://example.com/not-the-guide'},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            response.context['schedule_return_path'],
+            reverse('live_tv_guide'),
+        )

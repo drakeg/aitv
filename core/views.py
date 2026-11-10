@@ -11,6 +11,7 @@ from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils import timezone
+from django.utils.http import url_has_allowed_host_and_scheme
 from django.views.decorators.http import require_POST
 
 from content.models import Airing, AiringDestination, Channel, ChannelDestination, ChannelFavorite, DiscoveryPreference
@@ -548,6 +549,7 @@ def live_tv_guide(request):
         'epg_is_stale': refresh_health == 'stale',
         'epg_refresh_failed': refresh_health == 'failed',
         'epg_refresh_missing': refresh_health == 'missing',
+        'guide_return_path': request.get_full_path(),
     })
 
 
@@ -558,6 +560,18 @@ def live_tv_channel_schedule(request, channel_id):
         region = preference.region
 
     channel = get_object_or_404(Channel, pk=channel_id, region=region)
+    guide_path = reverse('live_tv_guide')
+    return_to = request.GET.get('return_to', '').strip()
+    if not (
+        return_to.startswith(guide_path)
+        and url_has_allowed_host_and_scheme(
+            return_to,
+            allowed_hosts={request.get_host()},
+            require_https=request.is_secure(),
+        )
+    ):
+        return_to = guide_path
+
     now = timezone.now()
     today = timezone.localdate()
 
@@ -606,6 +620,7 @@ def live_tv_channel_schedule(request, channel_id):
         'schedule_now': now,
         'schedule_days': schedule_days,
         'schedule_selected_date': selected_date,
+        'schedule_return_path': return_to,
     })
 
 

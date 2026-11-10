@@ -7,14 +7,14 @@
             <h2 class="mb-1">{{ channel.name }}</h2>
             <div class="text-muted">{{ channel.region }} · normalized schedule by source broadcast date</div>
         </div>
-        <a class="btn btn-outline-light" href="{% url 'live_tv_guide' %}">Back to Live TV</a>
+        <a class="btn btn-outline-light" href="{{ schedule_return_path }}">Back to Live TV</a>
     </div>
 
     <nav class="d-flex gap-2 flex-wrap mb-3" aria-label="Channel schedule days">
         {% for item in schedule_days %}
             <a
                 class="btn {% if item.date == schedule_selected_date %}btn-primary{% else %}btn-outline-light{% endif %}"
-                href="{% url 'live_tv_channel_schedule' channel.id %}?date={{ item.date|date:'Y-m-d' }}"
+                href="{% url 'live_tv_channel_schedule' channel.id %}?date={{ item.date|date:'Y-m-d' }}&amp;return_to={{ schedule_return_path|urlencode }}"
             >{{ item.label }}</a>
         {% endfor %}
     </nav>
