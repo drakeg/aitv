@@ -6,7 +6,7 @@ from django.test import TestCase
 from django.urls import reverse
 from django.utils import timezone
 
-from content.models import Airing, Channel, DiscoveryPreference, Program
+from content.models import Airing, Channel, ChannelFavorite, DiscoveryPreference, Program
 
 
 class LiveTvChannelScheduleTests(TestCase):
@@ -317,4 +317,62 @@ class LiveTvChannelScheduleTests(TestCase):
         self.assertEqual(
             response.context['schedule_return_path'],
             reverse('live_tv_guide'),
+        )
+
+
+    def test_signed_in_channel_schedule_can_toggle_favorite_and_return_to_same_day(self):
+        user = get_user_model().objects.create_user(
+            username='schedule-favorite-viewer',
+            password='password',
+        )
+        self.client.force_login(user)
+        channel = Channel.objects.create(
+            name='Favorite Schedule Network',
+            slug='favorite-schedule-network',
+            region='US',
+            source='tvmaze',
+            external_id='favorite-schedule-network',
+        )
+        today = timezone.localdate()
+        schedule_url = (
+            reverse('live_tv_channel_schedule', args=[channel.pk])
+            + f'?date={today.isoformat()}'
+        )
+
+        response = self.client.post(
+            reverse('toggle_channel_favorite', args=[channel.pk]),
+            {'return_to': schedule_url},
+        )
+
+        self.assertRedirects(response, schedule_url)
+        self.assertTrue(
+            ChannelFavorite.objects.filter(user=user, channel=channel).exists()
+        )
+
+        page = self.client.get(schedule_url)
+        self.assertTrue(page.context['schedule_is_favorite'])
+        self.assertContains(page, '★ Favorite')
+
+    def test_favorite_toggle_rejects_channel_outside_signed_in_region(self):
+        user = get_user_model().objects.create_user(
+            username='region-favorite-viewer',
+            password='password',
+        )
+        DiscoveryPreference.objects.create(user=user, region='CA')
+        self.client.force_login(user)
+        us_channel = Channel.objects.create(
+            name='US Favorite Network',
+            slug='us-favorite-network',
+            region='US',
+            source='tvmaze',
+            external_id='us-favorite-network',
+        )
+
+        response = self.client.post(
+            reverse('toggle_channel_favorite', args=[us_channel.pk]),
+        )
+
+        self.assertEqual(response.status_code, 404)
+        self.assertFalse(
+            ChannelFavorite.objects.filter(user=user, channel=us_channel).exists()
         )
