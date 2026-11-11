@@ -6,7 +6,7 @@ from django.test import TestCase
 from django.urls import reverse
 from django.utils import timezone
 
-from content.models import Airing, AiringDestination, Channel, ChannelDestination, ChannelFavorite, ContentAvailability, DiscoveryPreference, Program
+from content.models import Airing, AiringDestination, Channel, ChannelDestination, ChannelFavorite, ContentAvailability, DiscoveryPreference, EpgRefreshState, Program
 
 
 class LiveTvChannelScheduleTests(TestCase):
@@ -596,3 +596,78 @@ class LiveTvChannelScheduleTests(TestCase):
         self.assertIsNone(response.context['schedule_next_starts_in_minutes'])
         self.assertContains(response, 'Upcoming')
         self.assertNotContains(response, 'Starts in ')
+
+
+    def test_channel_schedule_surfaces_missing_epg_refresh_state(self):
+        channel = Channel.objects.create(
+            name='Missing Health Network',
+            slug='missing-health-network',
+            region='US',
+            source='tvmaze',
+            external_id='missing-health-network',
+        )
+
+        response = self.client.get(
+            reverse('live_tv_channel_schedule', args=[channel.pk]),
+        )
+
+        self.assertTrue(response.context['epg_refresh_missing'])
+        self.assertContains(
+            response,
+            'Guide refresh status is not available yet.',
+        )
+
+    def test_channel_schedule_surfaces_failed_epg_refresh_state(self):
+        channel = Channel.objects.create(
+            name='Failed Health Network',
+            slug='failed-health-network',
+            region='US',
+            source='tvmaze',
+            external_id='failed-health-network',
+        )
+        EpgRefreshState.objects.create(
+            source='tvmaze',
+            region='US',
+            refreshed_at=timezone.now() - timedelta(minutes=30),
+            airing_count=42,
+            attempted_at=timezone.now(),
+            status=EpgRefreshState.Status.FAILURE,
+            last_error='upstream failure',
+        )
+
+        response = self.client.get(
+            reverse('live_tv_channel_schedule', args=[channel.pk]),
+        )
+
+        self.assertTrue(response.context['epg_refresh_failed'])
+        self.assertContains(
+            response,
+            'The latest EPG refresh attempt failed.',
+        )
+        self.assertNotContains(response, 'upstream failure')
+
+    @patch.dict('os.environ', {'EPG_STALE_AFTER_SECONDS': '60'})
+    def test_channel_schedule_surfaces_stale_epg_refresh_state(self):
+        channel = Channel.objects.create(
+            name='Stale Health Network',
+            slug='stale-health-network',
+            region='US',
+            source='tvmaze',
+            external_id='stale-health-network',
+        )
+        EpgRefreshState.objects.create(
+            source='tvmaze',
+            region='US',
+            refreshed_at=timezone.now() - timedelta(minutes=5),
+            airing_count=12,
+            attempted_at=timezone.now() - timedelta(minutes=5),
+            status=EpgRefreshState.Status.SUCCESS,
+        )
+
+        response = self.client.get(
+            reverse('live_tv_channel_schedule', args=[channel.pk]),
+        )
+
+        self.assertTrue(response.context['epg_is_stale'])
+        self.assertContains(response, 'Guide data may be stale')
+        self.assertContains(response, '12 airings')
