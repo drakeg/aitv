@@ -532,3 +532,67 @@ class LiveTvChannelScheduleTests(TestCase):
 
         self.assertIsNone(response.context['schedule_current_ends_in_minutes'])
         self.assertNotContains(response, 'Ends in ')
+
+
+    def test_channel_schedule_shows_rounded_countdown_for_next_airing_within_hour(self):
+        channel = Channel.objects.create(
+            name='Starts Soon Schedule Network',
+            slug='starts-soon-schedule-network',
+            region='US',
+            source='tvmaze',
+            external_id='starts-soon-schedule-network',
+        )
+        first_program = Program.objects.create(
+            title='Starts Soon First Show',
+            source='tvmaze',
+            external_id='starts-soon-first-show',
+        )
+        later_program = Program.objects.create(
+            title='Starts Soon Later Show',
+            source='tvmaze',
+            external_id='starts-soon-later-show',
+        )
+        first_airing = self._airing(
+            channel, first_program, timedelta(minutes=20, seconds=1), timedelta(minutes=50),
+            'starts-soon-first-airing',
+        )
+        self._airing(
+            channel, later_program, timedelta(minutes=40), timedelta(minutes=70),
+            'starts-soon-later-airing',
+        )
+
+        response = self.client.get(
+            reverse('live_tv_channel_schedule', args=[channel.pk]),
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context['schedule_next_airing_id'], first_airing.id)
+        self.assertEqual(response.context['schedule_next_starts_in_minutes'], 21)
+        self.assertContains(response, 'Starts in 21 min', count=1)
+
+    def test_channel_schedule_keeps_plain_upcoming_when_next_airing_is_over_hour_away(self):
+        channel = Channel.objects.create(
+            name='Later Schedule Network',
+            slug='later-schedule-network',
+            region='US',
+            source='tvmaze',
+            external_id='later-schedule-network',
+        )
+        program = Program.objects.create(
+            title='Later Schedule Show',
+            source='tvmaze',
+            external_id='later-schedule-show',
+        )
+        next_airing = self._airing(
+            channel, program, timedelta(minutes=61), timedelta(minutes=91),
+            'later-schedule-airing',
+        )
+
+        response = self.client.get(
+            reverse('live_tv_channel_schedule', args=[channel.pk]),
+        )
+
+        self.assertEqual(response.context['schedule_next_airing_id'], next_airing.id)
+        self.assertIsNone(response.context['schedule_next_starts_in_minutes'])
+        self.assertContains(response, 'Upcoming')
+        self.assertNotContains(response, 'Starts in ')
