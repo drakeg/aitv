@@ -560,6 +560,10 @@ def live_tv_channel_schedule(request, channel_id):
         region = preference.region
 
     channel = get_object_or_404(Channel, pk=channel_id, region=region)
+    is_favorite = (
+        request.user.is_authenticated
+        and ChannelFavorite.objects.filter(user=request.user, channel=channel).exists()
+    )
     guide_path = reverse('live_tv_guide')
     return_to = request.GET.get('return_to', '').strip()
     if not (
@@ -621,18 +625,33 @@ def live_tv_channel_schedule(request, channel_id):
         'schedule_days': schedule_days,
         'schedule_selected_date': selected_date,
         'schedule_return_path': return_to,
+        'schedule_current_path': request.get_full_path(),
+        'schedule_is_favorite': is_favorite,
     })
 
 
 @login_required
 @require_POST
 def toggle_channel_favorite(request, channel_id):
-    channel = get_object_or_404(Channel, pk=channel_id)
+    preference, _ = DiscoveryPreference.objects.get_or_create(user=request.user)
+    channel = get_object_or_404(Channel, pk=channel_id, region=preference.region)
     favorite, created = ChannelFavorite.objects.get_or_create(user=request.user, channel=channel)
     if not created:
         favorite.delete()
 
     target = reverse('live_tv_guide')
+    requested_return = request.POST.get('return_to', '').strip()
+    if (
+        requested_return
+        and requested_return.startswith(target)
+        and url_has_allowed_host_and_scheme(
+            requested_return,
+            allowed_hosts={request.get_host()},
+            require_https=request.is_secure(),
+        )
+    ):
+        return redirect(requested_return)
+
     params = []
     if request.POST.get('favorites') == '1':
         params.append('favorites=1')

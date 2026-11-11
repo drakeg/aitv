@@ -7,7 +7,19 @@
             <h2 class="mb-1">{{ channel.name }}</h2>
             <div class="text-muted">{{ channel.region }} · normalized schedule by source broadcast date</div>
         </div>
-        <a class="btn btn-outline-light" href="{{ schedule_return_path }}">Back to Live TV</a>
+        <div class="d-flex gap-2 flex-wrap">
+            {% if user.is_authenticated %}
+                <form method="post" action="{% url 'toggle_channel_favorite' channel.id %}">
+                    {% csrf_token %}
+                    <input type="hidden" name="return_to" value="{{ schedule_current_path }}">
+                    <button
+                        class="btn {% if schedule_is_favorite %}btn-warning{% else %}btn-outline-warning{% endif %}"
+                        type="submit"
+                    >{% if schedule_is_favorite %}★ Favorite{% else %}☆ Add Favorite{% endif %}</button>
+                </form>
+            {% endif %}
+            <a class="btn btn-outline-light" href="{{ schedule_return_path }}">Back to Live TV</a>
+        </div>
     </div>
 
     <nav class="d-flex gap-2 flex-wrap mb-3" aria-label="Channel schedule days">
