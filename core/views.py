@@ -629,7 +629,10 @@ def live_tv_channel_schedule(request, channel_id):
     )
     current_destination = None
     current_destination_scope = ''
+    current_ends_in_minutes = None
     if current_airing is not None:
+        seconds_until_end = max(0, (current_airing.ends_at - now).total_seconds())
+        current_ends_in_minutes = max(1, int((seconds_until_end + 59) // 60))
         preferred_provider_order = {
             _provider_match_key(provider): index
             for index, provider in enumerate(preferred_providers)
@@ -683,6 +686,7 @@ def live_tv_channel_schedule(request, channel_id):
         'schedule_current_airing_id': current_airing.id if current_airing else None,
         'schedule_current_destination': current_destination,
         'schedule_current_destination_scope': current_destination_scope,
+        'schedule_current_ends_in_minutes': current_ends_in_minutes,
     })
 
 

@@ -45,6 +45,7 @@
                             <span class="badge text-bg-secondary align-self-start">Aired</span>
                         {% elif airing.starts_at <= schedule_now and schedule_now < airing.ends_at %}
                             <span class="badge text-bg-success align-self-start">Now</span>
+                            <span class="badge text-bg-secondary align-self-start">Ends in {{ schedule_current_ends_in_minutes }} min</span>
                         {% else %}
                             <span class="badge text-bg-info align-self-start">Upcoming</span>
                         {% endif %}
