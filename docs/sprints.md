@@ -71,6 +71,7 @@ This ledger is the durable project record for sprint-sized development. Git hist
 | 102 | #137 | Share visibility-aware Live TV auto-refresh with channel schedules so timing state stays current. |
 | 103 | #138 | Expose trusted current-airing playback actions on channel schedules without implying future playback. |
 | 104 | #139 | Add a live Ends in X min countdown to the current channel-schedule airing. |
+| 105 | #140 | Add Starts in X min timing for the next channel-schedule airing when it begins within one hour. |
 | 93 | #121 | Show an Ends in X min countdown for the current Live TV airing. |
 | 89 | #115 | Fix Live TV Favorite-toggle redirect encoding so preserved search/category filters cannot crash the request. |
 

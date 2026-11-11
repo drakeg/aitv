@@ -47,7 +47,11 @@
                             <span class="badge text-bg-success align-self-start">Now</span>
                             <span class="badge text-bg-secondary align-self-start">Ends in {{ schedule_current_ends_in_minutes }} min</span>
                         {% else %}
-                            <span class="badge text-bg-info align-self-start">Upcoming</span>
+                            {% if airing.id == schedule_next_airing_id and schedule_next_starts_in_minutes %}
+                                <span class="badge text-bg-info align-self-start">Starts in {{ schedule_next_starts_in_minutes }} min</span>
+                            {% else %}
+                                <span class="badge text-bg-info align-self-start">Upcoming</span>
+                            {% endif %}
                         {% endif %}
                         <strong>{{ channel.name }}</strong>
                         {% if airing.id == schedule_current_airing_id and schedule_current_destination %}
