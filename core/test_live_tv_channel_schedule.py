@@ -6,7 +6,7 @@ from django.test import TestCase
 from django.urls import reverse
 from django.utils import timezone
 
-from content.models import Airing, Channel, ChannelFavorite, DiscoveryPreference, Program
+from content.models import Airing, AiringDestination, Channel, ChannelDestination, ChannelFavorite, ContentAvailability, DiscoveryPreference, Program
 
 
 class LiveTvChannelScheduleTests(TestCase):
@@ -393,3 +393,90 @@ class LiveTvChannelScheduleTests(TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'js/live-tv-auto-refresh.js')
+
+
+    def test_channel_schedule_shows_trusted_destination_for_current_airing_only(self):
+        channel = Channel.objects.create(
+            name='Playable Schedule Network',
+            slug='playable-schedule-network',
+            region='US',
+            source='tvmaze',
+            external_id='playable-schedule-network',
+        )
+        current_program = Program.objects.create(
+            title='Playable Current Show',
+            source='tvmaze',
+            external_id='playable-current-show',
+        )
+        future_program = Program.objects.create(
+            title='Future No Play Show',
+            source='tvmaze',
+            external_id='future-no-play-show',
+        )
+        current_airing = self._airing(
+            channel, current_program, timedelta(minutes=-5), timedelta(minutes=25),
+            'playable-current-airing',
+        )
+        future_airing = self._airing(
+            channel, future_program, timedelta(minutes=30), timedelta(minutes=60),
+            'future-no-play-airing',
+        )
+        AiringDestination.objects.create(
+            airing=current_airing,
+            provider='Example Provider',
+            url='https://example.com/current',
+            access_type=ContentAvailability.AccessType.FREE,
+            scope=AiringDestination.Scope.EPISODE,
+            source='tvmaze',
+        )
+        AiringDestination.objects.create(
+            airing=future_airing,
+            provider='Future Provider',
+            url='https://example.com/future',
+            access_type=ContentAvailability.AccessType.FREE,
+            scope=AiringDestination.Scope.EPISODE,
+            source='tvmaze',
+        )
+
+        response = self.client.get(
+            reverse('live_tv_channel_schedule', args=[channel.pk]),
+        )
+
+        self.assertContains(response, 'Watch on Example Provider')
+        self.assertContains(response, 'Episode destination')
+        self.assertNotContains(response, 'Watch on Future Provider')
+        self.assertNotContains(response, 'https://example.com/future')
+
+    def test_channel_schedule_falls_back_to_trusted_channel_destination(self):
+        channel = Channel.objects.create(
+            name='Channel Destination Network',
+            slug='channel-destination-network',
+            region='US',
+            source='tvmaze',
+            external_id='channel-destination-network',
+        )
+        program = Program.objects.create(
+            title='Channel Destination Show',
+            source='tvmaze',
+            external_id='channel-destination-show',
+        )
+        self._airing(
+            channel, program, timedelta(minutes=-5), timedelta(minutes=25),
+            'channel-destination-airing',
+        )
+        ChannelDestination.objects.create(
+            channel=channel,
+            provider='Channel Provider',
+            url='https://example.com/channel',
+            access_type=ContentAvailability.AccessType.AUTH,
+            destination_type=ChannelDestination.DestinationType.DIRECT,
+            source='operator',
+        )
+
+        response = self.client.get(
+            reverse('live_tv_channel_schedule', args=[channel.pk]),
+        )
+
+        self.assertContains(response, 'Channel Provider · Sign-in required')
+        self.assertNotContains(response, 'Episode destination')
+        self.assertNotContains(response, 'Show destination')

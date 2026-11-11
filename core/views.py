@@ -555,9 +555,11 @@ def live_tv_guide(request):
 
 def live_tv_channel_schedule(request, channel_id):
     region = 'US'
+    preferred_providers = []
     if request.user.is_authenticated:
         preference, _ = DiscoveryPreference.objects.get_or_create(user=request.user)
         region = preference.region
+        preferred_providers = preference.preferred_providers
 
     channel = get_object_or_404(Channel, pk=channel_id, region=region)
     is_favorite = (
@@ -618,6 +620,57 @@ def live_tv_channel_schedule(request, channel_id):
         .order_by('starts_at')
     )
 
+    current_airing = next(
+        (
+            airing for airing in airings
+            if airing.starts_at <= now < airing.ends_at
+        ),
+        None,
+    )
+    current_destination = None
+    current_destination_scope = ''
+    if current_airing is not None:
+        preferred_provider_order = {
+            _provider_match_key(provider): index
+            for index, provider in enumerate(preferred_providers)
+        }
+        airing_destinations = list(
+            AiringDestination.objects.filter(airing=current_airing)
+        )
+        airing_destinations.sort(key=lambda destination: (
+            0 if destination.scope == AiringDestination.Scope.EPISODE else 1,
+            preferred_provider_order.get(
+                _provider_match_key(destination.provider),
+                len(preferred_provider_order),
+            ),
+            destination.provider.casefold(),
+            destination.url,
+        ))
+        if airing_destinations:
+            current_destination = airing_destinations[0]
+            current_destination_scope = current_destination.scope
+        else:
+            channel_destinations = list(
+                ChannelDestination.objects.filter(
+                    channel=channel,
+                    destination_type__in=[
+                        ChannelDestination.DestinationType.DIRECT,
+                        ChannelDestination.DestinationType.TUNER,
+                    ],
+                )
+            )
+            channel_destinations.sort(key=lambda destination: (
+                preferred_provider_order.get(
+                    _provider_match_key(destination.provider),
+                    len(preferred_provider_order),
+                ),
+                0 if destination.destination_type == ChannelDestination.DestinationType.DIRECT else 1,
+                destination.provider.casefold(),
+                destination.url,
+            ))
+            if channel_destinations:
+                current_destination = channel_destinations[0]
+
     return render(request, 'live_tv/channel_schedule.html', {
         'channel': channel,
         'airings': airings,
@@ -627,6 +680,9 @@ def live_tv_channel_schedule(request, channel_id):
         'schedule_return_path': return_to,
         'schedule_current_path': request.get_full_path(),
         'schedule_is_favorite': is_favorite,
+        'schedule_current_airing_id': current_airing.id if current_airing else None,
+        'schedule_current_destination': current_destination,
+        'schedule_current_destination_scope': current_destination_scope,
     })
 
 

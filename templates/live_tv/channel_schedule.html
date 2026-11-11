@@ -49,6 +49,21 @@
                             <span class="badge text-bg-info align-self-start">Upcoming</span>
                         {% endif %}
                         <strong>{{ channel.name }}</strong>
+                        {% if airing.id == schedule_current_airing_id and schedule_current_destination %}
+                            <div class="d-flex align-items-center gap-2 flex-wrap">
+                                {% if schedule_current_destination_scope == 'episode' %}
+                                    <span class="badge text-bg-success" title="This destination applies to the current episode only.">Episode destination</span>
+                                {% elif schedule_current_destination_scope == 'show' %}
+                                    <span class="badge text-bg-secondary" title="This destination applies to the current show's provider page.">Show destination</span>
+                                {% endif %}
+                                <a
+                                    class="btn btn-sm btn-success guide-watch-action"
+                                    href="{{ schedule_current_destination.url }}"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                >{{ schedule_current_destination.action_label }}</a>
+                            </div>
+                        {% endif %}
                     </div>
                     <div class="guide-program" style="grid-column: span 3;">
                         <strong>{{ airing.program.title }}</strong>
