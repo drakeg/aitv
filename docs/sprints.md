@@ -69,7 +69,7 @@ This ledger is the durable project record for sprint-sized development. Git hist
 | 100 | #135 | Preserve filtered Live TV guide state across channel schedule navigation with a safe local return target. |
 | 101 | #136 | Add account-scoped Favorite toggling on channel schedules while preserving the selected day and enforcing viewer region. |
 | 102 | #137 | Share visibility-aware Live TV auto-refresh with channel schedules so timing state stays current. |
-| 103 | TBD | Expose trusted current-airing playback actions on channel schedules without implying future playback. |
+| 103 | #138 | Expose trusted current-airing playback actions on channel schedules without implying future playback. |
 | 93 | #121 | Show an Ends in X min countdown for the current Live TV airing. |
 | 89 | #115 | Fix Live TV Favorite-toggle redirect encoding so preserved search/category filters cannot crash the request. |
 
