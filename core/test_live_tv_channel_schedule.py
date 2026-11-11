@@ -480,3 +480,55 @@ class LiveTvChannelScheduleTests(TestCase):
         self.assertContains(response, 'Channel Provider · Sign-in required')
         self.assertNotContains(response, 'Episode destination')
         self.assertNotContains(response, 'Show destination')
+
+
+    def test_channel_schedule_shows_rounded_current_airing_countdown(self):
+        channel = Channel.objects.create(
+            name='Countdown Schedule Network',
+            slug='countdown-schedule-network',
+            region='US',
+            source='tvmaze',
+            external_id='countdown-schedule-network',
+        )
+        program = Program.objects.create(
+            title='Countdown Current Show',
+            source='tvmaze',
+            external_id='countdown-current-show',
+        )
+        self._airing(
+            channel, program, timedelta(minutes=-5), timedelta(minutes=25, seconds=1),
+            'countdown-current-airing',
+        )
+
+        response = self.client.get(
+            reverse('live_tv_channel_schedule', args=[channel.pk]),
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context['schedule_current_ends_in_minutes'], 26)
+        self.assertContains(response, 'Ends in 26 min')
+
+    def test_channel_schedule_does_not_show_countdown_for_future_only_airings(self):
+        channel = Channel.objects.create(
+            name='Future Countdown Network',
+            slug='future-countdown-network',
+            region='US',
+            source='tvmaze',
+            external_id='future-countdown-network',
+        )
+        program = Program.objects.create(
+            title='Future Countdown Show',
+            source='tvmaze',
+            external_id='future-countdown-show',
+        )
+        self._airing(
+            channel, program, timedelta(minutes=20), timedelta(minutes=50),
+            'future-countdown-airing',
+        )
+
+        response = self.client.get(
+            reverse('live_tv_channel_schedule', args=[channel.pk]),
+        )
+
+        self.assertIsNone(response.context['schedule_current_ends_in_minutes'])
+        self.assertNotContains(response, 'Ends in ')
