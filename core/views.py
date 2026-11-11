@@ -627,6 +627,15 @@ def live_tv_channel_schedule(request, channel_id):
         ),
         None,
     )
+    next_airing = next(
+        (airing for airing in airings if airing.starts_at > now),
+        None,
+    )
+    next_starts_in_minutes = None
+    if next_airing is not None and next_airing.starts_at <= now + timezone.timedelta(hours=1):
+        seconds_until_start = max(0, (next_airing.starts_at - now).total_seconds())
+        next_starts_in_minutes = max(1, int((seconds_until_start + 59) // 60))
+
     current_destination = None
     current_destination_scope = ''
     current_ends_in_minutes = None
@@ -687,6 +696,8 @@ def live_tv_channel_schedule(request, channel_id):
         'schedule_current_destination': current_destination,
         'schedule_current_destination_scope': current_destination_scope,
         'schedule_current_ends_in_minutes': current_ends_in_minutes,
+        'schedule_next_airing_id': next_airing.id if next_airing else None,
+        'schedule_next_starts_in_minutes': next_starts_in_minutes,
     })
 
 
