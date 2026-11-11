@@ -683,6 +683,8 @@ def live_tv_channel_schedule(request, channel_id):
             if channel_destinations:
                 current_destination = channel_destinations[0]
 
+    refresh_state, refresh_health = epg_region_health(region, now=now)
+
     return render(request, 'live_tv/channel_schedule.html', {
         'channel': channel,
         'airings': airings,
@@ -698,6 +700,10 @@ def live_tv_channel_schedule(request, channel_id):
         'schedule_current_ends_in_minutes': current_ends_in_minutes,
         'schedule_next_airing_id': next_airing.id if next_airing else None,
         'schedule_next_starts_in_minutes': next_starts_in_minutes,
+        'epg_refresh_state': refresh_state,
+        'epg_is_stale': refresh_health == 'stale',
+        'epg_refresh_failed': refresh_health == 'failed',
+        'epg_refresh_missing': refresh_health == 'missing',
     })
 
 
