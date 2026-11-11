@@ -376,3 +376,20 @@ class LiveTvChannelScheduleTests(TestCase):
         self.assertFalse(
             ChannelFavorite.objects.filter(user=user, channel=us_channel).exists()
         )
+
+
+    def test_channel_schedule_loads_shared_auto_refresh_script(self):
+        channel = Channel.objects.create(
+            name='Refresh Schedule Network',
+            slug='refresh-schedule-network',
+            region='US',
+            source='tvmaze',
+            external_id='refresh-schedule-network',
+        )
+
+        response = self.client.get(
+            reverse('live_tv_channel_schedule', args=[channel.pk]),
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'js/live-tv-auto-refresh.js')
