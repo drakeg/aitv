@@ -68,6 +68,51 @@ def _provider_match_key(value):
     return PROVIDER_MATCH_ALIASES.get(normalized, normalized)
 
 
+def _preferred_provider_order(preferred_providers):
+    return {
+        _provider_match_key(provider): index
+        for index, provider in enumerate(preferred_providers)
+    }
+
+
+def _rank_channel_destinations(destinations, preferred_providers):
+    provider_order = _preferred_provider_order(preferred_providers)
+    return sorted(destinations, key=lambda destination: (
+        provider_order.get(
+            _provider_match_key(destination.provider),
+            len(provider_order),
+        ),
+        0 if destination.destination_type == ChannelDestination.DestinationType.DIRECT else 1,
+        destination.provider.casefold(),
+        destination.url,
+    ))
+
+
+def _rank_airing_destinations(destinations, preferred_providers):
+    provider_order = _preferred_provider_order(preferred_providers)
+    return sorted(destinations, key=lambda destination: (
+        0 if destination.scope == AiringDestination.Scope.EPISODE else 1,
+        provider_order.get(
+            _provider_match_key(destination.provider),
+            len(provider_order),
+        ),
+        destination.provider.casefold(),
+        destination.url,
+    ))
+
+
+def _select_current_destination(*, airing, channel_destination=None, airing_destinations=None, preferred_providers=()):
+    if airing is not None:
+        ranked_airing_destinations = _rank_airing_destinations(
+            list(airing_destinations if airing_destinations is not None else airing.destinations.all()),
+            preferred_providers,
+        )
+        if ranked_airing_destinations:
+            destination = ranked_airing_destinations[0]
+            return destination, destination.scope
+    return channel_destination, ''
+
+
 
 def health_live(request):
     try:
@@ -407,29 +452,19 @@ def live_tv_guide(request):
 
     playable_destinations = {}
     if channels:
-        preferred_provider_order = {
-            _provider_match_key(provider): index
-            for index, provider in enumerate(preferred_providers)
-        }
-        destinations = list(
-            ChannelDestination.objects
-            .filter(
-                channel_id__in=channels,
-                destination_type__in=[
-                    ChannelDestination.DestinationType.DIRECT,
-                    ChannelDestination.DestinationType.TUNER,
-                ],
-            )
-        )
-        destinations.sort(key=lambda destination: (
-            preferred_provider_order.get(
-                _provider_match_key(destination.provider),
-                len(preferred_provider_order),
+        destinations = _rank_channel_destinations(
+            list(
+                ChannelDestination.objects
+                .filter(
+                    channel_id__in=channels,
+                    destination_type__in=[
+                        ChannelDestination.DestinationType.DIRECT,
+                        ChannelDestination.DestinationType.TUNER,
+                    ],
+                )
             ),
-            0 if destination.destination_type == ChannelDestination.DestinationType.DIRECT else 1,
-            destination.provider.casefold(),
-            destination.url,
-        ))
+            preferred_providers,
+        )
         for destination in destinations:
             playable_destinations.setdefault(destination.channel_id, destination)
 
@@ -474,34 +509,26 @@ def live_tv_guide(request):
     ]
     airing_destinations = {}
     if current_airing_ids:
-        destinations = list(
-            AiringDestination.objects
-            .filter(airing_id__in=current_airing_ids)
-        )
-        preferred_provider_order = {
-            _provider_match_key(provider): index
-            for index, provider in enumerate(preferred_providers)
-        }
-        destinations.sort(key=lambda destination: (
-            destination.airing_id,
-            0 if destination.scope == AiringDestination.Scope.EPISODE else 1,
-            preferred_provider_order.get(
-                _provider_match_key(destination.provider),
-                len(preferred_provider_order),
-            ),
-            destination.provider.casefold(),
-            destination.url,
-        ))
-        for destination in destinations:
-            airing_destinations.setdefault(destination.airing_id, destination)
+        grouped_destinations = {}
+        for destination in AiringDestination.objects.filter(airing_id__in=current_airing_ids):
+            grouped_destinations.setdefault(destination.airing_id, []).append(destination)
+        for airing_id, destinations in grouped_destinations.items():
+            airing_destinations[airing_id] = _rank_airing_destinations(
+                destinations,
+                preferred_providers,
+            )[0]
 
     for row in guide_rows:
-        current_destination = (
-            airing_destinations.get(row['current'].id)
-            if row['current'] is not None else None
+        row['destination'], row['destination_scope'] = _select_current_destination(
+            airing=row['current'],
+            channel_destination=playable_destinations.get(row['channel'].id),
+            airing_destinations=(
+                [airing_destinations[row['current'].id]]
+                if row['current'] is not None and row['current'].id in airing_destinations
+                else []
+            ),
+            preferred_providers=preferred_providers,
         )
-        row['destination'] = current_destination or playable_destinations.get(row['channel'].id)
-        row['destination_scope'] = current_destination.scope if current_destination else ''
 
     if show_live_now_only:
         guide_rows = [row for row in guide_rows if row['current'] is not None]
@@ -642,27 +669,8 @@ def live_tv_channel_schedule(request, channel_id):
     if current_airing is not None:
         seconds_until_end = max(0, (current_airing.ends_at - now).total_seconds())
         current_ends_in_minutes = max(1, int((seconds_until_end + 59) // 60))
-        preferred_provider_order = {
-            _provider_match_key(provider): index
-            for index, provider in enumerate(preferred_providers)
-        }
-        airing_destinations = list(
-            AiringDestination.objects.filter(airing=current_airing)
-        )
-        airing_destinations.sort(key=lambda destination: (
-            0 if destination.scope == AiringDestination.Scope.EPISODE else 1,
-            preferred_provider_order.get(
-                _provider_match_key(destination.provider),
-                len(preferred_provider_order),
-            ),
-            destination.provider.casefold(),
-            destination.url,
-        ))
-        if airing_destinations:
-            current_destination = airing_destinations[0]
-            current_destination_scope = current_destination.scope
-        else:
-            channel_destinations = list(
+        channel_destinations = _rank_channel_destinations(
+            list(
                 ChannelDestination.objects.filter(
                     channel=channel,
                     destination_type__in=[
@@ -670,18 +678,15 @@ def live_tv_channel_schedule(request, channel_id):
                         ChannelDestination.DestinationType.TUNER,
                     ],
                 )
-            )
-            channel_destinations.sort(key=lambda destination: (
-                preferred_provider_order.get(
-                    _provider_match_key(destination.provider),
-                    len(preferred_provider_order),
-                ),
-                0 if destination.destination_type == ChannelDestination.DestinationType.DIRECT else 1,
-                destination.provider.casefold(),
-                destination.url,
-            ))
-            if channel_destinations:
-                current_destination = channel_destinations[0]
+            ),
+            preferred_providers,
+        )
+        current_destination, current_destination_scope = _select_current_destination(
+            airing=current_airing,
+            channel_destination=channel_destinations[0] if channel_destinations else None,
+            airing_destinations=AiringDestination.objects.filter(airing=current_airing),
+            preferred_providers=preferred_providers,
+        )
 
     refresh_state, refresh_health = epg_region_health(region, now=now)
 
