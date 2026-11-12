@@ -51,6 +51,20 @@ def epg_region_health(region, *, now=None, stale_after_seconds=None):
     )
 
 
+def epg_health_context(region, *, now=None, stale_after_seconds=None):
+    state, health = epg_region_health(
+        region,
+        now=now,
+        stale_after_seconds=stale_after_seconds,
+    )
+    return {
+        'epg_refresh_state': state,
+        'epg_is_stale': health == 'stale',
+        'epg_refresh_failed': health == 'failed',
+        'epg_refresh_missing': health == 'missing',
+    }
+
+
 def configured_epg_health(*, now=None, stale_after_seconds=None):
     now = now or timezone.now()
     stale_after_seconds = stale_after_seconds or epg_stale_after_seconds()
