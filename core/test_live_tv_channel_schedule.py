@@ -671,3 +671,58 @@ class LiveTvChannelScheduleTests(TestCase):
         self.assertTrue(response.context['epg_is_stale'])
         self.assertContains(response, 'Guide data may be stale')
         self.assertContains(response, '12 airings')
+
+
+    def test_guide_and_channel_schedule_share_preferred_destination_selection(self):
+        user = get_user_model().objects.create_user(
+            username='shared-destination-viewer',
+            password='password',
+        )
+        DiscoveryPreference.objects.create(
+            user=user,
+            region='US',
+            preferred_providers=['Amazon Prime Video'],
+        )
+        self.client.force_login(user)
+        channel = Channel.objects.create(
+            name='Shared Destination Network',
+            slug='shared-destination-network',
+            region='US',
+            source='tvmaze',
+            external_id='shared-destination-network',
+        )
+        program = Program.objects.create(
+            title='Shared Destination Show',
+            source='tvmaze',
+            external_id='shared-destination-show',
+        )
+        airing = self._airing(
+            channel, program, timedelta(minutes=-5), timedelta(minutes=25),
+            'shared-destination-airing',
+        )
+        AiringDestination.objects.create(
+            airing=airing,
+            provider='Other Provider',
+            url='https://example.com/shared/other',
+            access_type=ContentAvailability.AccessType.FREE,
+            scope=AiringDestination.Scope.EPISODE,
+            source='fixture',
+        )
+        AiringDestination.objects.create(
+            airing=airing,
+            provider='Prime Video',
+            url='https://example.com/shared/prime',
+            access_type=ContentAvailability.AccessType.SUBSCRIPTION,
+            scope=AiringDestination.Scope.EPISODE,
+            source='fixture',
+        )
+
+        guide = self.client.get(reverse('live_tv_guide'))
+        schedule = self.client.get(
+            reverse('live_tv_channel_schedule', args=[channel.pk]),
+        )
+
+        for response in (guide, schedule):
+            self.assertContains(response, 'Prime Video · Subscription')
+            self.assertContains(response, 'https://example.com/shared/prime')
+            self.assertNotContains(response, 'https://example.com/shared/other')
