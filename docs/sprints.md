@@ -76,7 +76,7 @@ This ledger is the durable project record for sprint-sized development. Git hist
 | 107 | #142 | Centralize trusted Live TV destination ranking/selection across the guide and channel schedules. |
 | 108 | #143 | Share EPG refresh metadata and health warning presentation across Live TV pages. |
 | 109 | #144 | Avoid misleading refresh-age metadata when the first tracked EPG refresh fails. |
-| 110 | TBD | Centralize regional EPG health context mapping for all Live TV views. |
+| 110 | #145 | Centralize regional EPG health context mapping for all Live TV views. |
 | 93 | #121 | Show an Ends in X min countdown for the current Live TV airing. |
 | 89 | #115 | Fix Live TV Favorite-toggle redirect encoding so preserved search/category filters cannot crash the request. |
 
