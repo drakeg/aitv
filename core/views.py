@@ -25,7 +25,7 @@ from content.services import (
 )
 from watchlist.models import Watchlist
 
-from .epg_health import configured_epg_health, epg_region_health
+from .epg_health import configured_epg_health, epg_health_context
 from .forms import AccountProfileForm
 
 DISCOVERY_GENRES = (
@@ -558,7 +558,7 @@ def live_tv_guide(request):
             row['channel'].name.casefold(),
         ))
 
-    refresh_state, refresh_health = epg_region_health(region, now=now)
+    health_context = epg_health_context(region, now=now)
 
     return render(request, 'live_tv/guide.html', {
         'guide_rows': guide_rows,
@@ -572,11 +572,8 @@ def live_tv_guide(request):
         'show_live_now_only': show_live_now_only,
         'show_ending_soon_only': show_ending_soon_only,
         'show_starts_soon_only': show_starts_soon_only,
-        'epg_refresh_state': refresh_state,
-        'epg_is_stale': refresh_health == 'stale',
-        'epg_refresh_failed': refresh_health == 'failed',
-        'epg_refresh_missing': refresh_health == 'missing',
         'guide_return_path': request.get_full_path(),
+        **health_context,
     })
 
 
@@ -688,7 +685,7 @@ def live_tv_channel_schedule(request, channel_id):
             preferred_providers=preferred_providers,
         )
 
-    refresh_state, refresh_health = epg_region_health(region, now=now)
+    health_context = epg_health_context(region, now=now)
 
     return render(request, 'live_tv/channel_schedule.html', {
         'channel': channel,
@@ -705,10 +702,7 @@ def live_tv_channel_schedule(request, channel_id):
         'schedule_current_ends_in_minutes': current_ends_in_minutes,
         'schedule_next_airing_id': next_airing.id if next_airing else None,
         'schedule_next_starts_in_minutes': next_starts_in_minutes,
-        'epg_refresh_state': refresh_state,
-        'epg_is_stale': refresh_health == 'stale',
-        'epg_refresh_failed': refresh_health == 'failed',
-        'epg_refresh_missing': refresh_health == 'missing',
+        **health_context,
     })
 
 
