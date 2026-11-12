@@ -1344,3 +1344,21 @@ class LiveTvGuideTests(TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'live_tv/_epg_health.html')
+
+
+    def test_guide_does_not_show_empty_refresh_age_after_first_refresh_failure(self):
+        EpgRefreshState.objects.create(
+            source='tvmaze',
+            region='US',
+            refreshed_at=None,
+            airing_count=0,
+            attempted_at=timezone.now(),
+            status=EpgRefreshState.Status.FAILURE,
+            last_error='initial upstream failure',
+        )
+
+        response = self.client.get(reverse('live_tv_guide'))
+
+        self.assertContains(response, 'The latest EPG refresh attempt failed.')
+        self.assertNotContains(response, 'Guide refreshed')
+        self.assertNotContains(response, 'initial upstream failure')

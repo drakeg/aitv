@@ -1,4 +1,4 @@
-{% if epg_refresh_state %}
+{% if epg_refresh_state and epg_refresh_state.refreshed_at %}
     <div class="text-muted small">Guide refreshed {{ epg_refresh_state.refreshed_at|timesince }} ago · {{ epg_refresh_state.airing_count }} airing{{ epg_refresh_state.airing_count|pluralize }}</div>
 {% endif %}
 {% if epg_refresh_failed %}
