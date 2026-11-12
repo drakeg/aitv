@@ -1337,3 +1337,10 @@ class LiveTvGuideTests(TestCase):
         response = self.client.get(reverse('live_tv_guide'), {'favorites': '1'})
 
         self.assertContains(response, 'No favorite channels currently have guide data for US.')
+
+
+    def test_guide_uses_shared_epg_health_partial(self):
+        response = self.client.get(reverse('live_tv_guide'))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'live_tv/_epg_health.html')
