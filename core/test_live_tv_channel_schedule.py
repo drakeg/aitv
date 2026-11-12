@@ -770,3 +770,45 @@ class LiveTvChannelScheduleTests(TestCase):
         self.assertContains(response, 'The latest EPG refresh attempt failed.')
         self.assertNotContains(response, 'Guide refreshed')
         self.assertNotContains(response, 'initial upstream failure')
+
+
+    def test_channel_schedule_labels_earliest_future_airing_next_beyond_one_hour(self):
+        channel = Channel.objects.create(
+            name='Next Label Network',
+            slug='next-label-network',
+            region='US',
+            source='tvmaze',
+            external_id='next-label-network',
+        )
+        next_program = Program.objects.create(
+            title='Next Label Show',
+            source='tvmaze',
+            external_id='next-label-show',
+        )
+        later_program = Program.objects.create(
+            title='Later Upcoming Show',
+            source='tvmaze',
+            external_id='later-upcoming-show',
+        )
+        self._airing(
+            channel,
+            next_program,
+            timedelta(minutes=90),
+            timedelta(minutes=120),
+            'next-label-airing',
+        )
+        self._airing(
+            channel,
+            later_program,
+            timedelta(minutes=150),
+            timedelta(minutes=180),
+            'later-upcoming-airing',
+        )
+
+        response = self.client.get(
+            reverse('live_tv_channel_schedule', args=[channel.pk]),
+        )
+
+        self.assertContains(response, '>Next<', count=1, html=False)
+        self.assertContains(response, '>Upcoming<', count=1, html=False)
+        self.assertNotContains(response, 'Starts in')
