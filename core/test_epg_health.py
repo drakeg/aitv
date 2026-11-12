@@ -68,3 +68,32 @@ class EpgHealthPolicyTests(TestCase):
             result = configured_epg_health(now=now, stale_after_seconds=7200)
 
         self.assertEqual([(region, health) for region, _state, health in result], [('CA', 'ok'), ('US', 'ok')])
+
+
+    def test_health_context_maps_missing_state_for_templates(self):
+        from core.epg_health import epg_health_context
+
+        context = epg_health_context('US', now=timezone.now())
+
+        self.assertIsNone(context['epg_refresh_state'])
+        self.assertFalse(context['epg_is_stale'])
+        self.assertFalse(context['epg_refresh_failed'])
+        self.assertTrue(context['epg_refresh_missing'])
+
+    def test_health_context_maps_failed_state_for_templates(self):
+        from core.epg_health import epg_health_context
+
+        state = EpgRefreshState.objects.create(
+            source='tvmaze',
+            region='US',
+            attempted_at=timezone.now(),
+            status=EpgRefreshState.Status.FAILURE,
+            last_error='upstream failure',
+        )
+
+        context = epg_health_context('US', now=timezone.now())
+
+        self.assertEqual(context['epg_refresh_state'], state)
+        self.assertFalse(context['epg_is_stale'])
+        self.assertTrue(context['epg_refresh_failed'])
+        self.assertFalse(context['epg_refresh_missing'])
