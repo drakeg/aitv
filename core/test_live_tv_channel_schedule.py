@@ -726,3 +726,20 @@ class LiveTvChannelScheduleTests(TestCase):
             self.assertContains(response, 'Prime Video · Subscription')
             self.assertContains(response, 'https://example.com/shared/prime')
             self.assertNotContains(response, 'https://example.com/shared/other')
+
+
+    def test_channel_schedule_uses_shared_epg_health_partial(self):
+        response = self.client.get(
+            reverse('live_tv_channel_schedule', args=[
+                Channel.objects.create(
+                    name='Shared Health Partial Network',
+                    slug='shared-health-partial-network',
+                    region='US',
+                    source='tvmaze',
+                    external_id='shared-health-partial-network',
+                ).pk
+            ]),
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'live_tv/_epg_health.html')
