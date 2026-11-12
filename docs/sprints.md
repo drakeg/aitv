@@ -74,6 +74,7 @@ This ledger is the durable project record for sprint-sized development. Git hist
 | 105 | #140 | Add Starts in X min timing for the next channel-schedule airing when it begins within one hour. |
 | 106 | #141 | Surface shared EPG refresh health and freshness warnings on channel schedule pages. |
 | 107 | #142 | Centralize trusted Live TV destination ranking/selection across the guide and channel schedules. |
+| 108 | TBD | Share EPG refresh metadata and health warning presentation across Live TV pages. |
 | 93 | #121 | Show an Ends in X min countdown for the current Live TV airing. |
 | 89 | #115 | Fix Live TV Favorite-toggle redirect encoding so preserved search/category filters cannot crash the request. |
 
