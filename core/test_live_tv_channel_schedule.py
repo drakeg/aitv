@@ -570,7 +570,7 @@ class LiveTvChannelScheduleTests(TestCase):
         self.assertEqual(response.context['schedule_next_starts_in_minutes'], 21)
         self.assertContains(response, 'Starts in 21 min', count=1)
 
-    def test_channel_schedule_keeps_plain_upcoming_when_next_airing_is_over_hour_away(self):
+    def test_channel_schedule_labels_next_airing_when_over_hour_away(self):
         channel = Channel.objects.create(
             name='Later Schedule Network',
             slug='later-schedule-network',
@@ -594,7 +594,8 @@ class LiveTvChannelScheduleTests(TestCase):
 
         self.assertEqual(response.context['schedule_next_airing_id'], next_airing.id)
         self.assertIsNone(response.context['schedule_next_starts_in_minutes'])
-        self.assertContains(response, 'Upcoming')
+        self.assertContains(response, '>Next<', count=1, html=False)
+        self.assertNotContains(response, '>Upcoming<', html=False)
         self.assertNotContains(response, 'Starts in ')
 
 
