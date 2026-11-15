@@ -623,6 +623,19 @@ def live_tv_channel_schedule(request, channel_id):
             label = f'{schedule_date:%b} {schedule_date.day}'
         schedule_days.append({'date': schedule_date, 'label': label})
 
+    schedule_day_counts = {}
+    for schedule_date in (
+        Airing.objects
+        .filter(
+            channel=channel,
+            source_schedule_date__in=[item['date'] for item in schedule_days],
+        )
+        .values_list('source_schedule_date', flat=True)
+    ):
+        schedule_day_counts[schedule_date] = schedule_day_counts.get(schedule_date, 0) + 1
+    for item in schedule_days:
+        item['airing_count'] = schedule_day_counts.get(item['date'], 0)
+
     selected_date = today
     requested_date = request.GET.get('date', '').strip()
     if requested_date:
