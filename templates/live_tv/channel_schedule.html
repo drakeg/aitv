@@ -29,7 +29,7 @@
             <a
                 class="btn {% if item.date == schedule_selected_date %}btn-primary{% else %}btn-outline-light{% endif %}"
                 href="{% url 'live_tv_channel_schedule' channel.id %}?date={{ item.date|date:'Y-m-d' }}&amp;return_to={{ schedule_return_path|urlencode }}"
-            >{{ item.label }}</a>
+            >{{ item.label }} ({{ item.airing_count }})</a>
         {% endfor %}
     </nav>
 
