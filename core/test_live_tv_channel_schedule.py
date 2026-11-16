@@ -813,3 +813,68 @@ class LiveTvChannelScheduleTests(TestCase):
         self.assertContains(response, '>Next<', count=1, html=False)
         self.assertContains(response, '>Upcoming<', count=1, html=False)
         self.assertNotContains(response, 'Starts in')
+
+
+    @patch.dict('os.environ', {'EPG_DAYS': '3'})
+    def test_channel_schedule_day_navigation_shows_airing_counts(self):
+        today = timezone.localdate()
+        tomorrow = today + timedelta(days=1)
+        third_day = today + timedelta(days=2)
+        channel = Channel.objects.create(
+            name='Day Count Network',
+            slug='day-count-network',
+            region='US',
+            source='tvmaze',
+            external_id='day-count-network',
+        )
+        first_program = Program.objects.create(
+            title='First Day Count Show',
+            source='tvmaze',
+            external_id='first-day-count-show',
+        )
+        second_program = Program.objects.create(
+            title='Second Day Count Show',
+            source='tvmaze',
+            external_id='second-day-count-show',
+        )
+        tomorrow_program = Program.objects.create(
+            title='Tomorrow Day Count Show',
+            source='tvmaze',
+            external_id='tomorrow-day-count-show',
+        )
+        self._airing(
+            channel,
+            first_program,
+            timedelta(minutes=30),
+            timedelta(minutes=60),
+            'day-count-first',
+            schedule_date=today,
+        )
+        self._airing(
+            channel,
+            second_program,
+            timedelta(minutes=90),
+            timedelta(minutes=120),
+            'day-count-second',
+            schedule_date=today,
+        )
+        self._airing(
+            channel,
+            tomorrow_program,
+            timedelta(days=1, minutes=30),
+            timedelta(days=1, minutes=60),
+            'day-count-tomorrow',
+            schedule_date=tomorrow,
+        )
+
+        response = self.client.get(
+            reverse('live_tv_channel_schedule', args=[channel.pk]),
+        )
+
+        self.assertContains(response, 'Today (2)')
+        self.assertContains(response, 'Tomorrow (1)')
+        self.assertContains(response, f'{third_day:%b} {third_day.day} (0)')
+        self.assertEqual(
+            [item['airing_count'] for item in response.context['schedule_days']],
+            [2, 1, 0],
+        )
