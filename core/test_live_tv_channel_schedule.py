@@ -878,3 +878,47 @@ class LiveTvChannelScheduleTests(TestCase):
             [item['airing_count'] for item in response.context['schedule_days']],
             [2, 1, 0],
         )
+
+
+    def test_channel_schedule_summary_shows_selected_day_airing_count(self):
+        today = timezone.localdate()
+        channel = Channel.objects.create(
+            name='Selected Day Count Network',
+            slug='selected-day-count-network',
+            region='US',
+            source='tvmaze',
+            external_id='selected-day-count-network',
+        )
+        first_program = Program.objects.create(
+            title='Selected Day First Show',
+            source='tvmaze',
+            external_id='selected-day-first-show',
+        )
+        second_program = Program.objects.create(
+            title='Selected Day Second Show',
+            source='tvmaze',
+            external_id='selected-day-second-show',
+        )
+        self._airing(
+            channel,
+            first_program,
+            timedelta(minutes=30),
+            timedelta(minutes=60),
+            'selected-day-first-airing',
+            schedule_date=today,
+        )
+        self._airing(
+            channel,
+            second_program,
+            timedelta(minutes=90),
+            timedelta(minutes=120),
+            'selected-day-second-airing',
+            schedule_date=today,
+        )
+
+        response = self.client.get(
+            reverse('live_tv_channel_schedule', args=[channel.pk]),
+        )
+
+        self.assertEqual(response.context['schedule_selected_day_airing_count'], 2)
+        self.assertContains(response, '2 airings.')

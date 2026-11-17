@@ -34,7 +34,7 @@
     </nav>
 
     <div class="text-muted mb-3">
-        Showing {{ schedule_selected_date|date:"l, F j, Y" }} by source schedule date.
+        Showing {{ schedule_selected_date|date:"l, F j, Y" }} by source schedule date · {{ schedule_selected_day_airing_count }} airing{{ schedule_selected_day_airing_count|pluralize }}.
     </div>
 
     {% if airings %}
