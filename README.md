@@ -221,7 +221,18 @@ Or through Docker:
 docker compose run --rm web python manage.py test
 ```
 
-GitHub Actions runs Django checks and the test suite for pull requests and pushes to `main`.
+GitHub Actions validates Docker Compose configuration with warning-free output, runs Django checks, and runs the complete test suite for pull requests and pushes to `main`.
+
+## Project planning and backlog
+
+Repository-owned planning lives in:
+
+- `docs/sprints.md` — sprint history plus the numbered near-term queue.
+- `docs/backlog.md` — prioritized upcoming work, acceptance direction, maintenance debt, and deferred ideas.
+- `docs/agile.md` — sprint workflow and definition of done.
+- `docs/coding-standards.md` — implementation and maintenance standards.
+
+Planning docs are updated as work is completed, reprioritized, or newly discovered so development does not depend on chat history.
 
 ### Definition of done
 
