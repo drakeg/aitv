@@ -955,3 +955,34 @@ class LiveTvChannelScheduleTests(TestCase):
 
         self.assertContains(response, 'aria-current="date"', count=1)
         self.assertContains(response, 'Tomorrow (1)')
+
+
+    def test_channel_schedule_day_links_have_full_date_and_airing_count_labels(self):
+        today = timezone.localdate()
+        channel = Channel.objects.create(
+            name='Accessible Label Network',
+            slug='accessible-label-network',
+            region='US',
+            source='tvmaze',
+            external_id='accessible-label-network',
+        )
+        program = Program.objects.create(
+            title='Accessible Label Show',
+            source='tvmaze',
+            external_id='accessible-label-show',
+        )
+        self._airing(
+            channel,
+            program,
+            timedelta(minutes=30),
+            timedelta(minutes=60),
+            'accessible-label-airing',
+            schedule_date=today,
+        )
+
+        response = self.client.get(
+            reverse('live_tv_channel_schedule', args=[channel.pk]),
+        )
+
+        expected_label = f'{today:%A, %B} {today.day}, {today.year}, 1 airing'
+        self.assertContains(response, f'aria-label="{expected_label}"')
