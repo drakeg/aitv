@@ -71,6 +71,7 @@ These items are continuous rather than assigned to one fixed sprint:
 - Keep dependencies on supported secure versions and review Renovate output.
 - Keep Docker Compose, Django checks, tests, and build commands free of avoidable warnings.
 - Keep README, focused architecture/product docs, sprint history, and this backlog synchronized with actual behavior.
+- Keep `docs/docker-deployment.md` synchronized with the actual supported Docker/Compose lifecycle, including upgrades, persistence, health checks, backups/restores, rollback limitations, and production boundaries.
 - Periodically audit stale wording such as “future” or “planned” for features that have already shipped.
 - Review accessibility and color contrast whenever templates/styles change.
 - Review live-source/provider classification whenever upstream URL patterns change.
