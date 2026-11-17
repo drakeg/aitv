@@ -23,6 +23,7 @@ A sprint is complete only when all applicable items are true:
 - New or changed behavior has meaningful regression coverage.
 - Existing tests are updated when intentional behavior changes make assertions stale; tests should validate behavior rather than incidental formatting where practical.
 - README and focused docs reflect changes to user-visible behavior, configuration, architecture, data-source semantics, security boundaries, or operations.
+- Docker/Compose changes update `docs/docker-deployment.md` whenever deployment, upgrade, persistence, health, backup, rollback, worker-profile, or network-exposure behavior changes.
 - Database changes include migrations and migration-focused tests where appropriate.
 - Static JavaScript/CSS changes that rely on cache-busting update the corresponding asset version.
 - No generated artifacts, secrets, credentials, or local databases are committed.
