@@ -44,6 +44,7 @@ These standards apply to all aitv feature, maintenance, and hotfix sprints.
 - Test representative middle states and failure/fallback paths, not only happy-path edges.
 - Do not weaken a correct regression merely to make CI green; fix the behavior or update an assertion only when the product contract intentionally changed.
 - `python manage.py check` and the complete test suite must pass in GitHub Actions before a PR is ready.
+- Keep routine developer tooling quiet: known avoidable warnings from Docker Compose, Django checks, tests, or build commands should be fixed rather than normalized as background noise.
 
 ## Documentation and sprint hygiene
 
@@ -51,3 +52,4 @@ These standards apply to all aitv feature, maintenance, and hotfix sprints.
 - Record each sprint in `docs/sprints.md` with goal, principal behavior, PR, and outcome.
 - Update README when capabilities, configuration, architecture, local operation, or security boundaries change.
 - Keep `docs/agile.md`, this file, and focused product/operations docs consistent with the code.
+- Keep `docs/backlog.md` synchronized with the actual near-term sprint queue and newly discovered debt; completed items move to sprint history rather than lingering as stale backlog entries.
