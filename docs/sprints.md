@@ -82,6 +82,7 @@ This ledger is the durable project record for sprint-sized development. Git hist
 | 113 | #148 | Show per-day normalized airing counts in channel-schedule navigation. |
 | 114 | #149 | Show the selected channel-schedule date's airing count in the page summary. |
 | 115 | #150 | Mark the selected channel-schedule day with accessible aria-current date state. |
+| 116 | TBD | Add full-date and airing-count accessible labels to schedule-day navigation. |
 | 93 | #121 | Show an Ends in X min countdown for the current Live TV airing. |
 | 89 | #115 | Fix Live TV Favorite-toggle redirect encoding so preserved search/category filters cannot crash the request. |
 
