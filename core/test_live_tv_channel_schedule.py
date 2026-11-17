@@ -922,3 +922,36 @@ class LiveTvChannelScheduleTests(TestCase):
 
         self.assertEqual(response.context['schedule_selected_day_airing_count'], 2)
         self.assertContains(response, '2 airings.')
+
+
+    def test_channel_schedule_marks_selected_day_with_aria_current_date(self):
+        today = timezone.localdate()
+        tomorrow = today + timedelta(days=1)
+        channel = Channel.objects.create(
+            name='Accessible Day Network',
+            slug='accessible-day-network',
+            region='US',
+            source='tvmaze',
+            external_id='accessible-day-network',
+        )
+        program = Program.objects.create(
+            title='Accessible Tomorrow Show',
+            source='tvmaze',
+            external_id='accessible-tomorrow-show',
+        )
+        self._airing(
+            channel,
+            program,
+            timedelta(days=1, minutes=30),
+            timedelta(days=1, minutes=60),
+            'accessible-tomorrow-airing',
+            schedule_date=tomorrow,
+        )
+
+        response = self.client.get(
+            reverse('live_tv_channel_schedule', args=[channel.pk]),
+            {'date': tomorrow.isoformat()},
+        )
+
+        self.assertContains(response, 'aria-current="date"', count=1)
+        self.assertContains(response, 'Tomorrow (1)')
