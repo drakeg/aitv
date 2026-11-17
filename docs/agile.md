@@ -12,7 +12,8 @@ aitv uses small, reviewable sprint increments. The current main branch is the so
 6. Treat GitHub Actions as the readiness gate. A PR is not called green/ready until the current head SHA has completed CI successfully.
 7. After merge, verify GitHub recorded the merge and re-read main before beginning the next sprint.
 8. Keep `docs/sprints.md` current so sprint history survives beyond chat context.
-9. Apply `docs/coding-standards.md` to feature, maintenance, and hotfix work.
+9. Keep `docs/backlog.md` current so priorities and future work are repository-owned rather than chat-owned.
+10. Apply `docs/coding-standards.md` to feature, maintenance, and hotfix work.
 
 ## Definition of done
 
@@ -26,6 +27,8 @@ A sprint is complete only when all applicable items are true:
 - Static JavaScript/CSS changes that rely on cache-busting update the corresponding asset version.
 - No generated artifacts, secrets, credentials, or local databases are committed.
 - Django checks and the complete automated test suite pass in CI.
+- Routine development and validation commands do not emit known avoidable warnings; warnings discovered during sprint work are fixed or explicitly recorded in the backlog with rationale.
+- The sprint ledger and backlog reflect completed work, next priorities, and newly discovered follow-up work.
 - The PR description states important non-goals so scope remains auditable.
 
 ## Ongoing review
