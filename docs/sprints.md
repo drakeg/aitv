@@ -80,7 +80,7 @@ This ledger is the durable project record for sprint-sized development. Git hist
 | 111 | #146 | Distinguish the next channel-schedule airing from later upcoming programs. |
 | 112 | #147 | Align the over-one-hour channel-schedule regression with the Sprint 111 Next label. |
 | 113 | #148 | Show per-day normalized airing counts in channel-schedule navigation. |
-| 114 | TBD | Show the selected channel-schedule date's airing count in the page summary. |
+| 114 | #149 | Show the selected channel-schedule date's airing count in the page summary. |
 | 93 | #121 | Show an Ends in X min countdown for the current Live TV airing. |
 | 89 | #115 | Fix Live TV Favorite-toggle redirect encoding so preserved search/category filters cannot crash the request. |
 
