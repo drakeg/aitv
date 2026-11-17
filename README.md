@@ -48,6 +48,10 @@ aitv/
 
 `streamhub/` is the historical Django project-package name; the application/product is **aitv**.
 
+## Docker deployment and operations
+
+The complete platform-neutral Docker deployment/operations guide is maintained in `docs/docker-deployment.md`. It covers prerequisites, first deployment, optional worker profiles, configuration, persistence, health/readiness, logs, upgrades, backups/restores, rollback considerations, network exposure, and the current production-support boundary.
+
 ## Quick local testing with Docker
 
 ```bash
@@ -231,6 +235,7 @@ Repository-owned planning lives in:
 - `docs/backlog.md` — prioritized upcoming work, acceptance direction, maintenance debt, and deferred ideas.
 - `docs/agile.md` — sprint workflow and definition of done.
 - `docs/coding-standards.md` — implementation and maintenance standards.
+- `docs/docker-deployment.md` — supported Docker deployment and operations for the current single-host model.
 
 Planning docs are updated as work is completed, reprioritized, or newly discovered so development does not depend on chat history.
 
