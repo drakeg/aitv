@@ -986,3 +986,32 @@ class LiveTvChannelScheduleTests(TestCase):
 
         expected_label = f'{today:%A, %B} {today.day}, {today.year}, 1 airing'
         self.assertContains(response, f'aria-label="{expected_label}"')
+
+
+    def test_channel_schedule_renders_machine_readable_airing_times(self):
+        channel = Channel.objects.create(
+            name='Semantic Time Network',
+            slug='semantic-time-network',
+            region='US',
+            source='tvmaze',
+            external_id='semantic-time-network',
+        )
+        program = Program.objects.create(
+            title='Semantic Time Show',
+            source='tvmaze',
+            external_id='semantic-time-show',
+        )
+        self._airing(
+            channel,
+            program,
+            timedelta(minutes=30),
+            timedelta(minutes=60),
+            'semantic-time-airing',
+        )
+
+        response = self.client.get(
+            reverse('live_tv_channel_schedule', args=[channel.pk]),
+        )
+
+        self.assertContains(response, '<time datetime="', count=2, html=False)
+        self.assertContains(response, 'Semantic Time Show')

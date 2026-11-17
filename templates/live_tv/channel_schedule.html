@@ -79,7 +79,7 @@
                     </div>
                     <div class="guide-program" style="grid-column: span 3;">
                         <strong>{{ airing.program.title }}</strong>
-                        <span>{{ airing.starts_at|date:"D, M j · g:i A" }}–{{ airing.ends_at|date:"g:i A" }}</span>
+                        <span><time datetime="{{ airing.starts_at|date:'c' }}">{{ airing.starts_at|date:"D, M j · g:i A" }}</time>–<time datetime="{{ airing.ends_at|date:'c' }}">{{ airing.ends_at|date:"g:i A" }}</time></span>
                     </div>
                 </article>
             {% endfor %}
