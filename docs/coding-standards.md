@@ -52,4 +52,5 @@ These standards apply to all aitv feature, maintenance, and hotfix sprints.
 - Record each sprint in `docs/sprints.md` with goal, principal behavior, PR, and outcome.
 - Update README when capabilities, configuration, architecture, local operation, or security boundaries change.
 - Keep `docs/agile.md`, this file, and focused product/operations docs consistent with the code.
+- Treat `docs/docker-deployment.md` as the canonical current Docker operations guide; update it with Compose, environment, persistence, health, upgrade, backup, rollback, and deployment-boundary changes.
 - Keep `docs/backlog.md` synchronized with the actual near-term sprint queue and newly discovered debt; completed items move to sprint history rather than lingering as stale backlog entries.
