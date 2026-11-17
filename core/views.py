@@ -656,6 +656,7 @@ def live_tv_channel_schedule(request, channel_id):
         .select_related('program')
         .order_by('starts_at')
     )
+    selected_day_airing_count = len(airings)
 
     current_airing = next(
         (
@@ -706,6 +707,7 @@ def live_tv_channel_schedule(request, channel_id):
         'schedule_now': now,
         'schedule_days': schedule_days,
         'schedule_selected_date': selected_date,
+        'schedule_selected_day_airing_count': selected_day_airing_count,
         'schedule_return_path': return_to,
         'schedule_current_path': request.get_full_path(),
         'schedule_is_favorite': is_favorite,
