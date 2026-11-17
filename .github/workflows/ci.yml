@@ -27,6 +27,18 @@ jobs:
       - name: Install dependencies
         run: pip install -r requirements.txt
 
+      - name: Validate Docker Compose config
+        run: |
+          cp .env.example .env
+          compose_output="$(docker compose config --quiet 2>&1)" || {
+            printf '%s\n' "$compose_output"
+            exit 1
+          }
+          if [ -n "$compose_output" ]; then
+            printf '%s\n' "$compose_output"
+            exit 1
+          fi
+
       - name: Django checks
         env:
           DJANGO_SECRET_KEY: ci-only-secret

@@ -16,7 +16,7 @@ The guide may combine:
 
 ## Core entities
 
-Future implementation should separate:
+The current implementation separates:
 
 - **Channel**: stable channel identity, display name/logo, region, categories, source provenance.
 - **Program**: title and descriptive metadata independent of a particular airing.

@@ -12,7 +12,8 @@ aitv uses small, reviewable sprint increments. The current main branch is the so
 6. Treat GitHub Actions as the readiness gate. A PR is not called green/ready until the current head SHA has completed CI successfully.
 7. After merge, verify GitHub recorded the merge and re-read main before beginning the next sprint.
 8. Keep `docs/sprints.md` current so sprint history survives beyond chat context.
-9. Apply `docs/coding-standards.md` to feature, maintenance, and hotfix work.
+9. Keep `docs/backlog.md` current so priorities and future work are repository-owned rather than chat-owned.
+10. Apply `docs/coding-standards.md` to feature, maintenance, and hotfix work.
 
 ## Definition of done
 
@@ -22,10 +23,13 @@ A sprint is complete only when all applicable items are true:
 - New or changed behavior has meaningful regression coverage.
 - Existing tests are updated when intentional behavior changes make assertions stale; tests should validate behavior rather than incidental formatting where practical.
 - README and focused docs reflect changes to user-visible behavior, configuration, architecture, data-source semantics, security boundaries, or operations.
+- Docker/Compose changes update `docs/docker-deployment.md` whenever deployment, upgrade, persistence, health, backup, rollback, worker-profile, or network-exposure behavior changes.
 - Database changes include migrations and migration-focused tests where appropriate.
 - Static JavaScript/CSS changes that rely on cache-busting update the corresponding asset version.
 - No generated artifacts, secrets, credentials, or local databases are committed.
 - Django checks and the complete automated test suite pass in CI.
+- Routine development and validation commands do not emit known avoidable warnings; warnings discovered during sprint work are fixed or explicitly recorded in the backlog with rationale.
+- The sprint ledger and backlog reflect completed work, next priorities, and newly discovered follow-up work.
 - The PR description states important non-goals so scope remains auditable.
 
 ## Ongoing review
