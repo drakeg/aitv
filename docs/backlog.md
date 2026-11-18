@@ -6,16 +6,6 @@ Priorities can change when local testing, CI, security review, source behavior, 
 
 ## Near-term sprint queue
 
-### Sprint 119 — Empty schedule-day navigation
-
-Improve channel-schedule browsing when a selected date contains no airings.
-
-Acceptance direction:
-- Keep zero-count days visible so data gaps remain truthful.
-- When the selected day is empty, offer navigation toward the nearest earlier/later populated date inside the configured EPG horizon.
-- Preserve the selected channel, safe Live TV return path, region rules, and source-date semantics.
-- Do not fabricate schedule rows or silently redirect away from an explicitly selected empty day.
-
 ### Sprint 120 — Live TV accessibility flow audit
 
 Audit the Live TV guide and channel schedule as one keyboard/screen-reader flow.
@@ -64,6 +54,10 @@ Acceptance direction:
 - Keep local Docker development simple and separate from production concerns.
 - Document upgrade/rollback and data-persistence expectations before declaring production readiness.
 
+## Completed sprints
+
+Sprint 119 — Empty schedule-day navigation: Implemented empty day navigation for channel schedules with comprehensive test coverage. See `docs/sprints.md` for details.
+
 ## Ongoing maintenance backlog
 
 These items are continuous rather than assigned to one fixed sprint:
@@ -72,7 +66,7 @@ These items are continuous rather than assigned to one fixed sprint:
 - Keep Docker Compose, Django checks, tests, and build commands free of avoidable warnings.
 - Keep README, focused architecture/product docs, sprint history, and this backlog synchronized with actual behavior.
 - Keep `docs/docker-deployment.md` synchronized with the actual supported Docker/Compose lifecycle, including upgrades, persistence, health checks, backups/restores, rollback limitations, and production boundaries.
-- Periodically audit stale wording such as “future” or “planned” for features that have already shipped.
+- Periodically audit stale wording such as "future" or "planned" for features that have already shipped.
 - Review accessibility and color contrast whenever templates/styles change.
 - Review live-source/provider classification whenever upstream URL patterns change.
 - Keep local development setup reproducible without committing secrets or local databases.
@@ -93,3 +87,4 @@ These are intentionally not scheduled yet:
 - New debt discovered during implementation should be fixed immediately when small and safe; otherwise add it here with enough context to act on later.
 - Reprioritization should update both this file and the numbered planned queue in `docs/sprints.md`.
 - GitHub issues remain appropriate for externally tracked defects, dependency automation, or work that benefits from separate discussion; this document is the canonical product/sprint planning queue.
+<EOF>
