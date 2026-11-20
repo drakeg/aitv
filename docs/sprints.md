@@ -89,6 +89,10 @@ This ledger is the durable project record for sprint-sized development. Git hist
 | 93 | #121 | Show an Ends in X min countdown for the current Live TV airing. |
 | 89 | #115 | Fix Live TV Favorite-toggle redirect encoding so preserved search/category filters cannot crash the request. |
 
+## Maintenance initiatives
+
+- **PR #155 — Mad Mallard standards adoption:** repository governance files, verified badge automation, standards CI, migration-drift enforcement, schema-state cleanup, security/release policy, and commercialization hypotheses. This maintenance work does not renumber the product sprint sequence.
+
 ## Planned queue
 
 These are the current near-term sprint targets. They are prioritized guidance rather than promises; discoveries from testing, CI, security, or source behavior can reorder them. Detailed acceptance direction lives in `docs/backlog.md`.
