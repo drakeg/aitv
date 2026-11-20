@@ -6,15 +6,6 @@ Priorities can change when local testing, CI, security review, source behavior, 
 
 ## Near-term sprint queue
 
-### Sprint 122 — Operator EPG diagnostics
-
-Improve operator visibility into EPG/source health while keeping public output sanitized.
-
-Acceptance direction:
-- Make refresh state, source/region, last attempt/success, counts, and stale/failure state easy to inspect.
-- Keep raw upstream exception details out of public pages and readiness payloads.
-- Reuse the existing centralized health policy rather than creating a parallel interpretation.
-
 ### Commercial validation — SMB hospitality pilot
 
 Validate the guest-entertainment-guide hypothesis before building substantial commercial-only features.

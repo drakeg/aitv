@@ -1,7 +1,10 @@
 from urllib.parse import urlparse
 
 from django import forms
-from django.contrib import admin
+from django.utils import timezone
+from django.contrib import admin, messages
+
+from core.epg_health import configured_epg_health, evaluate_epg_state
 
 from .models import (
     Airing,
@@ -14,6 +17,27 @@ from .models import (
     EpgRefreshState,
     Program,
 )
+
+
+def _age_label(timestamp, *, now=None):
+    if timestamp is None:
+        return 'Never'
+
+    now = now or timezone.now()
+    seconds = max(0, int((now - timestamp).total_seconds()))
+    if seconds < 60:
+        return '<1 min ago'
+
+    minutes = seconds // 60
+    if minutes < 60:
+        return f'{minutes} min ago'
+
+    hours = minutes // 60
+    if hours < 48:
+        return f'{hours} hr ago'
+
+    days = hours // 24
+    return f'{days} days ago'
 
 
 @admin.register(ContentItem)
@@ -133,9 +157,71 @@ class AiringDestinationAdmin(admin.ModelAdmin):
 
 @admin.register(EpgRefreshState)
 class EpgRefreshStateAdmin(admin.ModelAdmin):
-    list_display = ('source', 'region', 'status', 'attempted_at', 'refreshed_at', 'airing_count')
+    list_display = (
+        'source',
+        'region',
+        'health_status',
+        'status',
+        'attempt_age',
+        'success_age',
+        'airing_count',
+    )
     list_filter = ('source', 'region', 'status')
-    readonly_fields = ('source', 'region', 'status', 'attempted_at', 'refreshed_at', 'airing_count', 'last_error')
+    readonly_fields = (
+        'source',
+        'region',
+        'health_status',
+        'status',
+        'attempt_age',
+        'success_age',
+        'attempted_at',
+        'refreshed_at',
+        'airing_count',
+        'last_error',
+    )
+    fieldsets = (
+        ('Source', {'fields': ('source', 'region')}),
+        (
+            'Refresh diagnostics',
+            {
+                'fields': (
+                    'health_status',
+                    'status',
+                    'attempt_age',
+                    'success_age',
+                    'attempted_at',
+                    'refreshed_at',
+                    'airing_count',
+                ),
+            },
+        ),
+        ('Operator-only failure detail', {'fields': ('last_error',)}),
+    )
+
+    @admin.display(description='Health')
+    def health_status(self, obj):
+        return evaluate_epg_state(obj, now=timezone.now()).upper()
+
+    @admin.display(description='Attempt age')
+    def attempt_age(self, obj):
+        return _age_label(obj.attempted_at)
+
+    @admin.display(description='Success age')
+    def success_age(self, obj):
+        return _age_label(obj.refreshed_at)
+
+    def changelist_view(self, request, extra_context=None):
+        degraded = [
+            f'{region} {health}'
+            for region, _state, health in configured_epg_health()
+            if health != 'ok'
+        ]
+        if degraded:
+            messages.warning(
+                request,
+                'EPG diagnostics: ' + ', '.join(degraded) + '.',
+            )
+        return super().changelist_view(request, extra_context=extra_context)
 
     def has_add_permission(self, request):
         return False
