@@ -1,5 +1,11 @@
 # aitv
 
+<!-- madmallard-badges:start -->
+[![Django 6.1.3](https://img.shields.io/badge/Django%206.1.3-092E20?logo=django&logoColor=white)](https://www.djangoproject.com/) [![Docker](https://img.shields.io/badge/Docker-2496ED?logo=docker&logoColor=white)](https://www.docker.com/) [![Docker Compose](https://img.shields.io/badge/Docker%20Compose-2496ED?logo=docker&logoColor=white)](https://docs.docker.com/compose/) [![Python 3.15](https://img.shields.io/badge/Python%203.15-3776AB?logo=python&logoColor=white)](https://www.python.org/) [![SQLite](https://img.shields.io/badge/SQLite-003B57?logo=sqlite&logoColor=white)](https://www.sqlite.org/)
+
+[![ci](https://github.com/drakeg/aitv/actions/workflows/ci.yml/badge.svg)](https://github.com/drakeg/aitv/actions/workflows/ci.yml) [![standards](https://github.com/drakeg/aitv/actions/workflows/standards.yml/badge.svg)](https://github.com/drakeg/aitv/actions/workflows/standards.yml) [![Issues](https://img.shields.io/github/issues/drakeg/aitv)](https://github.com/drakeg/aitv/issues) [![Pull requests](https://img.shields.io/github/issues-pr/drakeg/aitv)](https://github.com/drakeg/aitv/pulls)
+<!-- madmallard-badges:end -->
+
 aitv is a Django-based personal streaming dashboard for discovering movies and TV from live upstream sources, seeing where titles are actually available, and keeping account-specific Watchlist and Favorite state.
 
 The goal is fewer clicks to legitimate content. Direct network/service destinations are preferred when a source actually supplies them; TMDB is used for discovery, metadata, canonical identity, and regional provider context rather than treated as the viewing destination. A unified Live TV/EPG experience is now being built across legitimate sources: the normalized region-aware Now / Next / Later guide with explicit Ends in X min for current airings plus Starts in X min / Upcoming states for future-only channels and a Starts soon-only filter for programs beginning within the next hour, ordered by Favorites first for signed-in viewers and then by soonest start time, with the Live TV page refreshing itself every minute when visible and idle so countdowns and schedule state stay current is available at `/live-tv/`, with search intentionally scoped to channel names and those visible program slots so a result always shows the text that matched, signed-in viewers can Favorite channels, see Favorites prioritized at the top of the normal guide, combine Favorites filtering with channel/program search, normalized category filtering, and a live-now-only filter for channels currently airing a program, an ending-soon-only filter for current programs with 30 minutes or less remaining, plus a playable-now-only filter that additionally requires an explicit trusted airing/channel destination, and receive preferred-provider ranking among explicit playable channel destinations. Trusted channel destinations remain stored separately from schedule metadata so search or preference ranking never invents playback availability. Trusted source-supplied episode/show destinations are also persisted separately at the airing level and can override a broader channel destination only for the matching current airing. When multiple legitimate airing destinations exist, episode-specific scope wins first and the signed-in viewer's preferred providers break ties within that scope. The guide visibly labels whether the selected airing destination is episode-specific or show-level; channel-wide destinations are not mislabeled as airing-scoped. Source and playback boundaries are documented in `docs/live-tv-epg.md`.
@@ -225,7 +231,7 @@ Or through Docker:
 docker compose run --rm web python manage.py test
 ```
 
-GitHub Actions validates Docker Compose configuration with warning-free output, runs Django checks, and runs the complete test suite for pull requests and pushes to `main`.
+GitHub Actions validates Docker Compose configuration with warning-free output, rejects uncommitted Django migration drift, runs Django checks, and runs the complete test suite for pull requests and pushes to `main`. A separate read-only repository-standards workflow validates required governance files and README badge drift.
 
 ## Project planning and backlog
 
@@ -236,6 +242,9 @@ Repository-owned planning lives in:
 - `docs/agile.md` — sprint workflow and definition of done.
 - `docs/coding-standards.md` — implementation and maintenance standards.
 - `docs/docker-deployment.md` — supported Docker deployment and operations for the current single-host model.
+- `AGENTS.md`, `CONTRIBUTING.md`, `RELEASES.md`, and `SECURITY.md` — repository operating, contribution, release, and security rules.
+- `SPRINTS.md` and `BACKLOG.md` — standards-compatible root summaries that point to the detailed records above.
+- `docs/commercialization.md` — explicitly unvalidated SMB pilot, value, pricing, and customer-validation hypotheses.
 
 Planning docs are updated as work is completed, reprioritized, or newly discovered so development does not depend on chat history.
 

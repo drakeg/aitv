@@ -35,6 +35,17 @@ Acceptance direction:
 - Keep raw upstream exception details out of public pages and readiness payloads.
 - Reuse the existing centralized health policy rather than creating a parallel interpretation.
 
+### Commercial validation — SMB hospitality pilot
+
+Validate the guest-entertainment-guide hypothesis before building substantial commercial-only features.
+
+Acceptance direction:
+- Prepare a demo suitable for an independent hospitality operator.
+- Interview at least 10 qualified operators about entertainment-discovery/support pain and current workarounds.
+- Ask for a paid pilot rather than treating positive feedback as willingness to pay.
+- Record objections and feature requests as evidence, not assumed demand.
+- Treat the pricing ideas in `docs/commercialization.md` as hypotheses until a customer agrees to pay.
+
 ### Sprint 123 — Next legitimate EPG/source adapter
 
 Evaluate and add the next schedule source only if it can satisfy the existing provenance and trust contract.
@@ -67,6 +78,7 @@ These items are continuous rather than assigned to one fixed sprint:
 - Review live-source/provider classification whenever upstream URL patterns change.
 - Keep local development setup reproducible without committing secrets or local databases.
 - Prefer fixes for discovered cleanup/debt in the sprint where they are found when the change is safe and focused.
+- Select an explicit open-source license before publishing a license badge or claiming licensed reuse; this requires a maintainer/legal choice.
 
 ## Deferred ideas
 
