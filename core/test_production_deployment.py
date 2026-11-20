@@ -36,9 +36,10 @@ class ProductionDeploymentContractTests(SimpleTestCase):
     def test_production_compose_does_not_bind_mount_source_tree(self):
         self.assertNotIn('- .:/app', self.compose)
         self.assertIn('- aitv_data:/data', self.compose)
-        self.assertIn('command: ["/app/scripts/start-production.sh"]', self.compose)
+        self.assertIn('command: ["sh", "/app/scripts/start-production.sh"]', self.compose)
         self.assertIn('DJANGO_DEBUG: "false"', self.compose)
         self.assertIn('DJANGO_SECURE_SSL_REDIRECT: "true"', self.compose)
+        self.assertIn("headers={'Host':host,'X-Forwarded-Proto':'https'}", self.compose)
 
 
     def test_production_proxy_is_version_pinned_and_only_web_is_upstream(self):
