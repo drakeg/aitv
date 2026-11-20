@@ -243,6 +243,7 @@ Repository-owned planning lives in:
 - `docs/coding-standards.md` — implementation and maintenance standards.
 - `docs/docker-deployment.md` — supported Docker deployment and operations for the current single-host model.
 - `docs/accessibility.md` — Live TV accessibility and timed-refresh interaction contract.
+- `docs/epg-source-evaluation.md` — current candidate EPG/source licensing, cost, technical-fit, and trust decisions.
 - `AGENTS.md`, `CONTRIBUTING.md`, `RELEASES.md`, and `SECURITY.md` — repository operating, contribution, release, and security rules.
 - `SPRINTS.md` and `BACKLOG.md` — standards-compatible root summaries that point to the detailed records above.
 - `docs/commercialization.md` — explicitly unvalidated SMB pilot, value, pricing, and customer-validation hypotheses.

@@ -89,6 +89,7 @@ This ledger is the durable project record for sprint-sized development. Git hist
 | 120 | #157 | Audit and improve the Live TV keyboard/screen-reader flow, including landmarks, semantic times, new-tab announcements, and user-controlled auto-refresh. |
 | 121 | #158 | Bound Live TV request queries as channel count grows and aggregate schedule-day counts in the database. |
 | 122 | #159 | Add shared-policy EPG health/age diagnostics and sanitized degraded-region warnings to Django admin. |
+| 123 | #160 | Evaluate additional EPG sources and defer integration because no candidate currently satisfies live-data, commercial-rights, trust, and no-unapproved-cost constraints. |
 | 93 | #121 | Show an Ends in X min countdown for the current Live TV airing. |
 | 89 | #115 | Fix Live TV Favorite-toggle redirect encoding so preserved search/category filters cannot crash the request. |
 
@@ -103,7 +104,6 @@ These are the current near-term sprint targets. They are prioritized guidance ra
 
 | Sprint | Planned focus |
 | --- | --- |
-| 123 | Evaluate and implement the next legitimate EPG/source adapter through the existing provenance/trust contract. |
 | 124 | Production-readiness hardening for serving, static assets, configuration, persistence, and deployment boundaries. |
 
 ## Earlier development
