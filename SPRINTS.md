@@ -7,7 +7,8 @@ The detailed historical sprint ledger and current numbered queue are maintained 
 ## Current state
 
 - Sprint 119: merged — empty schedule-day navigation.
-- Next planned product sprint: Sprint 120 — Live TV accessibility flow audit.
+- Sprint 120: PR #157 — Live TV accessibility flow audit and user-controlled auto-refresh.
+- Next planned product sprint after Sprint 120: Sprint 121 — Live TV request/query efficiency audit.
 - Repository standards adoption is active maintenance work and does not renumber already planned product sprints.
 - Commercialization hypotheses and pilot milestones are tracked in docs/commercialization.md.
 
