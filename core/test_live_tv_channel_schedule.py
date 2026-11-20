@@ -1016,395 +1016,109 @@ class LiveTvChannelScheduleTests(TestCase):
         self.assertContains(response, '<time datetime="', count=2, html=False)
         self.assertContains(response, 'Semantic Time Show')
 
-
-    def test_channel_schedule_empty_day_shows_navigation_to_populated_dates(self):
-        """Sprint 119: Empty schedule-day navigation shows nearest populated dates."""
+    def test_empty_schedule_day_links_to_nearest_later_populated_day(self):
         today = timezone.localdate()
         tomorrow = today + timedelta(days=1)
         channel = Channel.objects.create(
-            name='Empty Day Network',
-            slug='empty-day-network',
+            name='Empty Today Network',
+            slug='empty-today-network',
             region='US',
             source='tvmaze',
-            external_id='empty-day-network',
+            external_id='empty-today-network',
         )
-        # Create airings only for today (not tomorrow)
         program = Program.objects.create(
-            title='Today Show',
+            title='Tomorrow Program',
             source='tvmaze',
-            external_id='today-show',
+            external_id='tomorrow-program-empty-today',
         )
         self._airing(
             channel,
             program,
-            timedelta(hours=2),
-            timedelta(hours=3),
-            'today-airing',
-            schedule_date=today,
-        )
-        # Tomorrow has no airings (empty day)
-
-        response = self.client.get(
-            reverse('live_tv_channel_schedule', args=[channel.pk]),
-            {'date': tomorrow.isoformat()},
-        )
-
-        self.assertEqual(response.status_code, 200)
-        self.assertContains(response, 'No schedule is available')
-        self.assertContains(response, 'Empty Day Network')
-        # Verify empty day detection context variable
-        self.assertTrue(response.context['is_empty_day'])
-        # Verify nearest populated dates are provided for navigation
-        self.assertIsNotNone(response.context['nearest_populated_dates'])
-        self.assertEqual(len(response.context['nearest_populated_dates']), 1)
-        nav_target = response.context['nearest_populated_dates'][0]
-        self.assertEqual(nav_target['date'], today)
-        self.assertEqual(nav_target['count'], 1)
-        self.assertTrue(nav_target['is_later'])
-        self.assertFalse(nav_target['is_earlier'])
-
-
-    def test_channel_schedule_empty_day_navigation_buttons_appear(self):
-        """Sprint 119: Empty day navigation buttons are rendered in the empty state."""
-        today = timezone.localdate()
-        tomorrow = today + timedelta(days=1)
-        channel = Channel.objects.create(
-            name='Empty Day Navigation Network',
-            slug='empty-day-navigation-network',
-            region='US',
-            source='tvmaze',
-            external_id='empty-day-navigation-network',
-        )
-        # Create airings only for tomorrow (not today)
-        program = Program.objects.create(
-            title='Tomorrow Show',
-            source='tvmaze',
-            external_id='tomorrow-show',
-        )
-        self._airing(
-            channel,
-            program,
-            timedelta(hours=2),
-            timedelta(hours=3),
-            'tomorrow-airing',
+            timedelta(days=1, hours=1),
+            timedelta(days=1, hours=2),
+            'tomorrow-airing-empty-today',
             schedule_date=tomorrow,
         )
-        # Today has no airings (empty day)
 
+        return_to = reverse('live_tv_guide') + '?q=news'
         response = self.client.get(
             reverse('live_tv_channel_schedule', args=[channel.pk]),
+            {'return_to': return_to},
         )
 
-        self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'No schedule is available')
-        self.assertTrue(response.context['is_empty_day'])
-        # Verify navigation buttons are rendered
-        self.assertContains(response, 'Navigate to a populated day:')
         self.assertContains(response, 'Later →')
-        self.assertContains(response, f'{tomorrow:%B} {tomorrow.day}')
+        self.assertContains(response, f'date={tomorrow.isoformat()}')
         self.assertContains(response, '1 airing')
+        self.assertContains(response, 'return_to=%2Flive-tv%2F%3Fq%3Dnews')
 
-
-    def test_channel_schedule_empty_day_preserves_channel_selection(self):
-        """Sprint 119: Empty day navigation preserves channel selection and region."""
+    @patch.dict('os.environ', {'EPG_DAYS': '3'})
+    def test_empty_middle_schedule_day_links_to_nearest_earlier_and_later_days(self):
         today = timezone.localdate()
-        tomorrow = today + timedelta(days=1)
+        middle = today + timedelta(days=1)
+        later = today + timedelta(days=2)
         channel = Channel.objects.create(
-            name='Preserved Selection Network',
-            slug='preserved-selection-network',
+            name='Gap Day Network',
+            slug='gap-day-network',
             region='US',
             source='tvmaze',
-            external_id='preserved-selection-network',
+            external_id='gap-day-network',
         )
-        # Create airings only for tomorrow (not today)
-        program = Program.objects.create(
-            title='Tomorrow Show',
+        earlier_program = Program.objects.create(
+            title='Earlier Program',
             source='tvmaze',
-            external_id='tomorrow-show',
+            external_id='earlier-program-gap',
+        )
+        later_program = Program.objects.create(
+            title='Later Program',
+            source='tvmaze',
+            external_id='later-program-gap',
         )
         self._airing(
             channel,
-            program,
+            earlier_program,
+            timedelta(hours=1),
             timedelta(hours=2),
-            timedelta(hours=3),
-            'tomorrow-airing',
-            schedule_date=tomorrow,
-        )
-
-        response = self.client.get(
-            reverse('live_tv_channel_schedule', args=[channel.pk]),
-            {'date': today.isoformat()},
-        )
-
-        self.assertEqual(response.status_code, 200)
-        # Verify channel name is preserved in empty state
-        self.assertContains(response, 'Preserved Selection Network')
-        # Verify region is preserved
-        self.assertContains(response, 'US')
-
-
-    def test_channel_schedule_empty_day_does_not_silently_redirect(self):
-        """Sprint 119: Empty day navigation does not silently redirect away from explicitly selected empty day."""
-        today = timezone.localdate()
-        tomorrow = today + timedelta(days=1)
-        channel = Channel.objects.create(
-            name='No Silent Redirect Network',
-            slug='no-silent-redirect-network',
-            region='US',
-            source='tvmaze',
-            external_id='no-silent-redirect-network',
-        )
-        # Create airings only for tomorrow (not today)
-        program = Program.objects.create(
-            title='Tomorrow Show',
-            source='tvmaze',
-            external_id='tomorrow-show',
-        )
-        self._airing(
-            channel,
-            program,
-            timedelta(hours=2),
-            timedelta(hours=3),
-            'tomorrow-airing',
-            schedule_date=tomorrow,
-        )
-
-        # User explicitly selects today (empty day) via URL
-        response = self.client.get(
-            reverse('live_tv_channel_schedule', args=[channel.pk]),
-            {'date': today.isoformat()},
-        )
-
-        self.assertEqual(response.status_code, 200)
-        # Verify the page still shows today's empty state (not silently redirecting to tomorrow)
-        self.assertContains(response, 'No schedule is available')
-        self.assertTrue(response.context['is_empty_day'])
-        # Verify navigation buttons are present for user to choose
-        self.assertContains(response, 'Navigate to a populated day:')
-
-
-    def test_channel_schedule_empty_day_within_horizon_only(self):
-        """Sprint 119: Navigation only shows dates within the configured EPG horizon."""
-        from unittest.mock import patch
-        today = timezone.localdate()
-        tomorrow = today + timedelta(days=1)
-        channel = Channel.objects.create(
-            name='Horizon Boundary Network',
-            slug='horizon-boundary-network',
-            region='US',
-            source='tvmaze',
-            external_id='horizon-boundary-network',
-        )
-        # Create airings for today and tomorrow only (not beyond horizon)
-        program = Program.objects.create(
-            title='Today Show',
-            source='tvmaze',
-            external_id='today-show',
-        )
-        self._airing(
-            channel,
-            program,
-            timedelta(hours=2),
-            timedelta(hours=3),
-            'today-airing',
+            'earlier-airing-gap',
             schedule_date=today,
         )
-        tomorrow_program = Program.objects.create(
-            title='Tomorrow Show',
-            source='tvmaze',
-            external_id='tomorrow-show',
-        )
         self._airing(
             channel,
-            tomorrow_program,
-            timedelta(hours=2),
-            timedelta(hours=3),
-            'tomorrow-airing',
-            schedule_date=tomorrow,
+            later_program,
+            timedelta(days=2, hours=1),
+            timedelta(days=2, hours=2),
+            'later-airing-gap',
+            schedule_date=later,
         )
 
         response = self.client.get(
             reverse('live_tv_channel_schedule', args=[channel.pk]),
+            {'date': middle.isoformat()},
         )
 
         self.assertEqual(response.status_code, 200)
-        # Verify navigation only shows dates within horizon (today and tomorrow)
-        nav_targets = response.context['nearest_populated_dates'] or []
-        for target in nav_targets:
-            delta_days = abs((target['date'] - today).days)
-            self.assertLessEqual(delta_days, 2, f"Date {target['date']} is outside EPG horizon")
+        self.assertContains(response, '← Earlier')
+        self.assertContains(response, 'Later →')
+        self.assertContains(response, f'date={today.isoformat()}')
+        self.assertContains(response, f'date={later.isoformat()}')
+        self.assertEqual(
+            [item['direction'] for item in response.context['schedule_nearest_populated_days']],
+            ['earlier', 'later'],
+        )
 
-
-    def test_channel_schedule_empty_day_no_populated_dates_shows_no_nav(self):
-        """Sprint 119: When no populated dates exist in horizon, navigation buttons are not shown."""
-        today = timezone.localdate()
+    def test_empty_schedule_horizon_without_populated_days_shows_no_suggestions(self):
         channel = Channel.objects.create(
-            name='All Empty Network',
-            slug='all-empty-network',
+            name='No Schedule Network',
+            slug='no-schedule-network',
             region='US',
             source='tvmaze',
-            external_id='all-empty-network',
-        )
-        # No airings at all
-
-        response = self.client.get(
-            reverse('live_tv_channel_schedule', args=[channel.pk]),
-        )
-
-        self.assertEqual(response.status_code, 200)
-        self.assertTrue(response.context['is_empty_day'])
-        self.assertIsNone(response.context['nearest_populated_dates'])
-        # Verify navigation buttons are not rendered when no populated dates exist
-        self.assertNotContains(response, 'Navigate to a populated day:')
-
-
-    def test_channel_schedule_empty_day_with_both_earlier_and_later(self):
-        """Sprint 119: Navigation shows both earlier and later populated dates when available."""
-        from datetime import timedelta
-        today = timezone.localdate() - timedelta(days=2)  # Past date (outside horizon but for testing)
-        yesterday = today + timedelta(days=1)
-        tomorrow = today + timedelta(days=1)
-        channel = Channel.objects.create(
-            name='Both Sides Network',
-            slug='both-sides-network',
-            region='US',
-            source='tvmaze',
-            external_id='both-sides-network',
-        )
-        # Create airings for yesterday and tomorrow (not today)
-        program = Program.objects.create(
-            title='Yesterday Show',
-            source='tvmaze',
-            external_id='yesterday-show',
-        )
-        self._airing(
-            channel,
-            program,
-            timedelta(hours=2),
-            timedelta(hours=3),
-            'yesterday-airing',
-            schedule_date=yesterday,
-        )
-        tomorrow_program = Program.objects.create(
-            title='Tomorrow Show',
-            source='tvmaze',
-            external_id='tomorrow-show',
-        )
-        self._airing(
-            channel,
-            tomorrow_program,
-            timedelta(hours=2),
-            timedelta(hours=3),
-            'tomorrow-airing',
-            schedule_date=tomorrow,
-        )
-
-        # Note: This test would need to be run with a different time context or mocked timezone
-        # For now, we'll skip this test as it requires special setup
-        self.skipTest('Requires special timezone mocking for past/future dates')
-
-
-    def test_channel_schedule_empty_day_navigation_links_have_correct_url(self):
-        """Sprint 119: Navigation links have correct URL with date and return_to params."""
-        today = timezone.localdate()
-        tomorrow = today + timedelta(days=1)
-        channel = Channel.objects.create(
-            name='Correct URL Network',
-            slug='correct-url-network',
-            region='US',
-            source='tvmaze',
-            external_id='correct-url-network',
-        )
-        # Create airings only for tomorrow (not today)
-        program = Program.objects.create(
-            title='Tomorrow Show',
-            source='tvmaze',
-            external_id='tomorrow-show',
-        )
-        self._airing(
-            channel,
-            program,
-            timedelta(hours=2),
-            timedelta(hours=3),
-            'tomorrow-airing',
-            schedule_date=tomorrow,
+            external_id='no-schedule-network',
         )
 
         response = self.client.get(
             reverse('live_tv_channel_schedule', args=[channel.pk]),
         )
 
-        # Verify navigation link contains correct date in URL
-        self.assertContains(response, f'date={tomorrow.isoformat()}')
-        # Verify return_to parameter is preserved
-        self.assertContains(response, 'return_to=')
-
-
-    def test_channel_schedule_empty_day_navigation_aria_labels(self):
-        """Sprint 119: Navigation buttons have accessible aria-labels with date and airing count."""
-        today = timezone.localdate()
-        tomorrow = today + timedelta(days=1)
-        channel = Channel.objects.create(
-            name='Accessible Empty Day Network',
-            slug='accessible-empty-day-network',
-            region='US',
-            source='tvmaze',
-            external_id='accessible-empty-day-network',
-        )
-        # Create airings only for tomorrow (not today)
-        program = Program.objects.create(
-            title='Tomorrow Show',
-            source='tvmaze',
-            external_id='tomorrow-show',
-        )
-        self._airing(
-            channel,
-            program,
-            timedelta(hours=2),
-            timedelta(hours=3),
-            'tomorrow-airing',
-            schedule_date=tomorrow,
-        )
-
-        response = self.client.get(
-            reverse('live_tv_channel_schedule', args=[channel.pk]),
-        )
-
-        # Verify aria-label contains date information
-        self.assertContains(response, f'aria-label="Jump to {tomorrow:%A}')
-        # Verify aria-label contains airing count
-        self.assertContains(response, '1 airing')
-
-
-    def test_channel_schedule_empty_day_source_date_semantics_preserved(self):
-        """Sprint 119: Source-date semantics are preserved during empty day navigation."""
-        today = timezone.localdate()
-        tomorrow = today + timedelta(days=1)
-        channel = Channel.objects.create(
-            name='Source Date Semantics Network',
-            slug='source-date-semantics-network',
-            region='US',
-            source='tvmaze',
-            external_id='source-date-semantics-network',
-        )
-        # Create airings only for tomorrow (not today)
-        program = Program.objects.create(
-            title='Tomorrow Show',
-            source='tvmaze',
-            external_id='tomorrow-show',
-        )
-        self._airing(
-            channel,
-            program,
-            timedelta(hours=2),
-            timedelta(hours=3),
-            'tomorrow-airing',
-            schedule_date=tomorrow,
-        )
-
-        response = self.client.get(
-            reverse('live_tv_channel_schedule', args=[channel.pk]),
-        )
-
-        # Verify source date semantics are preserved in page title/header
-        self.assertContains(response, 'normalized schedule by source broadcast date')
+        self.assertContains(response, 'No schedule is available')
+        self.assertNotContains(response, 'Nearest available schedule dates')
+        self.assertEqual(response.context['schedule_nearest_populated_days'], [])

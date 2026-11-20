@@ -88,21 +88,19 @@
         <div class="empty-state">
             <strong>No schedule is available for {{ channel.name }} on {{ schedule_selected_date|date:"F j, Y" }}.</strong>
             <div class="text-muted mt-1">Only normalized schedule data from configured trustworthy sources is shown.</div>
-            {% if is_empty_day and nearest_populated_dates %}
-                <div class="mt-3 p-2 bg-light rounded border">
-                    <p class="mb-2"><strong>Navigate to a populated day:</strong></p>
-                    {% for target in nearest_populated_dates %}
-                        <a 
-                            href="{% url 'live_tv_channel_schedule' channel.id %}?date={{ target.date|date:'Y-m-d' }}&amp;return_to={{ schedule_return_path|urlencode }}"
-                            class="btn btn-sm btn-outline-primary me-1 mb-1"
-                            aria-label="Jump to {{ target.date|date:'l, F j, Y' }} with {{ target.count }} airing{{ target.count|pluralize }}"
+            {% if schedule_nearest_populated_days %}
+                <nav class="d-flex gap-2 flex-wrap mt-3" aria-label="Nearest available schedule dates">
+                    {% for item in schedule_nearest_populated_days %}
+                        <a
+                            class="btn btn-sm btn-outline-light"
+                            href="{% url 'live_tv_channel_schedule' channel.id %}?date={{ item.date|date:'Y-m-d' }}&amp;return_to={{ schedule_return_path|urlencode }}"
+                            aria-label="{% if item.direction == 'earlier' %}Earlier{% else %}Later{% endif %} available schedule: {{ item.date|date:'l, F j, Y' }}, {{ item.airing_count }} airing{{ item.airing_count|pluralize }}"
                         >
-                            {% if target.is_earlier %}← Earlier{% else %}Later →{% endif %}
-                            <span class="ms-1">{{ target.date|date:"F j" }}</span>
-                            <small class="text-muted">({{ target.count }} airing{{ target.count|pluralize }})</small>
+                            {% if item.direction == 'earlier' %}← Earlier{% else %}Later →{% endif %}
+                            · {{ item.label }} ({{ item.airing_count }})
                         </a>
                     {% endfor %}
-                </div>
+                </nav>
             {% endif %}
         </div>
     {% endif %}

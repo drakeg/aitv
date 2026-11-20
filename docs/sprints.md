@@ -11,7 +11,7 @@ This ledger is the durable project record for sprint-sized development. Git hist
 | 42 | #66 | Quality/docs/tests audit and Agile definition of done. |
 | 43 | #67 | Notification inbox pagination. |
 | 44 | #68 | Page-preserving individual notification read action. |
-| 45 | #69 | Mark-all-read and shared safe redirects. |
+| 45 | #69 | Page-preserving mark-all-read and shared safe redirects. |
 | 46 | #70 | Elided notification page navigation. |
 | 47 | #71 | Preferred-provider watch action labels. |
 | 48 | #72 | Separate direct-watch destinations from provider discovery/listing links. |
@@ -85,28 +85,9 @@ This ledger is the durable project record for sprint-sized development. Git hist
 | 116 | #151 | Add full-date and airing-count accessible labels to schedule-day navigation. |
 | 117 | #152 | Add semantic machine-readable start/end times to channel-schedule airings. |
 | 118 | #153 | Remove Compose interpolation warnings, add Docker deployment/operations documentation, and bring planning/documentation hygiene up to date. |
+| 119 | #154 | Add truthful empty schedule-day navigation to the nearest populated dates in the configured EPG horizon. |
 | 93 | #121 | Show an Ends in X min countdown for the current Live TV airing. |
 | 89 | #115 | Fix Live TV Favorite-toggle redirect encoding so preserved search/category filters cannot crash the request. |
-
-## Sprint 119 — Empty schedule-day navigation (IMPLEMENTED)
-
-**Goal**: Improve channel-schedule browsing when a selected date contains no airings by offering navigation toward the nearest earlier/later populated dates within the configured EPG horizon.
-
-**Implementation details**:
-- Modified `core/views.py` (`live_tv_channel_schedule`) to detect empty days and compute nearest populated dates for navigation
-- Updated `templates/live_tv/channel_schedule.html` to show navigation buttons when a day is empty  
-- Added comprehensive test coverage in `core/test_live_tv_channel_schedule.py`
-
-**Acceptance criteria met**:
-✅ Keep zero-count days visible so data gaps remain truthful  
-✅ Offer navigation toward the nearest earlier/later populated date inside the configured EPG horizon  
-✅ Preserve the selected channel, safe Live TV return path, region rules, and source-date semantics  
-✅ Do not fabricate schedule rows or silently redirect away from an explicitly selected empty day  
-
-**Files changed**:
-- `core/views.py`: Added empty day detection logic and nearest populated dates computation
-- `templates/live_tv/channel_schedule.html`: Added navigation UI for empty days with accessible buttons
-- `core/test_live_tv_channel_schedule.py`: Added 10 new test cases covering all acceptance criteria
 
 ## Planned queue
 
@@ -127,4 +108,3 @@ Sprints 1-39 established the Django foundation, live-source ingestion, accounts,
 ## Maintenance rule
 
 Every merged sprint should leave this ledger accurate. If a sprint is split, superseded, or closed without merge, record that outcome instead of silently renumbering history.
-<EOF>
