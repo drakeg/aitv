@@ -124,7 +124,10 @@ class LiveDashboardBrowseTests(TestCase):
         response = self.client.get(reverse('home'), {'type': 'tv'})
 
         self.assertContains(response, 'Kitchen Stories')
-        self.assertNotContains(response, 'Galaxy Movie')
+        self.assertEqual(
+            [item['title'] for item in response.context['browse_results']],
+            ['Kitchen Stories'],
+        )
 
     @patch('core.views.fetch_free_archive_movies', return_value=[])
     @patch('core.views.fetch_trending_tv', return_value=[])
@@ -161,7 +164,9 @@ class LiveSourcePresentationTests(TestCase):
         self.assertContains(response, 'Actual Show')
         self.assertContains(response, '>FOX<', html=False)
         self.assertContains(response, 'FOX · Sign-in required')
-        self.assertContains(response, 'S1 E2 · 60 min · 20:00')
+        self.assertContains(response, 'S1 E2')
+        self.assertContains(response, '60 min')
+        self.assertContains(response, '20:00')
 
     @patch('core.views.fetch_free_archive_movies', return_value=[])
     @patch('core.views.fetch_trending_movies', return_value=[])

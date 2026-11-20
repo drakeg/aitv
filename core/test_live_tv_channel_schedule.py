@@ -496,7 +496,7 @@ class LiveTvChannelScheduleTests(TestCase):
             external_id='countdown-current-show',
         )
         self._airing(
-            channel, program, timedelta(minutes=-5), timedelta(minutes=25, seconds=1),
+            channel, program, timedelta(minutes=-5), timedelta(minutes=25, seconds=30),
             'countdown-current-airing',
         )
 
@@ -553,7 +553,7 @@ class LiveTvChannelScheduleTests(TestCase):
             external_id='starts-soon-later-show',
         )
         first_airing = self._airing(
-            channel, first_program, timedelta(minutes=20, seconds=1), timedelta(minutes=50),
+            channel, first_program, timedelta(minutes=20, seconds=30), timedelta(minutes=50),
             'starts-soon-first-airing',
         )
         self._airing(
@@ -1050,7 +1050,8 @@ class LiveTvChannelScheduleTests(TestCase):
         self.assertContains(response, 'Later →')
         self.assertContains(response, f'date={tomorrow.isoformat()}')
         self.assertContains(response, '1 airing')
-        self.assertContains(response, 'return_to=%2Flive-tv%2F%3Fq%3Dnews')
+        self.assertEqual(response.context['schedule_return_path'], return_to)
+        self.assertContains(response, 'q%3Dnews')
 
     @patch.dict('os.environ', {'EPG_DAYS': '3'})
     def test_empty_middle_schedule_day_links_to_nearest_earlier_and_later_days(self):

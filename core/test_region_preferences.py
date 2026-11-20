@@ -24,7 +24,7 @@ class RegionPreferenceTests(TestCase):
 
         self.assertEqual(preference.region, 'US')
         self.assertTrue(preference.require_region_availability)
-        self.assertContains(response, 'Only show titles with providers in my region')
+        self.assertContains(response, 'Only show titles with a provider or watch destination in my region')
         self.assertContains(response, '<option value="US" selected>', html=False)
 
     def test_user_can_change_region_and_availability_filter(self, *_mocks):

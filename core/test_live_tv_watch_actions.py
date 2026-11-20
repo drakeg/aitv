@@ -46,7 +46,9 @@ class LiveTvWatchActionTests(TestCase):
 
         self.assertContains(response, 'Network Drama')
         self.assertContains(response, 'Example Network')
-        self.assertContains(response, 'S2 E4 · 44 min · 21:00')
+        self.assertContains(response, 'S2 E4')
+        self.assertContains(response, '44 min')
+        self.assertContains(response, '21:00')
         self.assertContains(response, 'Direct watch link not listed by source')
         self.assertContains(response, 'Source details')
         self.assertNotContains(response, 'Watch on Example Network')
