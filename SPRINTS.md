@@ -8,8 +8,9 @@ The detailed historical sprint ledger and current numbered queue are maintained 
 
 - Sprint 119: merged — empty schedule-day navigation.
 - Sprint 120: merged — Live TV accessibility flow audit and user-controlled auto-refresh.
-- Sprint 121: PR #158 — Live TV request/query efficiency audit.
-- Next planned product sprint after Sprint 121: Sprint 122 — Operator EPG/source diagnostics.
+- Sprint 121: merged — Live TV request/query efficiency audit.
+- Sprint 122: PR #159 — Operator EPG/source diagnostics.
+- Next planned product sprint after Sprint 122: Sprint 123 — next legitimate EPG/source adapter evaluation.
 - Repository standards adoption is active maintenance work and does not renumber already planned product sprints.
 - Commercialization hypotheses and pilot milestones are tracked in docs/commercialization.md.
 
