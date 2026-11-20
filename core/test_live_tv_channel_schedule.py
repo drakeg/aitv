@@ -392,8 +392,47 @@ class LiveTvChannelScheduleTests(TestCase):
         )
 
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, 'js/live-tv-auto-refresh.js')
+        self.assertContains(response, 'js/live-tv-auto-refresh.js?v=2')
+        self.assertContains(response, 'data-live-tv-refresh-toggle')
+        self.assertContains(response, 'Pause auto-refresh')
+        self.assertContains(response, 'aria-labelledby="channel-schedule-heading"')
 
+
+    def test_channel_schedule_uses_named_region_and_labelled_airing(self):
+        channel = Channel.objects.create(
+            name='Accessible Schedule Network',
+            slug='accessible-schedule-network',
+            region='US',
+            source='tvmaze',
+            external_id='accessible-schedule-network',
+        )
+        program = Program.objects.create(
+            title='Accessible Schedule Show',
+            source='tvmaze',
+            external_id='accessible-schedule-show',
+        )
+        airing = self._airing(
+            channel, program, timedelta(minutes=-5), timedelta(minutes=25),
+            'accessible-schedule-airing',
+        )
+
+        response = self.client.get(
+            reverse('live_tv_channel_schedule', args=[channel.pk]),
+        )
+
+        self.assertContains(
+            response,
+            f'<section class="guide-list" aria-label="{channel.name} schedule">',
+            html=False,
+        )
+        self.assertContains(
+            response,
+            f'aria-labelledby="airing-title-{airing.id}"',
+        )
+        self.assertContains(
+            response,
+            f'id="airing-title-{airing.id}"',
+        )
 
     def test_channel_schedule_shows_trusted_destination_for_current_airing_only(self):
         channel = Channel.objects.create(
