@@ -2,14 +2,15 @@
 {% load static %}
 
 {% block content %}
-<section class="live-guide">
+<section class="live-guide" aria-labelledby="channel-schedule-heading">
     <div class="d-flex justify-content-between align-items-end flex-wrap gap-2 mb-3">
         <div>
-            <h2 class="mb-1">{{ channel.name }}</h2>
+            <h2 class="mb-1" id="channel-schedule-heading">{{ channel.name }}</h2>
             <div class="text-muted">{{ channel.region }} · normalized schedule by source broadcast date</div>
             {% include "live_tv/_epg_health.html" %}
         </div>
         <div class="d-flex gap-2 flex-wrap">
+            <button class="btn btn-outline-light" type="button" data-live-tv-refresh-toggle aria-pressed="false">Pause auto-refresh</button>
             {% if user.is_authenticated %}
                 <form method="post" action="{% url 'toggle_channel_favorite' channel.id %}">
                     {% csrf_token %}
@@ -40,9 +41,9 @@
     </div>
 
     {% if airings %}
-        <div class="guide-list" aria-label="{{ channel.name }} schedule">
+        <section class="guide-list" aria-label="{{ channel.name }} schedule">
             {% for airing in airings %}
-                <article class="guide-row">
+                <article class="guide-row" aria-labelledby="airing-title-{{ airing.id }}">
                     <div class="guide-channel">
                         {% if airing.ends_at <= schedule_now %}
                             <span class="badge text-bg-secondary align-self-start">Aired</span>
@@ -73,17 +74,17 @@
                                     href="{{ schedule_current_destination.url }}"
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                >{{ schedule_current_destination.action_label }}</a>
+                                >{{ schedule_current_destination.action_label }}<span class="visually-hidden"> (opens in new tab)</span></a>
                             </div>
                         {% endif %}
                     </div>
                     <div class="guide-program" style="grid-column: span 3;">
-                        <strong>{{ airing.program.title }}</strong>
+                        <strong id="airing-title-{{ airing.id }}">{{ airing.program.title }}</strong>
                         <span><time datetime="{{ airing.starts_at|date:'c' }}">{{ airing.starts_at|date:"D, M j · g:i A" }}</time>–<time datetime="{{ airing.ends_at|date:'c' }}">{{ airing.ends_at|date:"g:i A" }}</time></span>
                     </div>
                 </article>
             {% endfor %}
-        </div>
+        </section>
     {% else %}
         <div class="empty-state">
             <strong>No schedule is available for {{ channel.name }} on {{ schedule_selected_date|date:"F j, Y" }}.</strong>
@@ -105,5 +106,5 @@
         </div>
     {% endif %}
 </section>
-<script src="{% static 'js/live-tv-auto-refresh.js' %}?v=1" defer></script>
+<script src="{% static 'js/live-tv-auto-refresh.js' %}?v=2" defer></script>
 {% endblock %}

@@ -6,16 +6,6 @@ Priorities can change when local testing, CI, security review, source behavior, 
 
 ## Near-term sprint queue
 
-### Sprint 120 — Live TV accessibility flow audit
-
-Audit the Live TV guide and channel schedule as one keyboard/screen-reader flow.
-
-Acceptance direction:
-- Verify focus order, form controls, filter state, Favorite actions, status badges, day navigation, and Watch actions.
-- Add or improve semantic names/state only where needed.
-- Preserve visible behavior unless an accessibility defect requires a UI adjustment.
-- Add regression coverage for meaningful issues found.
-
 ### Sprint 121 — Live TV request/query efficiency audit
 
 Review guide and schedule request paths for repeated database work and avoidable in-memory processing.

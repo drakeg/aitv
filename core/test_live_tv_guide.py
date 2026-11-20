@@ -317,7 +317,64 @@ class LiveTvGuideTests(TestCase):
     def test_guide_loads_periodic_refresh_behavior(self):
         response = self.client.get(reverse('live_tv_guide'))
 
-        self.assertContains(response, 'js/live-tv-auto-refresh.js?v=1')
+        self.assertContains(response, 'js/live-tv-auto-refresh.js?v=2')
+
+    def test_guide_exposes_accessibility_landmarks_and_refresh_control(self):
+        response = self.client.get(reverse('live_tv_guide'))
+
+        self.assertContains(response, 'href="#main-content"')
+        self.assertContains(response, 'id="main-content"')
+        self.assertContains(response, 'aria-label="Primary navigation"')
+        self.assertContains(response, 'role="search"')
+        self.assertContains(response, 'aria-label="Live TV guide filters"')
+        self.assertContains(response, 'data-live-tv-refresh-toggle')
+        self.assertContains(response, 'aria-pressed="false"')
+        self.assertContains(response, 'Pause auto-refresh')
+
+    def test_guide_uses_named_region_articles_and_semantic_airing_times(self):
+        channel = Channel.objects.create(
+            name='Accessible Network',
+            slug='accessible-network',
+            region='US',
+            source='tvmaze',
+            external_id='accessible-network',
+        )
+        current = Program.objects.create(
+            title='Accessible Current',
+            source='tvmaze',
+            external_id='accessible-current',
+        )
+        upcoming = Program.objects.create(
+            title='Accessible Next',
+            source='tvmaze',
+            external_id='accessible-next',
+        )
+        self._airing(
+            channel, current, timedelta(minutes=-5), timedelta(minutes=25),
+            'accessible-current-airing',
+        )
+        self._airing(
+            channel, upcoming, timedelta(minutes=30), timedelta(minutes=60),
+            'accessible-next-airing',
+        )
+
+        response = self.client.get(reverse('live_tv_guide'))
+
+        self.assertContains(
+            response,
+            '<section class="guide-list" aria-label="Live TV channel guide">',
+            html=False,
+        )
+        self.assertContains(
+            response,
+            f'aria-labelledby="channel-name-{channel.id}"',
+        )
+        self.assertContains(
+            response,
+            f'id="channel-name-{channel.id}"',
+        )
+        self.assertContains(response, '<time datetime="', count=4, html=False)
+
 
     def test_guide_shows_only_explicit_playable_channel_destination(self):
         channel = Channel.objects.create(
@@ -339,6 +396,7 @@ class LiveTvGuideTests(TestCase):
 
         self.assertContains(response, 'Watch on Example Stream')
         self.assertContains(response, 'https://example.com/live')
+        self.assertContains(response, 'opens in new tab')
 
     def test_current_airing_destination_precedes_channel_destination(self):
         channel = Channel.objects.create(
