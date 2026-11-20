@@ -17,16 +17,6 @@ Acceptance direction:
 - Record objections and feature requests as evidence, not assumed demand.
 - Treat the pricing ideas in `docs/commercialization.md` as hypotheses until a customer agrees to pay.
 
-### Sprint 123 — Next legitimate EPG/source adapter
-
-Evaluate and add the next schedule source only if it can satisfy the existing provenance and trust contract.
-
-Acceptance direction:
-- Document region semantics, refresh completeness, stable identities, timestamps, access type, and destination meaning.
-- Treat schedule metadata and playback destinations separately.
-- Add adapter contract tests and fail closed when an authoritative snapshot is incomplete or ambiguous.
-- No scraped streams, mystery playlists, guessed playback URLs, DRM bypass, or credential replay.
-
 ### Sprint 124 — Production-readiness hardening
 
 Move beyond the development-only Docker path where appropriate.
@@ -55,6 +45,9 @@ These items are continuous rather than assigned to one fixed sprint:
 
 These are intentionally not scheduled yet:
 
+- Re-evaluate TV Schedule API as a second EPG source if its Live-plan recurring cost is explicitly authorized; re-check current terms/pricing first.
+- Re-evaluate Schedules Direct only with written commercial permission/approval, not an ordinary subscriber account.
+- Re-evaluate TheTVDB only with a suitable commercial API arrangement and evidence its schedule data adds material value beyond TVmaze.
 - Additional account/provider integrations using provider-supported OAuth/token mechanisms where available.
 - User-owned tuner integrations when a trustworthy local-source contract can be defined.
 - Broader guide layouts or grid-style EPG presentation after the current normalized guide behavior is stable.
