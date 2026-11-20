@@ -1,0 +1,99 @@
+services:
+  web:
+    build:
+      context: .
+    env_file:
+      - .env.production
+    command: ["/app/scripts/start-production.sh"]
+    restart: unless-stopped
+    expose:
+      - "8000"
+    environment:
+      DJANGO_DEBUG: "false"
+      DJANGO_TRUST_PROXY_HEADERS: "true"
+      DJANGO_SECURE_SSL_REDIRECT: "true"
+      DJANGO_SESSION_COOKIE_SECURE: "true"
+      DJANGO_CSRF_COOKIE_SECURE: "true"
+      DJANGO_SECURE_HSTS_SECONDS: "${DJANGO_SECURE_HSTS_SECONDS:-31536000}"
+      DJANGO_SECURE_HSTS_INCLUDE_SUBDOMAINS: "${DJANGO_SECURE_HSTS_INCLUDE_SUBDOMAINS:-true}"
+      DJANGO_SECURE_HSTS_PRELOAD: "${DJANGO_SECURE_HSTS_PRELOAD:-true}"
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - "import urllib.request; req=urllib.request.Request('http://127.0.0.1:8000/health/live/', headers={'X-Forwarded-Proto':'https'}); urllib.request.urlopen(req, timeout=3).read()"
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+    volumes:
+      - aitv_data:/data
+
+  caddy:
+    image: caddy:2.11.9-alpine
+    env_file:
+      - .env.production
+    restart: unless-stopped
+    depends_on:
+      web:
+        condition: service_healthy
+    ports:
+      - "${HTTP_PORT:-80}:80"
+      - "${HTTPS_PORT:-443}:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+
+  notifications:
+    profiles:
+      - notifications
+    build:
+      context: .
+    env_file:
+      - .env.production
+    depends_on:
+      web:
+        condition: service_healthy
+    restart: unless-stopped
+    command: >-
+      sh -c '
+        interval="$${RELEASE_CHECK_INTERVAL_SECONDS:-3600}";
+        case "$$interval" in
+          ""|*[!0-9]*) echo "RELEASE_CHECK_INTERVAL_SECONDS must be a positive integer; using 3600." >&2; interval=3600 ;;
+          0) echo "RELEASE_CHECK_INTERVAL_SECONDS must be greater than zero; using 3600." >&2; interval=3600 ;;
+        esac;
+        while true; do
+          if ! python manage.py check_release_notifications; then
+            echo "Favorite release check failed; retrying after $$interval seconds." >&2;
+          fi;
+          sleep "$$interval";
+        done
+      '
+    environment:
+      DJANGO_DEBUG: "false"
+    volumes:
+      - aitv_data:/data
+
+  epg:
+    profiles:
+      - epg
+    build:
+      context: .
+    env_file:
+      - .env.production
+    depends_on:
+      web:
+        condition: service_healthy
+    restart: unless-stopped
+    command: ["sh", "/app/scripts/epg-worker.sh"]
+    environment:
+      DJANGO_DEBUG: "false"
+    volumes:
+      - aitv_data:/data
+
+volumes:
+  aitv_data:
+  caddy_data:
+  caddy_config:
