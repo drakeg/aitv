@@ -1,8 +1,8 @@
 # Docker deployment and operations
 
-This document describes the currently supported Docker deployment model for aitv in a platform-neutral way. It applies to Docker Engine / Docker Desktop environments that support Docker Compose v2.
+This document describes aitv's Docker development/testing model in a platform-neutral way. It applies to Docker Engine / Docker Desktop environments that support Docker Compose v2.
 
-The current Compose stack is intentionally development-focused. It is suitable for local testing, evaluation, and controlled single-host use. It is **not yet the project's declared production deployment architecture**. Production-serving concerns such as a production WSGI/ASGI server, reverse proxy/TLS termination, production database selection, static-file serving, centralized secrets, and deployment rollback are tracked separately in the backlog.
+The default `docker-compose.yml` remains development-focused: Django's development server, source bind mounts, and convenient local iteration. A separate hardened single-host/pilot production stack is now documented in `docs/production-deployment.md` and defined by `compose.production.yml`. Do not use the development Compose file as an Internet-facing production deployment.
 
 ## Components
 
@@ -331,4 +331,6 @@ Before considering a Docker deployment healthy:
 
 ## Production status
 
-The current Compose stack remains a development/single-host deployment model. The production-readiness backlog covers the remaining work before the project should claim a supported Internet-facing production deployment.
+The default Compose stack remains the supported development/testing path. For a real single-host SMB pilot, use the separate production profile documented in `docs/production-deployment.md`, which uses Gunicorn, WhiteNoise, Caddy/HTTPS, deployment security checks, and no source bind mount.
+
+The production profile deliberately retains SQLite and defaults to one Gunicorn worker, so it is not a horizontal-scaling or high-availability architecture.
