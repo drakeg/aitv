@@ -317,7 +317,7 @@ class LiveTvGuideTests(TestCase):
     def test_guide_loads_periodic_refresh_behavior(self):
         response = self.client.get(reverse('live_tv_guide'))
 
-        self.assertContains(response, 'js/live-tv-guide.js?v=1')
+        self.assertContains(response, 'js/live-tv-auto-refresh.js?v=1')
 
     def test_guide_shows_only_explicit_playable_channel_destination(self):
         channel = Channel.objects.create(
