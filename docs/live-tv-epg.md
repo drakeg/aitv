@@ -48,6 +48,8 @@ Airing data and playback destinations must not be conflated. Knowing that a prog
 
 Each source integration must define its provenance, region semantics, access type, refresh behavior, failure behavior, and whether its URL is metadata, provider discovery, or direct playback.
 
+Current candidate evaluations, licensing/cost gates, and re-evaluation conditions are recorded in `docs/epg-source-evaluation.md`. A candidate does not become an adapter merely because its API shape is convenient; it must also satisfy the commercial-rights, trust, and authorization constraints above.
+
 ## Discovery deduplication versus EPG completeness
 
 **Implemented in Sprint 78:** TVmaze home discovery continues to collapse repeated same-day airings of the same show into one discovery card. The normalized EPG refresh uses the same source fetcher in full-schedule mode instead, preserving every distinct TVmaze episode/schedule identity so back-to-back or repeated airings are not silently dropped before persistence.
