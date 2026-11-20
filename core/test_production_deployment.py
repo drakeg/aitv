@@ -20,6 +20,7 @@ class ProductionDeploymentContractTests(SimpleTestCase):
         self.assertIn('gunicorn==27.0.1', self.requirements)
         self.assertIn('whitenoise==6.12.0', self.requirements)
         self.assertIn('whitenoise.middleware.WhiteNoiseMiddleware', self.settings)
+        self.assertIn('django.middleware.clickjacking.XFrameOptionsMiddleware', self.settings)
         self.assertIn('CompressedManifestStaticFilesStorage', self.settings)
         self.assertIn("STATIC_ROOT = BASE_DIR / 'staticfiles'", self.settings)
 
