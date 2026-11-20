@@ -92,6 +92,7 @@ This ledger is the durable project record for sprint-sized development. Git hist
 ## Maintenance initiatives
 
 - **PR #155 — Mad Mallard standards adoption:** repository governance files, verified badge automation, standards CI, migration-drift enforcement, schema-state cleanup, security/release policy, and commercialization hypotheses. This maintenance work does not renumber the product sprint sequence.
+- **PR #156 — Full Django test discovery:** restore package markers for `core` and `watchlist`, repair stale assertions exposed by the previously skipped modules, and protect CI against silently losing those modular tests again. The restored suite exercises 321 tests.
 
 ## Planned queue
 

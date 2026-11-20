@@ -45,9 +45,14 @@ class TVDiscoveryDepthTests(TestCase):
         self.assertContains(response, 'Trending TV Today')
         self.assertContains(response, 'TV On the Air')
         self.assertContains(response, 'Popular TV')
-        self.assertEqual(response.content.decode().count('Shared Series'), 1)
-        self.assertEqual(response.content.decode().count('On Air Series'), 1)
-        self.assertContains(response, 'Popular Series')
+        rendered_titles = [
+            item['title']
+            for section in response.context['home_sections']
+            for item in section['items']
+        ]
+        self.assertEqual(rendered_titles.count('Shared Series'), 1)
+        self.assertEqual(rendered_titles.count('On Air Series'), 1)
+        self.assertIn('Popular Series', rendered_titles)
 
     @patch('core.views.fetch_free_archive_movies', return_value=[])
     @patch('core.views.fetch_trending_movies', return_value=[])

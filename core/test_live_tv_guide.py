@@ -271,7 +271,7 @@ class LiveTvGuideTests(TestCase):
 
         self.assertContains(response, 'Upcoming Network')
         self.assertContains(response, 'Upcoming')
-        self.assertNotContains(response, 'Starts soon')
+        self.assertNotContains(response, 'Starts in ')
 
     def test_current_airing_shows_ends_in_countdown(self):
         channel = Channel.objects.create(
@@ -317,7 +317,7 @@ class LiveTvGuideTests(TestCase):
     def test_guide_loads_periodic_refresh_behavior(self):
         response = self.client.get(reverse('live_tv_guide'))
 
-        self.assertContains(response, 'js/live-tv-guide.js?v=1')
+        self.assertContains(response, 'js/live-tv-auto-refresh.js?v=1')
 
     def test_guide_shows_only_explicit_playable_channel_destination(self):
         channel = Channel.objects.create(
@@ -1106,7 +1106,7 @@ class LiveTvGuideTests(TestCase):
         self.assertContains(response, 'Drama Program')
         self.assertNotContains(response, 'Comedy Network')
         self.assertNotContains(response, 'Comedy Program')
-        self.assertContains(response, '<option value="Drama" selected>', html=True)
+        self.assertContains(response, '<option value="Drama" selected>Drama</option>', html=True)
         self.assertContains(response, '<option value="Comedy">Comedy</option>', html=True)
 
     def test_category_filter_combines_with_search(self):

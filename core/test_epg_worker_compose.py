@@ -7,34 +7,47 @@ class EpgWorkerComposeTests(SimpleTestCase):
     def setUp(self):
         root = Path(__file__).resolve().parents[1]
         self.compose = (root / 'docker-compose.yml').read_text()
+        self.worker = (root / 'scripts' / 'epg-worker.sh').read_text()
         self.env_example = (root / '.env.example').read_text()
 
-    def test_epg_profile_runs_refresh_command_on_interval(self):
+    def test_epg_profile_wires_shared_worker_script_and_persistent_data(self):
         self.assertIn('  epg:', self.compose)
         self.assertIn('- epg', self.compose)
-        self.assertIn('python manage.py refresh_epg --regions "$regions" --retention-hours "$retention" --days "$days"', self.compose)
+        self.assertIn('command: ["sh", "/app/scripts/epg-worker.sh"]', self.compose)
         self.assertIn('EPG_REFRESH_INTERVAL_SECONDS', self.compose)
         self.assertIn('EPG_REGIONS', self.compose)
         self.assertIn('EPG_RETENTION_HOURS', self.compose)
-        self.assertIn('until [ -f /data/db.sqlite3 ]', self.compose)
+        self.assertIn('EPG_DAYS', self.compose)
         self.assertIn('- aitv_data:/data', self.compose)
 
-    def test_epg_worker_recovers_from_failed_refresh(self):
-        self.assertIn('if ! python manage.py refresh_epg', self.compose)
-        self.assertIn('EPG refresh failed; retrying after $interval seconds.', self.compose)
+    def test_epg_worker_runs_refresh_command_and_recovers_from_failure(self):
+        self.assertIn(
+            'python manage.py refresh_epg --regions "$regions" --retention-hours "$retention" --days "$days"',
+            self.worker,
+        )
+        self.assertIn('if ! python manage.py refresh_epg', self.worker)
+        self.assertIn('EPG refresh failed; retrying after $interval seconds.', self.worker)
+        self.assertIn('until [ -f /data/db.sqlite3 ]', self.worker)
+        self.assertIn('sleep "$interval"', self.worker)
         self.assertIn('restart: unless-stopped', self.compose)
 
     def test_epg_worker_validates_day_horizon(self):
-        self.assertIn('days="${EPG_DAYS:-2}"', self.compose)
-        self.assertIn('EPG_DAYS must be an integer from 1 to 7; using 2.', self.compose)
-        self.assertIn('EPG_DAYS must be between 1 and 7; using 2.', self.compose)
+        self.assertIn('days="${EPG_DAYS:-2}"', self.worker)
+        self.assertIn('EPG_DAYS must be an integer from 1 to 7; using 2.', self.worker)
+        self.assertIn('EPG_DAYS must be between 1 and 7; using 2.', self.worker)
         self.assertIn('EPG_DAYS: "${EPG_DAYS:-2}"', self.compose)
 
     def test_epg_worker_rejects_invalid_or_zero_interval(self):
-        self.assertIn('EPG_REFRESH_INTERVAL_SECONDS must be a positive integer; using 1800.', self.compose)
-        self.assertIn('EPG_REFRESH_INTERVAL_SECONDS must be greater than zero; using 1800.', self.compose)
-        self.assertIn('interval=1800', self.compose)
-        self.assertIn('sleep "$interval"', self.compose)
+        self.assertIn(
+            'EPG_REFRESH_INTERVAL_SECONDS must be a positive integer; using 1800.',
+            self.worker,
+        )
+        self.assertIn(
+            'EPG_REFRESH_INTERVAL_SECONDS must be greater than zero; using 1800.',
+            self.worker,
+        )
+        self.assertIn('interval=1800', self.worker)
+        self.assertIn('sleep "$interval"', self.worker)
 
     def test_epg_defaults_are_documented(self):
         self.assertIn('EPG_REGIONS=US', self.env_example)
