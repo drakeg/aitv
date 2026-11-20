@@ -26,7 +26,15 @@ TECH = {
     "React": ("React", "149ECA", "react"),
     "PostgreSQL": ("PostgreSQL", "4169E1", "postgresql"),
     "MariaDB": ("MariaDB", "003545", "mariadb"),
+    "SQLite": ("SQLite", "003B57", "sqlite"),
     "Vercel": ("Vercel", "000000", "vercel"),
+}
+TECH_URLS = {
+    "Python": "https://www.python.org/",
+    "Docker": "https://www.docker.com/",
+    "Docker Compose": "https://docs.docker.com/compose/",
+    "Django": "https://www.djangoproject.com/",
+    "SQLite": "https://www.sqlite.org/",
 }
 LICENSE_FILES = ("LICENSE", "LICENSE.md", "LICENSE.txt", "COPYING")
 MANIFESTS = ("package.json", "pyproject.toml", "requirements.txt", "go.mod", "Cargo.toml")
@@ -81,7 +89,24 @@ def detected(root: Path) -> list[str]:
     for name, pattern in (("PostgreSQL", r"(?im)^\s*image:\s*['\"]?postgres(?::|@|['\"]?\s*$)"),
                           ("MariaDB", r"(?im)^\s*image:\s*['\"]?mariadb(?::|@|['\"]?\s*$)")):
         if re.search(pattern, configs): found.add(name)
+    django_settings = "\n".join(read(path) for path in root.rglob("settings.py"))
+    if "django.db.backends.sqlite3" in django_settings:
+        found.add("SQLite")
     return sorted(found)
+
+def verified_versions(root: Path) -> dict[str, str]:
+    versions: dict[str, str] = {}
+    dockerfiles = [path for path in root.iterdir() if path.name.lower().startswith("dockerfile")] if root.is_dir() else []
+    for dockerfile in dockerfiles:
+        match = re.search(r"(?im)^FROM\s+python:([0-9]+(?:\.[0-9]+){1,2})(?:[-@]|\s|$)", read(dockerfile))
+        if match:
+            versions["Python"] = match.group(1)
+            break
+    requirements = read(root / "requirements.txt")
+    match = re.search(r"(?im)^\s*Django==([0-9]+(?:\.[0-9]+){1,2})\s*$", requirements)
+    if match:
+        versions["Django"] = match.group(1)
+    return versions
 
 def shield(label: str, color: str, logo: str) -> str:
     path = quote(label, safe="").replace("-", "--")
@@ -95,9 +120,14 @@ def generate(root: Path) -> str:
     slug = repository(root)
     lines: list[str] = []
     first = []
+    versions = verified_versions(root)
     for name in detected(root):
         label, color, logo = TECH[name]
-        first.append(f"![{name}]({shield(label, color, logo)})")
+        display_label = f"{label} {versions[name]}" if name in versions else label
+        alt = f"{name} {versions[name]}" if name in versions else name
+        badge = f"![{alt}]({shield(display_label, color, logo)})"
+        target = TECH_URLS.get(name)
+        first.append(f"[{badge}]({target})" if target else badge)
     if first: lines.append(" ".join(first))
     second = []
     if slug:
