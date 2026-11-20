@@ -6,16 +6,6 @@ Priorities can change when local testing, CI, security review, source behavior, 
 
 ## Near-term sprint queue
 
-### Sprint 121 — Live TV request/query efficiency audit
-
-Review guide and schedule request paths for repeated database work and avoidable in-memory processing.
-
-Acceptance direction:
-- Measure/query-count relevant paths before changing them.
-- Remove N+1 or duplicate queries without changing provider ranking, trust boundaries, or ordering.
-- Keep behavior deterministic and regression-covered.
-- Prefer database aggregation where it clearly improves bounded schedule/guide work.
-
 ### Sprint 122 — Operator EPG diagnostics
 
 Improve operator visibility into EPG/source health while keeping public output sanitized.

@@ -87,6 +87,7 @@ This ledger is the durable project record for sprint-sized development. Git hist
 | 118 | #153 | Remove Compose interpolation warnings, add Docker deployment/operations documentation, and bring planning/documentation hygiene up to date. |
 | 119 | #154 | Add truthful empty schedule-day navigation to the nearest populated dates in the configured EPG horizon. |
 | 120 | #157 | Audit and improve the Live TV keyboard/screen-reader flow, including landmarks, semantic times, new-tab announcements, and user-controlled auto-refresh. |
+| 121 | #158 | Bound Live TV request queries as channel count grows and aggregate schedule-day counts in the database. |
 | 93 | #121 | Show an Ends in X min countdown for the current Live TV airing. |
 | 89 | #115 | Fix Live TV Favorite-toggle redirect encoding so preserved search/category filters cannot crash the request. |
 
@@ -101,7 +102,6 @@ These are the current near-term sprint targets. They are prioritized guidance ra
 
 | Sprint | Planned focus |
 | --- | --- |
-| 121 | Audit request/database efficiency across Live TV guide and schedule views and remove avoidable repeated work. |
 | 122 | Improve operator-facing EPG/source diagnostics while keeping public errors sanitized. |
 | 123 | Evaluate and implement the next legitimate EPG/source adapter through the existing provenance/trust contract. |
 | 124 | Production-readiness hardening for serving, static assets, configuration, persistence, and deployment boundaries. |

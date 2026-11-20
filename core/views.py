@@ -6,7 +6,7 @@ from django.contrib.auth import login
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import UserCreationForm
 from django.db import DatabaseError, connection
-from django.db.models import Q
+from django.db.models import Count, Q
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
@@ -623,16 +623,16 @@ def live_tv_channel_schedule(request, channel_id):
             label = f'{schedule_date:%b} {schedule_date.day}'
         schedule_days.append({'date': schedule_date, 'label': label})
 
-    schedule_day_counts = {}
-    for schedule_date in (
+    schedule_day_counts = dict(
         Airing.objects
         .filter(
             channel=channel,
             source_schedule_date__in=[item['date'] for item in schedule_days],
         )
-        .values_list('source_schedule_date', flat=True)
-    ):
-        schedule_day_counts[schedule_date] = schedule_day_counts.get(schedule_date, 0) + 1
+        .values('source_schedule_date')
+        .annotate(airing_count=Count('id'))
+        .values_list('source_schedule_date', 'airing_count')
+    )
     for item in schedule_days:
         item['airing_count'] = schedule_day_counts.get(item['date'], 0)
 
