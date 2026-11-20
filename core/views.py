@@ -658,6 +658,33 @@ def live_tv_channel_schedule(request, channel_id):
     )
     selected_day_airing_count = len(airings)
 
+    schedule_nearest_populated_days = []
+    if selected_day_airing_count == 0:
+        earlier_day = next(
+            (
+                item for item in reversed(schedule_days)
+                if item['date'] < selected_date and item['airing_count'] > 0
+            ),
+            None,
+        )
+        later_day = next(
+            (
+                item for item in schedule_days
+                if item['date'] > selected_date and item['airing_count'] > 0
+            ),
+            None,
+        )
+        if earlier_day is not None:
+            schedule_nearest_populated_days.append({
+                **earlier_day,
+                'direction': 'earlier',
+            })
+        if later_day is not None:
+            schedule_nearest_populated_days.append({
+                **later_day,
+                'direction': 'later',
+            })
+
     current_airing = next(
         (
             airing for airing in airings
@@ -708,6 +735,7 @@ def live_tv_channel_schedule(request, channel_id):
         'schedule_days': schedule_days,
         'schedule_selected_date': selected_date,
         'schedule_selected_day_airing_count': selected_day_airing_count,
+        'schedule_nearest_populated_days': schedule_nearest_populated_days,
         'schedule_return_path': return_to,
         'schedule_current_path': request.get_full_path(),
         'schedule_is_favorite': is_favorite,

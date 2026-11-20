@@ -88,6 +88,20 @@
         <div class="empty-state">
             <strong>No schedule is available for {{ channel.name }} on {{ schedule_selected_date|date:"F j, Y" }}.</strong>
             <div class="text-muted mt-1">Only normalized schedule data from configured trustworthy sources is shown.</div>
+            {% if schedule_nearest_populated_days %}
+                <nav class="d-flex gap-2 flex-wrap mt-3" aria-label="Nearest available schedule dates">
+                    {% for item in schedule_nearest_populated_days %}
+                        <a
+                            class="btn btn-sm btn-outline-light"
+                            href="{% url 'live_tv_channel_schedule' channel.id %}?date={{ item.date|date:'Y-m-d' }}&amp;return_to={{ schedule_return_path|urlencode }}"
+                            aria-label="{% if item.direction == 'earlier' %}Earlier{% else %}Later{% endif %} available schedule: {{ item.date|date:'l, F j, Y' }}, {{ item.airing_count }} airing{{ item.airing_count|pluralize }}"
+                        >
+                            {% if item.direction == 'earlier' %}← Earlier{% else %}Later →{% endif %}
+                            · {{ item.label }} ({{ item.airing_count }})
+                        </a>
+                    {% endfor %}
+                </nav>
+            {% endif %}
         </div>
     {% endif %}
 </section>

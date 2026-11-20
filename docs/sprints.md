@@ -85,6 +85,7 @@ This ledger is the durable project record for sprint-sized development. Git hist
 | 116 | #151 | Add full-date and airing-count accessible labels to schedule-day navigation. |
 | 117 | #152 | Add semantic machine-readable start/end times to channel-schedule airings. |
 | 118 | #153 | Remove Compose interpolation warnings, add Docker deployment/operations documentation, and bring planning/documentation hygiene up to date. |
+| 119 | #154 | Add truthful empty schedule-day navigation to the nearest populated dates in the configured EPG horizon. |
 | 93 | #121 | Show an Ends in X min countdown for the current Live TV airing. |
 | 89 | #115 | Fix Live TV Favorite-toggle redirect encoding so preserved search/category filters cannot crash the request. |
 
@@ -94,7 +95,6 @@ These are the current near-term sprint targets. They are prioritized guidance ra
 
 | Sprint | Planned focus |
 | --- | --- |
-| 119 | Improve empty schedule-day UX with navigation toward the nearest populated day in the configured EPG horizon. |
 | 120 | Audit Live TV guide and schedule accessibility as a complete keyboard/screen-reader flow. |
 | 121 | Audit request/database efficiency across Live TV guide and schedule views and remove avoidable repeated work. |
 | 122 | Improve operator-facing EPG/source diagnostics while keeping public errors sanitized. |

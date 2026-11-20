@@ -1015,3 +1015,110 @@ class LiveTvChannelScheduleTests(TestCase):
 
         self.assertContains(response, '<time datetime="', count=2, html=False)
         self.assertContains(response, 'Semantic Time Show')
+
+    def test_empty_schedule_day_links_to_nearest_later_populated_day(self):
+        today = timezone.localdate()
+        tomorrow = today + timedelta(days=1)
+        channel = Channel.objects.create(
+            name='Empty Today Network',
+            slug='empty-today-network',
+            region='US',
+            source='tvmaze',
+            external_id='empty-today-network',
+        )
+        program = Program.objects.create(
+            title='Tomorrow Program',
+            source='tvmaze',
+            external_id='tomorrow-program-empty-today',
+        )
+        self._airing(
+            channel,
+            program,
+            timedelta(days=1, hours=1),
+            timedelta(days=1, hours=2),
+            'tomorrow-airing-empty-today',
+            schedule_date=tomorrow,
+        )
+
+        return_to = reverse('live_tv_guide') + '?q=news'
+        response = self.client.get(
+            reverse('live_tv_channel_schedule', args=[channel.pk]),
+            {'return_to': return_to},
+        )
+
+        self.assertContains(response, 'No schedule is available')
+        self.assertContains(response, 'Later →')
+        self.assertContains(response, f'date={tomorrow.isoformat()}')
+        self.assertContains(response, '1 airing')
+        self.assertContains(response, 'return_to=%2Flive-tv%2F%3Fq%3Dnews')
+
+    @patch.dict('os.environ', {'EPG_DAYS': '3'})
+    def test_empty_middle_schedule_day_links_to_nearest_earlier_and_later_days(self):
+        today = timezone.localdate()
+        middle = today + timedelta(days=1)
+        later = today + timedelta(days=2)
+        channel = Channel.objects.create(
+            name='Gap Day Network',
+            slug='gap-day-network',
+            region='US',
+            source='tvmaze',
+            external_id='gap-day-network',
+        )
+        earlier_program = Program.objects.create(
+            title='Earlier Program',
+            source='tvmaze',
+            external_id='earlier-program-gap',
+        )
+        later_program = Program.objects.create(
+            title='Later Program',
+            source='tvmaze',
+            external_id='later-program-gap',
+        )
+        self._airing(
+            channel,
+            earlier_program,
+            timedelta(hours=1),
+            timedelta(hours=2),
+            'earlier-airing-gap',
+            schedule_date=today,
+        )
+        self._airing(
+            channel,
+            later_program,
+            timedelta(days=2, hours=1),
+            timedelta(days=2, hours=2),
+            'later-airing-gap',
+            schedule_date=later,
+        )
+
+        response = self.client.get(
+            reverse('live_tv_channel_schedule', args=[channel.pk]),
+            {'date': middle.isoformat()},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, '← Earlier')
+        self.assertContains(response, 'Later →')
+        self.assertContains(response, f'date={today.isoformat()}')
+        self.assertContains(response, f'date={later.isoformat()}')
+        self.assertEqual(
+            [item['direction'] for item in response.context['schedule_nearest_populated_days']],
+            ['earlier', 'later'],
+        )
+
+    def test_empty_schedule_horizon_without_populated_days_shows_no_suggestions(self):
+        channel = Channel.objects.create(
+            name='No Schedule Network',
+            slug='no-schedule-network',
+            region='US',
+            source='tvmaze',
+            external_id='no-schedule-network',
+        )
+
+        response = self.client.get(
+            reverse('live_tv_channel_schedule', args=[channel.pk]),
+        )
+
+        self.assertContains(response, 'No schedule is available')
+        self.assertNotContains(response, 'Nearest available schedule dates')
+        self.assertEqual(response.context['schedule_nearest_populated_days'], [])

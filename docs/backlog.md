@@ -6,16 +6,6 @@ Priorities can change when local testing, CI, security review, source behavior, 
 
 ## Near-term sprint queue
 
-### Sprint 119 — Empty schedule-day navigation
-
-Improve channel-schedule browsing when a selected date contains no airings.
-
-Acceptance direction:
-- Keep zero-count days visible so data gaps remain truthful.
-- When the selected day is empty, offer navigation toward the nearest earlier/later populated date inside the configured EPG horizon.
-- Preserve the selected channel, safe Live TV return path, region rules, and source-date semantics.
-- Do not fabricate schedule rows or silently redirect away from an explicitly selected empty day.
-
 ### Sprint 120 — Live TV accessibility flow audit
 
 Audit the Live TV guide and channel schedule as one keyboard/screen-reader flow.
