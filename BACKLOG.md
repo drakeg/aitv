@@ -4,7 +4,7 @@ The detailed acceptance criteria and maintenance backlog live in docs/backlog.md
 
 | Priority | Item | Target | Status |
 | --- | --- | --- | --- |
-| P0 | Keep CI, migrations, Docker startup, health checks, and local test environment clean | Continuous | Active |
+| P0 | Keep CI, migrations, full test discovery, Docker startup, health checks, and local test environment clean | Continuous | Active |
 | P0 | Repository standards, governance docs, verified README badges, and validation automation | Maintenance | PR #155 |
 | P0 | Select an explicit open-source license | Maintainer/legal decision | Blocked on choice |
 | P1 | Live TV accessibility flow audit | Sprint 120 | Planned |

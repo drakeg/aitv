@@ -53,6 +53,11 @@ jobs:
           DJANGO_ALLOWED_HOSTS: localhost
         run: python manage.py check
 
+      - name: Verify modular test packages
+        run: |
+          test -f core/__init__.py
+          test -f watchlist/__init__.py
+
       - name: Run tests
         env:
           DJANGO_SECRET_KEY: ci-only-secret
