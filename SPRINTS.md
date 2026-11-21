@@ -21,7 +21,8 @@ The detailed historical sprint ledger and current numbered queue are maintained 
 - Sprint 131: merged — permission-aware operator configuration and diagnostics actions.
 - Sprint 132: merged — permission-gated inline guest settings on the operator dashboard.
 - Sprint 133: merged — operator pilot-readiness checklist for guest settings, EPG coverage, and guide health.
-- Sprint 134: active — hospitality pilot demo guide and structured interview/evidence package.
+- Sprint 134: merged — hospitality pilot demo guide and structured interview/evidence package.
+- Commercial validation is now prepared for operator interviews; external outreach and paid-pilot asks remain unperformed and require explicit authorization.
 - After Sprint 124, prioritize commercial pilot validation and defects/opportunities discovered from real testing rather than inventing another feature sprint.
 - Repository standards adoption is active maintenance work and does not renumber already planned product sprints.
 - Commercialization hypotheses and pilot milestones are tracked in docs/commercialization.md.
