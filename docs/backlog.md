@@ -28,19 +28,17 @@ Sprint 134 completed the non-outreach preparation:
 
 The next commercial-validation action is conducting qualified operator conversations using those materials. External outreach remains pending explicit authorization; that dependency does not block continuous reliability, security, accessibility, documentation, dependency, or defect work.
 
-### Sprint 138 — True guest preview
+### Sprint 139 — Development staticfiles reliability
 
-Make the operator dashboard's Preview actions show the actual anonymous guest experience instead of the currently signed-in staff experience.
+Fix a local/test deployment defect discovered while verifying Sprint 138: the manifest staticfiles backend is currently unconditional, so debug/test rendering can fail when `collectstatic` has not populated `STATIC_ROOT`.
 
 Acceptance direction:
-- Allow `guest_preview=1` only to change behavior when the session user is authenticated staff.
-- Treat an authorized preview request as anonymous for account personalization, Watchlist/Favorites, notifications, account navigation, and viewer-region preferences.
-- Keep the operator-configured guest region, branding, welcome message, and guest account-prompt setting active.
-- Preserve preview mode through discovery filters, Live TV filters, channel schedule navigation, and top-level guest navigation.
-- Show a clear preview banner with an Exit guest preview action that returns to the operator dashboard without logging the staff user out.
-- Keep real guest launch URLs unchanged; only the operator Preview actions should add the preview flag.
-- Ignore the preview flag for authenticated non-staff users.
-- Add dedicated regression coverage for staff/non-staff, region scoping, navigation persistence, and account-control suppression.
+- Use Django's ordinary staticfiles storage when `DJANGO_DEBUG=true`.
+- Keep WhiteNoise `CompressedManifestStaticFilesStorage` when `DJANGO_DEBUG=false`.
+- Preserve the hardened production `collectstatic` and deployment checks.
+- Add CI assertions for both debug and production storage modes.
+- Verify local Docker-rendered pages and focused tests no longer depend on a pre-existing static manifest.
+- Do not weaken production hashed-static behavior.
 
 ## Next product priorities
 

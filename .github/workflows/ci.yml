@@ -58,6 +58,14 @@ jobs:
             node --check "$file"
           done
 
+      - name: Validate staticfiles storage modes
+        env:
+          DJANGO_SECRET_KEY: ci-only-secret
+          DJANGO_ALLOWED_HOSTS: localhost
+        run: |
+          DJANGO_DEBUG=true python -c "import os; os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'streamhub.settings'); from django.conf import settings; assert settings.STORAGES['staticfiles']['BACKEND'] == 'django.contrib.staticfiles.storage.StaticFilesStorage'"
+          DJANGO_DEBUG=false python -c "import os; os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'streamhub.settings'); from django.conf import settings; assert settings.STORAGES['staticfiles']['BACKEND'] == 'whitenoise.storage.CompressedManifestStaticFilesStorage'"
+
       - name: Check migration drift
         env:
           DJANGO_SECRET_KEY: ci-only-secret

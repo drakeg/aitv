@@ -24,7 +24,8 @@ The detailed acceptance criteria and maintenance backlog live in docs/backlog.md
 | P1 | One-click guest launch URL copy controls | Sprint 135 | Merged #175 |
 | P1 | Preserve/display source episode metadata in Live TV | Sprint 136 | Merged #177 |
 | P1 | Current-program progress indicators in Live TV | Sprint 137 | Merged #178 |
-| P1 | True anonymous guest preview for staff operators | Sprint 138 | Active |
+| P1 | True anonymous guest preview for staff operators | Sprint 138 | Merged #179 |
+| P0 | Debug/staticfiles reliability for local/test rendering | Sprint 139 | Active |
 | P1 | Next legitimate EPG/source adapter if it meets provenance/trust contracts | Sprint 123 | Evaluated; no-go under current constraints |
 | P1 | Production-readiness hardening | Sprint 124 | Merged #161 |
 | P2 | Provider-supported account integrations | Future | Backlog |
