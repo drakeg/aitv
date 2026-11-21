@@ -17,7 +17,8 @@ The detailed acceptance criteria and maintenance backlog live in docs/backlog.md
 | P1 | Staff operator dashboard for pilot configuration/health | Sprint 128 | Merged #167 |
 | P1 | Warn when guest region is missing from EPG refresh configuration | Sprint 129 | Merged #168 |
 | P1 | Copyable guest launch URLs for pilot distribution | Sprint 130 | Merged #169 |
-| P1 | Permission-aware operator dashboard actions | Sprint 131 | Active |
+| P1 | Permission-aware operator dashboard actions | Sprint 131 | Merged #170 |
+| P1 | Inline guest settings on operator dashboard | Sprint 132 | Active |
 | P1 | Next legitimate EPG/source adapter if it meets provenance/trust contracts | Sprint 123 | Evaluated; no-go under current constraints |
 | P1 | Production-readiness hardening | Sprint 124 | Merged #161 |
 | P2 | Provider-supported account integrations | Future | Backlog |
