@@ -12,7 +12,7 @@ def get_system_settings(request):
     settings = (
         SystemSettings.objects
         .filter(pk=1)
-        .only('site_name', 'welcome_message', 'default_region')
+        .only('site_name', 'welcome_message', 'default_region', 'show_guest_account_links')
         .first()
     )
     setattr(request, _REQUEST_CACHE_ATTR, settings)

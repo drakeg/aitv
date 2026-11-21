@@ -22,8 +22,10 @@
                 <span>Hi, {{ user.username }}</span>
                 <form method="post" action="{% url 'logout' %}" class="m-0">{% csrf_token %}<button type="submit" class="btn btn-sm btn-outline-light">Logout</button></form>
             {% else %}
-                <a href="{% url 'login' %}" class="btn btn-sm btn-outline-light">Login</a>
-                <a href="{% url 'register' %}" class="btn btn-sm btn-light">Register</a>
+                {% if site_show_guest_account_links %}
+                    <a href="{% url 'login' %}" class="btn btn-sm btn-outline-light">Login</a>
+                    <a href="{% url 'register' %}" class="btn btn-sm btn-light">Register</a>
+                {% endif %}
             {% endif %}
         </div>
     </div>

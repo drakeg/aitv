@@ -17,17 +17,17 @@ Acceptance direction:
 - Record objections and feature requests as evidence, not assumed demand.
 - Treat the pricing ideas in `docs/commercialization.md` as hypotheses until a customer agrees to pay.
 
-### Sprint 126 — Operator-configurable guest default region
+### Sprint 127 — Guest-first account prompt control
 
-Complete the pilot MVP's location-level region configuration for anonymous guests.
+Let hospitality operators keep the anonymous guest experience focused on discovery and Live TV while retaining optional account functionality.
 
 Acceptance direction:
-- Let the operator select a supported default region in System Settings.
-- Use that region for anonymous discovery, Live TV guide, and channel schedules.
-- Preserve signed-in viewers' account-specific region as the higher-priority override.
-- Keep the default region as US for existing installations.
-- Reuse request-scoped system settings so branding/region configuration does not add duplicate database queries.
-- Add migration, regression, and region-boundary coverage.
+- Let the operator choose whether anonymous guests see Login/Register actions.
+- Preserve current behavior by default so existing deployments do not lose account entry points.
+- Keep authenticated navigation unchanged.
+- Keep Live TV and anonymous discovery available when account prompts are hidden.
+- Reuse the existing request-scoped System Settings lookup without adding per-page queries.
+- Add migration and regression coverage.
 
 ## Next product priorities
 
