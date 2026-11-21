@@ -192,6 +192,40 @@ def operator_dashboard(request):
     guest_home_url = request.build_absolute_uri(reverse('home'))
     guest_live_tv_url = request.build_absolute_uri(reverse('live_tv_guide'))
 
+    epg_region_configured = region in configured_epg_regions()
+    operator_readiness_checks = [
+        {
+            'label': 'Guest settings saved',
+            'ready': settings is not None,
+            'detail': (
+                'Guest-facing settings are saved for this deployment.'
+                if settings is not None
+                else 'Save the guest-facing settings before a pilot.'
+            ),
+        },
+        {
+            'label': 'EPG region configured',
+            'ready': epg_region_configured,
+            'detail': (
+                f'{region} is included in recurring EPG refresh configuration.'
+                if epg_region_configured
+                else f'Add {region} to EPG_REGIONS before relying on Live TV.'
+            ),
+        },
+        {
+            'label': 'Guide data healthy',
+            'ready': epg_health == 'ok',
+            'detail': (
+                'The configured guest-region guide data is current and healthy.'
+                if epg_health == 'ok'
+                else f'Guide health is {epg_health}; resolve it before a pilot.'
+            ),
+        },
+    ]
+    operator_pilot_ready = all(
+        item['ready'] for item in operator_readiness_checks
+    )
+
     return render(request, 'operator/dashboard.html', {
         'operator_site_name': settings.site_name if settings is not None else 'aitv',
         'operator_default_region': region,
@@ -200,12 +234,14 @@ def operator_dashboard(request):
         ),
         'operator_epg_state': epg_state,
         'operator_epg_health': epg_health,
-        'operator_epg_region_configured': region in configured_epg_regions(),
+        'operator_epg_region_configured': epg_region_configured,
         'operator_settings_admin_url': settings_admin_url,
         'operator_settings_form': operator_settings_form,
         'operator_epg_diagnostics_url': epg_diagnostics_url,
         'operator_guest_home_url': guest_home_url,
         'operator_guest_live_tv_url': guest_live_tv_url,
+        'operator_readiness_checks': operator_readiness_checks,
+        'operator_pilot_ready': operator_pilot_ready,
     })
 
 
