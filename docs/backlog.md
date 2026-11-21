@@ -17,17 +17,16 @@ Acceptance direction:
 - Record objections and feature requests as evidence, not assumed demand.
 - Treat the pricing ideas in `docs/commercialization.md` as hypotheses until a customer agrees to pay.
 
-### Sprint 134 — Hospitality pilot demo/evidence package
+### Commercial validation — current state
 
-Prepare the non-outreach portion of commercial validation so a future authorized operator conversation can be consistent, evidence-driven, and immediately usable.
+Sprint 134 completed the non-outreach preparation:
 
-Acceptance direction:
-- Document a repeatable 8–10 minute hospitality demo flow using the actual pilot MVP.
-- Define a pre-demo operational readiness checklist and live-source failure behavior.
-- Provide neutral discovery questions about current pain, frequency, workarounds, deployment constraints, and decision process.
-- Include an explicit paid-pilot ask using the current unvalidated $49/month hypothesis.
-- Provide a one-record-per-interview evidence template that separates observed pain, exact quotes, requests, objections, willingness to pay, and commitments.
-- Do not contact external prospects or claim validation as part of this sprint.
+- `docs/pilot-demo.md` provides the repeatable hospitality demo and paid-pilot discovery flow.
+- `docs/pilot-interview-template.md` provides one structured evidence record per conversation.
+- The product's operator dashboard now exposes operational pilot readiness for a configured location.
+- No external operator interview, outreach message, paid-pilot ask, customer commitment, revenue, or willingness-to-pay result has been performed or claimed.
+
+The next commercial-validation action is conducting qualified operator conversations using those materials. External outreach remains pending explicit authorization; that dependency does not block continuous reliability, security, accessibility, documentation, dependency, or defect work.
 
 ## Next product priorities
 
