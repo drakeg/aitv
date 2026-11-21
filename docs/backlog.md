@@ -17,17 +17,17 @@ Acceptance direction:
 - Record objections and feature requests as evidence, not assumed demand.
 - Treat the pricing ideas in `docs/commercialization.md` as hypotheses until a customer agrees to pay.
 
-### Sprint 130 — Guest launch URLs
+### Sprint 131 — Permission-aware operator actions
 
-Make it easy for an operator to distribute the guest experience without introducing an external QR/short-link dependency.
+Keep the staff operator dashboard useful for read-only staff without presenting Admin actions they cannot open.
 
 Acceptance direction:
-- Show absolute guest home and Live TV URLs on the staff operator dashboard.
-- Build URLs from the current request origin and existing named routes.
-- Present URLs as readonly, copy-friendly fields with same-site open/preview actions.
-- Preserve HTTPS when the operator accesses the dashboard over HTTPS.
-- Do not add an external URL shortener, QR service, or tracking dependency.
-- Add regression coverage for host/scheme correctness.
+- Show the System Settings Admin action only when the current staff user has the required add/change permission for the current settings state.
+- Show the EPG diagnostics Admin action only when the current staff user has view permission for EPG refresh state.
+- Keep status, preview, launch-link, and sanitized health information available to ordinary staff.
+- Explain read-only state instead of rendering dead links.
+- Preserve Django's native permission model; do not grant permissions implicitly.
+- Add regression coverage for restricted and permitted staff users.
 
 ## Next product priorities
 
