@@ -572,6 +572,7 @@ def live_tv_guide(request):
             if wanted_query in row['channel'].name.casefold()
             or any(
                 wanted_query in airing.program.title.casefold()
+                or wanted_query in airing.episode_title.casefold()
                 for airing in (row['current'], row['next'], row['later'])
                 if airing is not None
             )
