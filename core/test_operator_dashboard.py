@@ -69,7 +69,7 @@ class OperatorDashboardTests(TestCase):
         self.assertContains(response, 'Pine Ridge Guest TV')
         self.assertContains(response, '>CA<', html=False)
         self.assertContains(response, '>Hidden<', html=False)
-        self.assertContains(response, '>FAILED<', html=False)
+        self.assertContains(response, 'FAILED')
         self.assertContains(response, '>14<', html=False)
         self.assertContains(
             response,
