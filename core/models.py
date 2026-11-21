@@ -23,6 +23,10 @@ class SystemSettings(models.Model):
         default="US",
         help_text="Default discovery and Live TV region for guests who are not signed in.",
     )
+    show_guest_account_links = models.BooleanField(
+        default=True,
+        help_text="Show Login and Register actions to anonymous guests.",
+    )
 
     def save(self, *args, **kwargs):
         self.pk = 1
