@@ -20,12 +20,18 @@ The current implementation separates:
 
 - **Channel**: stable channel identity, display name/logo, region, categories, source provenance.
 - **Program**: title and descriptive metadata independent of a particular airing.
-- **Airing**: channel + start/end time + program.
+- **Airing**: channel + start/end time + program, with optional source-supplied episode title/season/number for that specific occurrence.
 - **Channel destination**: provider/source URL plus access type and provenance.
 - **Airing destination**: source-supplied episode/show playback URL scoped to one scheduled airing.
 - **Viewer state**: Favorite channels/programs and provider preferences, scoped per account.
 
 Airing data and playback destinations must not be conflated. Knowing that a program airs on a channel does not prove that aitv has a playable URL for it. Likewise, a show/episode URL supplied for one airing must not be promoted to a channel-wide destination.
+
+## Per-airing episode metadata
+
+**Implemented in Sprint 136:** TVmaze source episode names and season/episode numbers are preserved as optional metadata on the normalized Airing rather than being collapsed into the reusable show-level Program. The compact Live TV guide and per-channel schedule display this metadata when present, and guide search can match episode titles only when that airing is one of the visible Now / Next / Later slots.
+
+Episode metadata is descriptive schedule data only. Missing or malformed optional episode numbering does not invalidate an otherwise trustworthy airing, and episode metadata never creates, upgrades, or changes a playback destination.
 
 ## Source trust boundary
 
