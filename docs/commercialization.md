@@ -25,7 +25,7 @@ aitv could provide a branded, region-aware guest entertainment guide that:
 The fastest credible paid-pilot scope is intentionally small:
 
 1. One hospitality location.
-2. Branded landing page and region configuration. **Brand name/welcome-message configuration is implemented in Sprint 125; region behavior already exists.**
+2. Branded landing page and region configuration. **Brand name/welcome-message configuration shipped in Sprint 125; operator-level guest default region configuration is implemented in Sprint 126, while signed-in viewers retain account-specific overrides.**
 3. Live TV guide plus trusted watch/provider destinations.
 4. Mobile-friendly guest experience requiring no guest account for basic viewing.
 5. Operator health/status view and simple configuration.
