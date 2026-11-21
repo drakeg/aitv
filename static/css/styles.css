@@ -73,6 +73,7 @@ input::placeholder { color: #aaa; }
 .guide-program-now { background: #202020; }
 .guide-label { font-size: 0.65rem !important; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; }
 .guide-program strong { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.guide-episode { color: #cfcfcf !important; line-height: 1.25; }
 @media (max-width: 760px) {
     .guide-row { grid-template-columns: 1fr; }
     .guide-program { border-left: 0; border-top: 1px solid #333; }
