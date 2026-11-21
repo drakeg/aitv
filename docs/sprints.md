@@ -105,6 +105,7 @@ This ledger is the durable project record for sprint-sized development. Git hist
 | 136 | #177 | Preserve authoritative per-airing episode title/season/number metadata and surface it in Live TV guide/search/schedules. |
 | 137 | #178 | Add accessible current-program progress indicators derived from normalized airing start/end times. |
 | 138 | #179 | Make staff operator Preview actions render the true anonymous guest experience while preserving the staff session for exit. |
+| 139 | TBD | Restore reliable debug/test static rendering while retaining WhiteNoise manifest storage in production. |
 | 93 | #121 | Show an Ends in X min countdown for the current Live TV airing. |
 | 89 | #115 | Fix Live TV Favorite-toggle redirect encoding so preserved search/category filters cannot crash the request. |
 
