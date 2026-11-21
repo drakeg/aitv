@@ -96,7 +96,7 @@ This ledger is the durable project record for sprint-sized development. Git hist
 | 127 | #166 | Add operator-controlled guest-first navigation that can hide anonymous Login/Register prompts while preserving account functionality. |
 | 128 | #167 | Add a staff-only operator dashboard with guest configuration summary, sanitized EPG health, and preview/configuration links. |
 | 129 | #168 | Warn staff when the operator guest region is not included in recurring EPG refresh configuration. |
-| 130 | TBD | Add staff-only absolute guest home and Live TV launch URLs for pilot distribution channels. |
+| 130 | #169 | Add staff-only absolute guest home and Live TV launch URLs for pilot distribution channels. |
 | 93 | #121 | Show an Ends in X min countdown for the current Live TV airing. |
 | 89 | #115 | Fix Live TV Favorite-toggle redirect encoding so preserved search/category filters cannot crash the request. |
 
