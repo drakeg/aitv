@@ -553,6 +553,11 @@ class LiveTvChannelScheduleTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.context['schedule_current_ends_in_minutes'], 26)
         self.assertContains(response, 'Ends in 26 min')
+        progress = response.context['schedule_current_progress_percent']
+        self.assertGreaterEqual(progress, 15)
+        self.assertLessEqual(progress, 18)
+        self.assertContains(response, '<progress', html=False)
+        self.assertContains(response, '% elapsed')
 
     def test_channel_schedule_does_not_show_countdown_for_future_only_airings(self):
         channel = Channel.objects.create(
@@ -578,6 +583,8 @@ class LiveTvChannelScheduleTests(TestCase):
 
         self.assertIsNone(response.context['schedule_current_ends_in_minutes'])
         self.assertNotContains(response, 'Ends in ')
+        self.assertIsNone(response.context['schedule_current_progress_percent'])
+        self.assertNotContains(response, '<progress', html=False)
 
 
     def test_channel_schedule_shows_rounded_countdown_for_next_airing_within_hour(self):

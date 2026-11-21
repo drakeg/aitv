@@ -74,6 +74,8 @@ input::placeholder { color: #aaa; }
 .guide-label { font-size: 0.65rem !important; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; }
 .guide-program strong { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .guide-episode { color: #cfcfcf !important; line-height: 1.25; }
+.guide-progress-wrap { display: grid; gap: .2rem; min-width: 8rem; }
+.guide-progress { width: 100%; height: .45rem; }
 @media (max-width: 760px) {
     .guide-row { grid-template-columns: 1fr; }
     .guide-program { border-left: 0; border-top: 1px solid #333; }

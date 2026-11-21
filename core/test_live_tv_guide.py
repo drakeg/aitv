@@ -272,6 +272,7 @@ class LiveTvGuideTests(TestCase):
         self.assertContains(response, 'Upcoming Network')
         self.assertContains(response, 'Upcoming')
         self.assertNotContains(response, 'Starts in ')
+        self.assertNotContains(response, '<progress', html=False)
 
     def test_current_airing_shows_ends_in_countdown(self):
         channel = Channel.objects.create(
@@ -290,6 +291,11 @@ class LiveTvGuideTests(TestCase):
 
         self.assertContains(response, 'Ending Network')
         self.assertContains(response, 'Ends in 30 min')
+        progress = response.context['guide_rows'][0]['progress_percent']
+        self.assertGreaterEqual(progress, 49)
+        self.assertLessEqual(progress, 51)
+        self.assertContains(response, '<progress', html=False)
+        self.assertContains(response, '% elapsed')
 
     def test_current_airing_countdown_rounds_up_to_next_minute(self):
         channel = Channel.objects.create(

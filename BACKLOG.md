@@ -22,7 +22,8 @@ The detailed acceptance criteria and maintenance backlog live in docs/backlog.md
 | P1 | Operator pilot-readiness checklist | Sprint 133 | Merged #172 |
 | P1 | Hospitality pilot demo/evidence package | Sprint 134 | Merged #173 |
 | P1 | One-click guest launch URL copy controls | Sprint 135 | Merged #175 |
-| P1 | Preserve/display source episode metadata in Live TV | Sprint 136 | Active |
+| P1 | Preserve/display source episode metadata in Live TV | Sprint 136 | Merged #177 |
+| P1 | Current-program progress indicators in Live TV | Sprint 137 | Active |
 | P1 | Next legitimate EPG/source adapter if it meets provenance/trust contracts | Sprint 123 | Evaluated; no-go under current constraints |
 | P1 | Production-readiness hardening | Sprint 124 | Merged #161 |
 | P2 | Provider-supported account integrations | Future | Backlog |

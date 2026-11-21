@@ -64,6 +64,12 @@ Current candidate evaluations, licensing/cost gates, and re-evaluation condition
 
 **Sprint 67:** TVmaze's episode `airstamp` supplies a dated, timezone-aware instant. EPG normalization preserves that timestamp, including post-midnight broadcasts and offsets; a bare `airtime` is no longer promoted to a guessed server-date airing. Missing, malformed, or timezone-naive airstamps are skipped rather than fabricating current/next guide timing. The existing Live TV home cards can still show their source-supplied airtime label.
 
+## Current-program progress
+
+**Implemented in Sprint 137:** the compact Live TV guide and channel schedule show an accessible progress indicator only for the normalized airing that is current at request time. The percentage is derived from the trusted airing start/end timestamps, clamped to 0–100, and displayed alongside the existing Ends in countdown.
+
+This is schedule progress, not playback progress. It does not inspect a player, stream position, ad breaks, buffering, provider state, or destination availability and therefore never changes the playback trust model.
+
 ## Refresh operations
 
 **Implemented in Sprint 64:** normalized EPG persistence now has a supported `refresh_epg` management command and an opt-in Docker `epg` worker. Operators can refresh one or multiple configured regions, control expired-airing retention, and choose the recurring refresh interval through `.env`. Worker failures are surfaced and retried on the next interval; ordinary `docker compose up` does not enable recurring EPG refreshes.

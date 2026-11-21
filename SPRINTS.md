@@ -23,7 +23,8 @@ The detailed historical sprint ledger and current numbered queue are maintained 
 - Sprint 133: merged — operator pilot-readiness checklist for guest settings, EPG coverage, and guide health.
 - Sprint 134: merged — hospitality pilot demo guide and structured interview/evidence package.
 - Sprint 135: merged — accessible one-click Copy controls for guest Home and Live TV launch URLs.
-- Sprint 136: active — preserve and display authoritative per-airing episode title/season/number metadata.
+- Sprint 136: merged — preserve and display authoritative per-airing episode title/season/number metadata.
+- Sprint 137: active — accessible current-program progress indicators from normalized airing timing.
 - Commercial validation is now prepared for operator interviews; external outreach and paid-pilot asks remain unperformed and require explicit authorization.
 - After Sprint 124, prioritize commercial pilot validation and defects/opportunities discovered from real testing rather than inventing another feature sprint.
 - Repository standards adoption is active maintenance work and does not renumber already planned product sprints.
