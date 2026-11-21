@@ -18,7 +18,7 @@ aitv could provide a branded, region-aware guest entertainment guide that:
 - points only to trusted provider/source-supplied destinations;
 - avoids rebroadcasting content or bypassing provider authentication;
 - reduces staff support questions;
-- gives operators a lightweight amenity they can link from Wi-Fi portals, QR codes, welcome messages, or guest tablets.
+- gives operators a lightweight amenity they can link from Wi-Fi portals, QR codes, welcome messages, or guest tablets. **Sprint 130 exposes same-site guest home and Live TV launch URLs on the operator dashboard for these distribution channels.**
 
 ## Pilot MVP
 
