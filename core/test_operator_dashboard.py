@@ -48,6 +48,8 @@ class OperatorDashboardTests(TestCase):
         self.assertContains(response, '>Shown<', html=False)
         self.assertContains(response, 'Preview guest home')
         self.assertContains(response, 'Preview Live TV')
+        self.assertContains(response, 'href="/?guest_preview=1"', html=False)
+        self.assertContains(response, 'href="/live-tv/?guest_preview=1"', html=False)
         self.assertContains(response, 'data-copy-target="guest-home-url"', html=False)
         self.assertContains(response, 'data-copy-target="guest-live-tv-url"', html=False)
         self.assertContains(response, 'data-copy-status', html=False)
