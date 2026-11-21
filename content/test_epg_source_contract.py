@@ -225,6 +225,9 @@ class EpgSourceAdapterContractTests(TestCase):
                 'title': 'Example Show',
                 'description': 'Description',
                 'show_type': 'Scripted',
+                'episode_title': 'Contract Episode',
+                'season_number': 4,
+                'episode_number': 9,
                 'airtime': '20:30',
                 'airstamp': '2026-09-26T20:30:00-04:00',
                 'runtime': 45,
@@ -238,7 +241,30 @@ class EpgSourceAdapterContractTests(TestCase):
         self.assertEqual(row['channel_external_id'], 'network-2')
         self.assertEqual(row['program_external_id'], 'show-3')
         self.assertEqual(row['channel_name'], 'Example Network')
+        self.assertEqual(row['episode_title'], 'Contract Episode')
+        self.assertEqual(row['season_number'], 4)
+        self.assertEqual(row['episode_number'], 9)
         self.assertEqual(int((row['ends_at'] - row['starts_at']).total_seconds() / 60), 45)
+
+    def test_tvmaze_optional_episode_numbers_do_not_reject_valid_airing(self):
+        def fetch_schedule(*, limit, country):
+            return [{
+                'schedule_external_id': 'optional-episode',
+                'channel_external_id': 'network',
+                'external_id': 'show',
+                'episode_title': 'Optional Metadata Episode',
+                'season_number': 'unknown',
+                'episode_number': -2,
+                'airstamp': '2026-09-26T20:00:00-04:00',
+                'runtime': 30,
+            }]
+
+        rows = TvmazeScheduleAdapter(fetch_schedule=fetch_schedule).fetch_airings(region='US')
+
+        self.assertEqual(len(rows), 1)
+        self.assertEqual(rows[0]['episode_title'], 'Optional Metadata Episode')
+        self.assertIsNone(rows[0]['season_number'])
+        self.assertIsNone(rows[0]['episode_number'])
 
     def test_tvmaze_airstamp_preserves_date_and_timezone_across_midnight(self):
         def fetch_schedule(*, limit, country):
