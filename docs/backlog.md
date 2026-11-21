@@ -28,17 +28,18 @@ Sprint 134 completed the non-outreach preparation:
 
 The next commercial-validation action is conducting qualified operator conversations using those materials. External outreach remains pending explicit authorization; that dependency does not block continuous reliability, security, accessibility, documentation, dependency, or defect work.
 
-### Sprint 136 — Source episode metadata
+### Sprint 137 — Current-program progress indicators
 
-Preserve useful authoritative episode detail already supplied by TVmaze instead of discarding it during normalized EPG persistence.
+Make the Live TV guide easier to scan by showing how far the currently airing program has progressed using timing data aitv already trusts.
 
 Acceptance direction:
-- Persist optional episode title, season number, and episode number on the specific Airing, not the reusable show-level Program.
-- Keep stable identity/timing validation fail-closed while treating optional episode detail as best-effort metadata.
-- Show episode detail in the compact Live TV guide and channel schedule when present.
-- Let guide search match a source episode title only when that airing is already visible in Now / Next / Later.
-- Keep playback destination ranking/trust completely unchanged; descriptive episode metadata must never imply watchability.
-- Expose source episode metadata read-only in Airing admin and add source, normalization, persistence, display, and search regression coverage.
+- Compute progress only for an airing that is current at request time.
+- Derive the percentage solely from normalized `starts_at` / `ends_at` timestamps and clamp it to 0–100.
+- Render a semantic, accessible progress indicator in the compact guide and the current row of the channel schedule.
+- Keep the existing Ends in countdown alongside the progress indicator.
+- Do not render progress for future or aired rows.
+- Do not infer playback, source availability, ad breaks, or actual stream position from schedule progress.
+- Add guide and channel-schedule regression coverage.
 
 ## Next product priorities
 
