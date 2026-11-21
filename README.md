@@ -29,6 +29,7 @@ The goal is fewer clicks to legitimate content. Direct network/service destinati
 - Operator-configurable default guest region for anonymous discovery and Live TV, with signed-in account preferences taking precedence
 - Operator-configurable guest-first navigation that can hide Login/Register prompts while preserving account features when enabled
 - Staff-only operator dashboard with guest configuration summary, sanitized EPG health, preview links, and direct settings/diagnostics access
+- Operator warning when the guest default region is missing from the configured EPG refresh regions
 - Automated Django checks and tests in GitHub Actions
 
 ## Live-data and provider policy
