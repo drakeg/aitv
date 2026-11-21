@@ -128,10 +128,20 @@ class ProgramAdmin(admin.ModelAdmin):
 
 @admin.register(Airing)
 class AiringAdmin(admin.ModelAdmin):
-    list_display = ('channel', 'program', 'starts_at', 'ends_at', 'source')
+    list_display = ('channel', 'program', 'episode_label', 'starts_at', 'ends_at', 'source')
     list_filter = ('source', 'channel__region')
-    search_fields = ('channel__name', 'program__title', 'external_id')
-    readonly_fields = ('channel', 'program', 'starts_at', 'ends_at', 'source', 'external_id')
+    search_fields = ('channel__name', 'program__title', 'episode_title', 'external_id')
+    readonly_fields = (
+        'channel',
+        'program',
+        'episode_title',
+        'season_number',
+        'episode_number',
+        'starts_at',
+        'ends_at',
+        'source',
+        'external_id',
+    )
     date_hierarchy = 'starts_at'
 
     def has_add_permission(self, request):
