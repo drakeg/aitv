@@ -243,7 +243,7 @@ Or through Docker:
 docker compose run --rm web python manage.py test
 ```
 
-GitHub Actions validates Docker Compose configuration with warning-free output, rejects uncommitted Django migration drift, runs Django checks, and runs the complete test suite for pull requests and pushes to `main`. A separate read-only repository-standards workflow validates required governance files and README badge drift.
+GitHub Actions validates Docker Compose configuration with warning-free output, rejects uncommitted Django migration drift, syntax-checks every `static/js/*.js` file with Node, runs Django checks, and runs the complete test suite for pull requests and pushes to `main`. A separate read-only repository-standards workflow validates required governance files and README badge drift.
 
 ## Project planning and backlog
 
