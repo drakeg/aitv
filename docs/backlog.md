@@ -17,16 +17,17 @@ Acceptance direction:
 - Record objections and feature requests as evidence, not assumed demand.
 - Treat the pricing ideas in `docs/commercialization.md` as hypotheses until a customer agrees to pay.
 
-### Sprint 125 — Operator-configurable guest branding
+### Sprint 126 — Operator-configurable guest default region
 
-Make the guest-facing experience demo-ready for a hospitality pilot without introducing a full theming subsystem.
+Complete the pilot MVP's location-level region configuration for anonymous guests.
 
 Acceptance direction:
-- Let an operator set a guest-facing property/site name and optional welcome message.
-- Keep default behavior as `aitv` when no branding is configured.
-- Make branding visible to anonymous guests and editable through Django admin.
-- Escape operator-provided text and preserve the existing source/playback trust model.
-- Add migration and regression coverage.
+- Let the operator select a supported default region in System Settings.
+- Use that region for anonymous discovery, Live TV guide, and channel schedules.
+- Preserve signed-in viewers' account-specific region as the higher-priority override.
+- Keep the default region as US for existing installations.
+- Reuse request-scoped system settings so branding/region configuration does not add duplicate database queries.
+- Add migration, regression, and region-boundary coverage.
 
 ## Next product priorities
 
