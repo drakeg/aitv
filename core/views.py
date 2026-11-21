@@ -27,7 +27,7 @@ from content.services import (
 from watchlist.models import Watchlist
 
 from .epg_health import configured_epg_health, configured_epg_regions, epg_health_context, epg_region_health
-from .forms import AccountProfileForm
+from .forms import AccountProfileForm, OperatorGuestSettingsForm
 from .regions import REGION_CHOICES, REGION_CODES
 from .system_settings import get_operator_region, get_system_settings
 
@@ -162,13 +162,28 @@ def operator_dashboard(request):
         'core.change_systemsettings' if settings is not None
         else 'core.add_systemsettings'
     )
+    can_manage_guest_settings = request.user.has_perm(settings_permission)
     settings_admin_url = ''
-    if request.user.has_perm(settings_permission):
+    if can_manage_guest_settings:
         settings_admin_url = (
             reverse('admin:core_systemsettings_change', args=[settings.pk])
             if settings is not None
             else reverse('admin:core_systemsettings_add')
         )
+
+    operator_settings_form = None
+    if request.method == 'POST':
+        if not can_manage_guest_settings:
+            raise PermissionDenied
+        operator_settings_form = OperatorGuestSettingsForm(
+            request.POST,
+            instance=settings,
+        )
+        if operator_settings_form.is_valid():
+            operator_settings_form.save()
+            return redirect('operator_dashboard')
+    elif can_manage_guest_settings:
+        operator_settings_form = OperatorGuestSettingsForm(instance=settings)
 
     epg_diagnostics_url = ''
     if request.user.has_perm('content.view_epgrefreshstate'):
@@ -187,6 +202,7 @@ def operator_dashboard(request):
         'operator_epg_health': epg_health,
         'operator_epg_region_configured': region in configured_epg_regions(),
         'operator_settings_admin_url': settings_admin_url,
+        'operator_settings_form': operator_settings_form,
         'operator_epg_diagnostics_url': epg_diagnostics_url,
         'operator_guest_home_url': guest_home_url,
         'operator_guest_live_tv_url': guest_live_tv_url,
