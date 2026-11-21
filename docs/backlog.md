@@ -17,6 +17,18 @@ Acceptance direction:
 - Record objections and feature requests as evidence, not assumed demand.
 - Treat the pricing ideas in `docs/commercialization.md` as hypotheses until a customer agrees to pay.
 
+### Sprint 130 — Guest launch URLs
+
+Make it easy for an operator to distribute the guest experience without introducing an external QR/short-link dependency.
+
+Acceptance direction:
+- Show absolute guest home and Live TV URLs on the staff operator dashboard.
+- Build URLs from the current request origin and existing named routes.
+- Present URLs as readonly, copy-friendly fields with same-site open/preview actions.
+- Preserve HTTPS when the operator accesses the dashboard over HTTPS.
+- Do not add an external URL shortener, QR service, or tracking dependency.
+- Add regression coverage for host/scheme correctness.
+
 ## Next product priorities
 
 With the planned Sprint 119–124 sequence complete, product work is now evidence-driven:

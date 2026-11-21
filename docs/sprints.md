@@ -91,6 +91,12 @@ This ledger is the durable project record for sprint-sized development. Git hist
 | 122 | #159 | Add shared-policy EPG health/age diagnostics and sanitized degraded-region warnings to Django admin. |
 | 123 | #160 | Evaluate additional EPG sources and defer integration because no candidate currently satisfies live-data, commercial-rights, trust, and no-unapproved-cost constraints. |
 | 124 | #161 | Add a hardened single-host/pilot production Docker path with Gunicorn, WhiteNoise, Caddy-managed HTTPS, deployment security checks, and runtime smoke tests. |
+| 125 | #164 | Add operator-configurable guest-facing site name and welcome messaging for pilot/demo usability. |
+| 126 | #165 | Add operator-configurable default guest region for anonymous discovery and Live TV while preserving signed-in viewer overrides. |
+| 127 | #166 | Add operator-controlled guest-first navigation that can hide anonymous Login/Register prompts while preserving account functionality. |
+| 128 | #167 | Add a staff-only operator dashboard with guest configuration summary, sanitized EPG health, and preview/configuration links. |
+| 129 | #168 | Warn staff when the operator guest region is not included in recurring EPG refresh configuration. |
+| 130 | #169 | Add staff-only absolute guest home and Live TV launch URLs for pilot distribution channels. |
 | 93 | #121 | Show an Ends in X min countdown for the current Live TV airing. |
 | 89 | #115 | Fix Live TV Favorite-toggle redirect encoding so preserved search/category filters cannot crash the request. |
 

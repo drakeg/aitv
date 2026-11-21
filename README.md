@@ -25,6 +25,12 @@ The goal is fewer clicks to legitimate content. Direct network/service destinati
 - Tested `refresh_epg` management command plus optional Docker EPG worker for recurring normalized Live TV guide with per-channel source-date schedule browsing across the configured EPG horizon
 - Live-source-only home discovery: no seeded/sample catalog fallback
 - Configurable Docker host port and persistent SQLite data volume
+- Operator-configurable guest-facing site name and welcome message through Django admin
+- Operator-configurable default guest region for anonymous discovery and Live TV, with signed-in account preferences taking precedence
+- Operator-configurable guest-first navigation that can hide Login/Register prompts while preserving account features when enabled
+- Staff-only operator dashboard with guest configuration summary, sanitized EPG health, preview links, and direct settings/diagnostics access
+- Operator warning when the guest default region is missing from the configured EPG refresh regions
+- Staff-only absolute guest home and Live TV launch URLs for Wi-Fi portals, welcome messages, QR setup, and guest tablets
 - Automated Django checks and tests in GitHub Actions
 
 ## Live-data and provider policy

@@ -18,17 +18,17 @@ aitv could provide a branded, region-aware guest entertainment guide that:
 - points only to trusted provider/source-supplied destinations;
 - avoids rebroadcasting content or bypassing provider authentication;
 - reduces staff support questions;
-- gives operators a lightweight amenity they can link from Wi-Fi portals, QR codes, welcome messages, or guest tablets.
+- gives operators a lightweight amenity they can link from Wi-Fi portals, QR codes, welcome messages, or guest tablets. **Sprint 130 exposes same-site guest home and Live TV launch URLs on the operator dashboard for these distribution channels.**
 
 ## Pilot MVP
 
 The fastest credible paid-pilot scope is intentionally small:
 
 1. One hospitality location.
-2. Branded landing page and region configuration.
+2. Branded landing page and region configuration. **Brand name/welcome-message configuration shipped in Sprint 125; operator-level guest default region configuration is implemented in Sprint 126, while signed-in viewers retain account-specific overrides.**
 3. Live TV guide plus trusted watch/provider destinations.
-4. Mobile-friendly guest experience requiring no guest account for basic viewing.
-5. Operator health/status view and simple configuration.
+4. Mobile-friendly guest experience requiring no guest account for basic viewing. **Sprint 127 adds an operator option to hide Login/Register prompts for a guest-first deployment while leaving account functionality available when desired.**
+5. Operator health/status view and simple configuration. **Sprint 128 adds a staff-only dashboard summarizing guest configuration and sanitized EPG health with direct preview/settings links.** **Sprint 129 adds a configuration-readiness warning when the location's guest region is not included in the recurring EPG worker regions.**
 6. No custom streaming infrastructure, DRM handling, or provider credential storage.
 
 ## Pricing hypothesis

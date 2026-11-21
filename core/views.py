@@ -5,6 +5,7 @@ from urllib.parse import quote_plus
 from django.contrib.auth import login
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import UserCreationForm
+from django.core.exceptions import PermissionDenied
 from django.db import DatabaseError, connection
 from django.db.models import Count, Q
 from django.http import JsonResponse
@@ -25,8 +26,10 @@ from content.services import (
 )
 from watchlist.models import Watchlist
 
-from .epg_health import configured_epg_health, epg_health_context
+from .epg_health import configured_epg_health, configured_epg_regions, epg_health_context, epg_region_health
 from .forms import AccountProfileForm
+from .regions import REGION_CHOICES, REGION_CODES
+from .system_settings import get_operator_region, get_system_settings
 
 DISCOVERY_GENRES = (
     'Action', 'Adventure', 'Animation', 'Comedy', 'Crime', 'Documentary', 'Drama',
@@ -39,12 +42,6 @@ PROVIDER_CHOICES = (
     'Paramount Plus', 'Peacock Premium', 'Tubi TV', 'The Roku Channel', 'Pluto TV',
     'Plex', 'YouTube',
 )
-REGION_CHOICES = (
-    ('US', 'United States'), ('CA', 'Canada'), ('GB', 'United Kingdom'),
-    ('AU', 'Australia'), ('DE', 'Germany'), ('FR', 'France'), ('ES', 'Spain'),
-    ('IT', 'Italy'), ('JP', 'Japan'),
-)
-REGION_CODES = {code for code, _label in REGION_CHOICES}
 CATEGORY_ALIASES = {
     'soap': {'soap opera', 'soap operas'}, 'soap opera': {'soap'}, 'soap operas': {'soap'},
     'science fiction': {'science-fiction', 'sci-fi & fantasy'},
@@ -150,6 +147,39 @@ def health_ready(request):
         {'status': 'ready' if ready else 'degraded', 'database': 'ok', 'epg': epg},
         status=200 if ready else 503,
     )
+
+
+
+@login_required
+def operator_dashboard(request):
+    if not request.user.is_staff:
+        raise PermissionDenied
+
+    settings = get_system_settings(request)
+    region = settings.default_region if settings is not None else 'US'
+    epg_state, epg_health = epg_region_health(region)
+    settings_admin_url = (
+        reverse('admin:core_systemsettings_change', args=[settings.pk])
+        if settings is not None
+        else reverse('admin:core_systemsettings_add')
+    )
+
+    guest_home_url = request.build_absolute_uri(reverse('home'))
+    guest_live_tv_url = request.build_absolute_uri(reverse('live_tv_guide'))
+
+    return render(request, 'operator/dashboard.html', {
+        'operator_site_name': settings.site_name if settings is not None else 'aitv',
+        'operator_default_region': region,
+        'operator_guest_account_links': (
+            settings.show_guest_account_links if settings is not None else True
+        ),
+        'operator_epg_state': epg_state,
+        'operator_epg_health': epg_health,
+        'operator_epg_region_configured': region in configured_epg_regions(),
+        'operator_settings_admin_url': settings_admin_url,
+        'operator_guest_home_url': guest_home_url,
+        'operator_guest_live_tv_url': guest_live_tv_url,
+    })
 
 
 def register(request):
@@ -328,7 +358,7 @@ def home(request):
     customized = bool(preference and preference.customized)
     preferred_genres = preference.preferred_genres if customized else list(DISCOVERY_GENRES)
     preferred_providers = preference.preferred_providers if preference else []
-    discovery_region = preference.region if preference else 'US'
+    discovery_region = preference.region if preference else get_operator_region(request)
     require_region_availability = bool(preference and preference.require_region_availability)
     content_mix = preference.content_mix if preference else DiscoveryPreference.ContentMix.BALANCED
 
@@ -382,7 +412,7 @@ def home(request):
 
 
 def live_tv_guide(request):
-    region = 'US'
+    region = get_operator_region(request)
     favorite_channel_ids = set()
     show_favorites_only = False
     preferred_providers = []
@@ -578,7 +608,7 @@ def live_tv_guide(request):
 
 
 def live_tv_channel_schedule(request, channel_id):
-    region = 'US'
+    region = get_operator_region(request)
     preferred_providers = []
     if request.user.is_authenticated:
         preference, _ = DiscoveryPreference.objects.get_or_create(user=request.user)
