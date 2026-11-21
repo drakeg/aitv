@@ -2,7 +2,7 @@ import os
 from unittest.mock import patch
 
 from django.contrib.auth import get_user_model
-from django.test import TestCase
+from django.test import TestCase, override_settings
 from django.urls import reverse
 from django.utils import timezone
 
@@ -107,6 +107,7 @@ class OperatorDashboardTests(TestCase):
 
         self.assertNotContains(response, 'Live TV refresh is not configured for CA.')
 
+    @override_settings(ALLOWED_HOSTS=['guest.example.test'])
     def test_dashboard_builds_same_site_guest_launch_urls(self):
         self.client.force_login(self.staff)
 
