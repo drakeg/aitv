@@ -111,6 +111,16 @@ def _select_current_destination(*, airing, channel_destination=None, airing_dest
 
 
 
+def _airing_progress_percent(airing, now):
+    if airing is None or not (airing.starts_at <= now < airing.ends_at):
+        return None
+    duration_seconds = (airing.ends_at - airing.starts_at).total_seconds()
+    if duration_seconds <= 0:
+        return None
+    elapsed_seconds = max(0, (now - airing.starts_at).total_seconds())
+    return max(0, min(100, round((elapsed_seconds / duration_seconds) * 100)))
+
+
 def health_live(request):
     try:
         with connection.cursor() as cursor:
@@ -589,6 +599,7 @@ def live_tv_guide(request):
             row['starts_in_minutes'] = max(1, int((seconds_until_start + 59) // 60))
 
         row['ends_in_minutes'] = None
+        row['progress_percent'] = _airing_progress_percent(row['current'], now)
         if row['current'] is not None:
             seconds_until_end = max(0, (row['current'].ends_at - now).total_seconds())
             row['ends_in_minutes'] = max(1, int((seconds_until_end + 59) // 60))
@@ -798,6 +809,7 @@ def live_tv_channel_schedule(request, channel_id):
     current_destination = None
     current_destination_scope = ''
     current_ends_in_minutes = None
+    current_progress_percent = _airing_progress_percent(current_airing, now)
     if current_airing is not None:
         seconds_until_end = max(0, (current_airing.ends_at - now).total_seconds())
         current_ends_in_minutes = max(1, int((seconds_until_end + 59) // 60))
@@ -837,6 +849,7 @@ def live_tv_channel_schedule(request, channel_id):
         'schedule_current_destination': current_destination,
         'schedule_current_destination_scope': current_destination_scope,
         'schedule_current_ends_in_minutes': current_ends_in_minutes,
+        'schedule_current_progress_percent': current_progress_percent,
         'schedule_next_airing_id': next_airing.id if next_airing else None,
         'schedule_next_starts_in_minutes': next_starts_in_minutes,
         **health_context,
