@@ -80,6 +80,7 @@
                     </div>
                     <div class="guide-program" style="grid-column: span 3;">
                         <strong id="airing-title-{{ airing.id }}">{{ airing.program.title }}</strong>
+                        {% if airing.episode_label %}<span class="guide-episode">{{ airing.episode_label }}</span>{% endif %}
                         <span><time datetime="{{ airing.starts_at|date:'c' }}">{{ airing.starts_at|date:"D, M j · g:i A" }}</time>–<time datetime="{{ airing.ends_at|date:'c' }}">{{ airing.ends_at|date:"g:i A" }}</time></span>
                     </div>
                 </article>
