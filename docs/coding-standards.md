@@ -44,6 +44,7 @@ These standards apply to all aitv feature, maintenance, and hotfix sprints.
 - Test representative middle states and failure/fallback paths, not only happy-path edges.
 - Do not weaken a correct regression merely to make CI green; fix the behavior or update an assertion only when the product contract intentionally changed.
 - `python manage.py check` and the complete test suite must pass in GitHub Actions before a PR is ready.
+- Static JavaScript must pass `node --check static/js/*.js` in GitHub Actions before a PR is ready.
 - Keep routine developer tooling quiet: known avoidable warnings from Docker Compose, Django checks, tests, or build commands should be fixed rather than normalized as background noise.
 
 ## Documentation and sprint hygiene
