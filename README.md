@@ -28,6 +28,7 @@ The goal is fewer clicks to legitimate content. Direct network/service destinati
 - Operator-configurable guest-facing site name and welcome message through Django admin
 - Operator-configurable default guest region for anonymous discovery and Live TV, with signed-in account preferences taking precedence
 - Operator-configurable guest-first navigation that can hide Login/Register prompts while preserving account features when enabled
+- Staff-only operator dashboard with guest configuration summary, sanitized EPG health, preview links, and direct settings/diagnostics access
 - Automated Django checks and tests in GitHub Actions
 
 ## Live-data and provider policy
