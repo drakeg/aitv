@@ -15,7 +15,8 @@ The detailed historical sprint ledger and current numbered queue are maintained 
 - Sprint 125: merged — operator-configurable guest branding for pilot/demo usability.
 - Sprint 126: merged — operator-configurable default guest region, with account-level region override preserved.
 - Sprint 127: merged — operator-controlled guest-first navigation that can hide Login/Register prompts.
-- Sprint 128: active — staff operator dashboard for guest configuration, safe EPG health, and preview links.
+- Sprint 128: merged — staff operator dashboard for guest configuration, safe EPG health, and preview links.
+- Sprint 129: active — operator warning for guest-region/EPG refresh configuration mismatch.
 - After Sprint 124, prioritize commercial pilot validation and defects/opportunities discovered from real testing rather than inventing another feature sprint.
 - Repository standards adoption is active maintenance work and does not renumber already planned product sprints.
 - Commercialization hypotheses and pilot milestones are tracked in docs/commercialization.md.
