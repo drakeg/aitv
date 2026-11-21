@@ -3,7 +3,7 @@
 <!-- madmallard-badges:start -->
 [![Django 6.1.3](https://img.shields.io/badge/Django%206.1.3-092E20?logo=django&logoColor=white)](https://www.djangoproject.com/) [![Docker](https://img.shields.io/badge/Docker-2496ED?logo=docker&logoColor=white)](https://www.docker.com/) [![Docker Compose](https://img.shields.io/badge/Docker%20Compose-2496ED?logo=docker&logoColor=white)](https://docs.docker.com/compose/) [![Python 3.15](https://img.shields.io/badge/Python%203.15-3776AB?logo=python&logoColor=white)](https://www.python.org/) [![SQLite](https://img.shields.io/badge/SQLite-003B57?logo=sqlite&logoColor=white)](https://www.sqlite.org/)
 
-[![ci](https://github.com/drakeg/aitv/actions/workflows/ci.yml/badge.svg)](https://github.com/drakeg/aitv/actions/workflows/ci.yml) [![standards](https://github.com/drakeg/aitv/actions/workflows/standards.yml/badge.svg)](https://github.com/drakeg/aitv/actions/workflows/standards.yml) [![Issues](https://img.shields.io/github/issues/drakeg/aitv)](https://github.com/drakeg/aitv/issues) [![Pull requests](https://img.shields.io/github/issues-pr/drakeg/aitv)](https://github.com/drakeg/aitv/pulls)
+[![ci](https://github.com/drakeg/aitv/actions/workflows/ci.yml/badge.svg)](https://github.com/drakeg/aitv/actions/workflows/ci.yml) [![security](https://github.com/drakeg/aitv/actions/workflows/security.yml/badge.svg)](https://github.com/drakeg/aitv/actions/workflows/security.yml) [![standards](https://github.com/drakeg/aitv/actions/workflows/standards.yml/badge.svg)](https://github.com/drakeg/aitv/actions/workflows/standards.yml) [![Issues](https://img.shields.io/github/issues/drakeg/aitv)](https://github.com/drakeg/aitv/issues) [![Pull requests](https://img.shields.io/github/issues-pr/drakeg/aitv)](https://github.com/drakeg/aitv/pulls)
 <!-- madmallard-badges:end -->
 
 aitv is a Django-based personal streaming dashboard for discovering movies and TV from live upstream sources, seeing where titles are actually available, and keeping account-specific Watchlist and Favorite state.
@@ -56,7 +56,9 @@ aitv/
 
 ## Docker deployment and operations
 
-The complete platform-neutral Docker deployment/operations guide is maintained in `docs/docker-deployment.md`. It covers prerequisites, first deployment, optional worker profiles, configuration, persistence, health/readiness, logs, upgrades, backups/restores, rollback considerations, network exposure, and the current production-support boundary.
+The development/testing Docker guide is maintained in `docs/docker-deployment.md`. A separate hardened single-host/pilot production path is documented in `docs/production-deployment.md` and uses Gunicorn, WhiteNoise, Caddy-managed HTTPS, production Django security settings, and no application source bind mount.
+
+The production path deliberately retains SQLite and defaults to one Gunicorn worker. It is intended for a small SMB pilot, not horizontal scaling or high availability.
 
 ## Quick local testing with Docker
 
@@ -241,7 +243,8 @@ Repository-owned planning lives in:
 - `docs/backlog.md` — prioritized upcoming work, acceptance direction, maintenance debt, and deferred ideas.
 - `docs/agile.md` — sprint workflow and definition of done.
 - `docs/coding-standards.md` — implementation and maintenance standards.
-- `docs/docker-deployment.md` — supported Docker deployment and operations for the current single-host model.
+- `docs/docker-deployment.md` — development/testing Docker operation.
+- `docs/production-deployment.md` — hardened single-host/pilot production deployment and operational boundaries.
 - `docs/accessibility.md` — Live TV accessibility and timed-refresh interaction contract.
 - `docs/epg-source-evaluation.md` — current candidate EPG/source licensing, cost, technical-fit, and trust decisions.
 - `AGENTS.md`, `CONTRIBUTING.md`, `RELEASES.md`, and `SECURITY.md` — repository operating, contribution, release, and security rules.
@@ -258,7 +261,7 @@ Feature and maintenance work is expected to keep implementation, tests, and docu
 
 `core.views.home` assembles live discovery from TVmaze, Internet Archive, and TMDB. Server-side ranking accounts for direct-watch usefulness, user content mix, categories, and known Favorite state. Browser-side enrichment adds TMDB context to eligible TVmaze cards near the viewport and can immediately synchronize Watchlist/Favorite state and provider choices without a page refresh.
 
-The Docker path remains development-focused: Django's development server, bind-mounted source, persistent SQLite, an optional EPG refresh worker, and an optional lightweight notification worker. Production server/database/static serving/security remains separate work. Sprint 71 adds lightweight built-in operational health endpoints: `/health/live/` checks the web process/database path and is used by Docker Compose healthcheck; `/health/ready/` additionally evaluates configured EPG regions against refresh failure/staleness state and returns HTTP 503 when degraded. Readiness responses never expose stored upstream error details. Sprint 72 centralizes region normalization, stale-threshold handling, and EPG state evaluation so the Live TV guide and readiness endpoint use the same policy. Sprint 73 also surfaces the shared `missing` state in the Live TV guide, warning when schedule rows exist before any tracked refresh has completed.
+The default Docker path remains development-focused for rapid local iteration. The separate production Compose path uses Gunicorn, WhiteNoise, Caddy-managed HTTPS, persistent SQLite, and the optional workers without source bind mounts. That production path is intentionally single-host/pilot scale; client/server database and high-availability work remain demand-driven future architecture. Sprint 71 adds lightweight built-in operational health endpoints: `/health/live/` checks the web process/database path and is used by Docker Compose healthcheck; `/health/ready/` additionally evaluates configured EPG regions against refresh failure/staleness state and returns HTTP 503 when degraded. Readiness responses never expose stored upstream error details. Sprint 72 centralizes region normalization, stale-threshold handling, and EPG state evaluation so the Live TV guide and readiness endpoint use the same policy. Sprint 73 also surfaces the shared `missing` state in the Live TV guide, warning when schedule rows exist before any tracked refresh has completed.
 
 ## Security and provider authentication
 

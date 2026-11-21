@@ -5,14 +5,14 @@ The detailed acceptance criteria and maintenance backlog live in docs/backlog.md
 | Priority | Item | Target | Status |
 | --- | --- | --- | --- |
 | P0 | Keep CI, migrations, full test discovery, Docker startup, health checks, and local test environment clean | Continuous | Active |
-| P0 | Repository standards, governance docs, verified README badges, and validation automation | Maintenance | PR #155 |
+| P0 | Repository standards, governance docs, verified README badges, and validation automation | Maintenance | Merged #155 |
 | P0 | Select an explicit open-source license | Maintainer/legal decision | Blocked on choice |
-| P1 | Live TV accessibility flow audit | Sprint 120 | PR #157 |
-| P1 | Live TV request/database efficiency audit | Sprint 121 | PR #158 |
+| P1 | Live TV accessibility flow audit | Sprint 120 | Merged #157 |
+| P1 | Live TV request/database efficiency audit | Sprint 121 | Merged #158 |
 | P1 | Operator EPG/source diagnostics | Sprint 122 | Merged #159 |
 | P1 | Validate SMB guest-entertainment pilot demand and willingness to pay | Commercial validation | Planned |
-| P1 | Next legitimate EPG/source adapter if it meets provenance/trust contracts | Sprint 123 | No-go under current constraints; see docs/epg-source-evaluation.md |
-| P1 | Production-readiness hardening | Sprint 124 | Planned |
+| P1 | Next legitimate EPG/source adapter if it meets provenance/trust contracts | Sprint 123 | Evaluated; no-go under current constraints |
+| P1 | Production-readiness hardening | Sprint 124 | PR #161 |
 | P2 | Provider-supported account integrations | Future | Backlog |
 | P2 | User-owned tuner integration with explicit trustworthy source contract | Future | Backlog |
 

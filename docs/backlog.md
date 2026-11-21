@@ -17,14 +17,14 @@ Acceptance direction:
 - Record objections and feature requests as evidence, not assumed demand.
 - Treat the pricing ideas in `docs/commercialization.md` as hypotheses until a customer agrees to pay.
 
-### Sprint 124 — Production-readiness hardening
+## Next product priorities
 
-Move beyond the development-only Docker path where appropriate.
+With the planned Sprint 119–124 sequence complete, product work is now evidence-driven:
 
-Acceptance direction:
-- Define the supported production serving model for Django, static assets, secrets, database, health checks, and deployment configuration.
-- Keep local Docker development simple and separate from production concerns.
-- Document upgrade/rollback and data-persistence expectations before declaring production readiness.
+- validate the SMB hospitality pilot hypothesis in `docs/commercialization.md`;
+- prioritize demo/pilot blockers found through real operator conversations;
+- keep production reliability, accessibility, source licensing, and test coverage as continuous quality gates;
+- do not add infrastructure scale or paid services until measured demand justifies them.
 
 ## Ongoing maintenance backlog
 

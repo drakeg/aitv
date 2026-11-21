@@ -22,6 +22,8 @@ A first stable v1.0.0 should require:
 
 Pre-stable releases may use v0.x.y when a tested milestone is useful for pilot users.
 
+After Sprint 124, the repository has a supported single-host/pilot production runtime. That is necessary but not sufficient for a public open-source release. An explicit repository license is still required before claiming licensed open-source redistribution, and a pilot release should be cut only when the intended demo/pilot workflow is verified on the release commit.
+
 ## Release checklist
 
 - Required pull requests reviewed and merged.

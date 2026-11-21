@@ -317,7 +317,8 @@ class LiveTvGuideTests(TestCase):
     def test_guide_loads_periodic_refresh_behavior(self):
         response = self.client.get(reverse('live_tv_guide'))
 
-        self.assertContains(response, 'js/live-tv-auto-refresh.js?v=2')
+        self.assertContains(response, 'live-tv-auto-refresh')
+        self.assertContains(response, '?v=2')
 
     def test_guide_exposes_accessibility_landmarks_and_refresh_control(self):
         response = self.client.get(reverse('live_tv_guide'))
