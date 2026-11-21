@@ -28,7 +28,7 @@ The fastest credible paid-pilot scope is intentionally small:
 2. Branded landing page and region configuration. **Brand name/welcome-message configuration shipped in Sprint 125; operator-level guest default region configuration is implemented in Sprint 126, while signed-in viewers retain account-specific overrides.**
 3. Live TV guide plus trusted watch/provider destinations.
 4. Mobile-friendly guest experience requiring no guest account for basic viewing. **Sprint 127 adds an operator option to hide Login/Register prompts for a guest-first deployment while leaving account functionality available when desired.**
-5. Operator health/status view and simple configuration.
+5. Operator health/status view and simple configuration. **Sprint 128 adds a staff-only dashboard summarizing guest configuration and sanitized EPG health with direct preview/settings links.**
 6. No custom streaming infrastructure, DRM handling, or provider credential storage.
 
 ## Pricing hypothesis

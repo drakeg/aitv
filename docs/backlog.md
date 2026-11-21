@@ -17,17 +17,17 @@ Acceptance direction:
 - Record objections and feature requests as evidence, not assumed demand.
 - Treat the pricing ideas in `docs/commercialization.md` as hypotheses until a customer agrees to pay.
 
-### Sprint 127 — Guest-first account prompt control
+### Sprint 128 — Staff operator dashboard
 
-Let hospitality operators keep the anonymous guest experience focused on discovery and Live TV while retaining optional account functionality.
+Give a pilot operator a productized status/configuration surface instead of requiring them to navigate raw Django admin pages.
 
 Acceptance direction:
-- Let the operator choose whether anonymous guests see Login/Register actions.
-- Preserve current behavior by default so existing deployments do not lose account entry points.
-- Keep authenticated navigation unchanged.
-- Keep Live TV and anonymous discovery available when account prompts are hidden.
-- Reuse the existing request-scoped System Settings lookup without adding per-page queries.
-- Add migration and regression coverage.
+- Require authentication and staff status.
+- Summarize guest-facing site name, default region, and account-prompt state.
+- Show sanitized EPG health for the location's configured guest region without exposing stored upstream failure details.
+- Provide direct links to guest home/Live TV previews, System Settings, and EPG diagnostics.
+- Keep the dashboard read-only; configuration writes remain in the protected admin surface.
+- Add access-control and sanitization regression coverage.
 
 ## Next product priorities
 

@@ -5,6 +5,7 @@ from urllib.parse import quote_plus
 from django.contrib.auth import login
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import UserCreationForm
+from django.core.exceptions import PermissionDenied
 from django.db import DatabaseError, connection
 from django.db.models import Count, Q
 from django.http import JsonResponse
@@ -25,10 +26,10 @@ from content.services import (
 )
 from watchlist.models import Watchlist
 
-from .epg_health import configured_epg_health, epg_health_context
+from .epg_health import configured_epg_health, epg_health_context, epg_region_health
 from .forms import AccountProfileForm
 from .regions import REGION_CHOICES, REGION_CODES
-from .system_settings import get_operator_region
+from .system_settings import get_operator_region, get_system_settings
 
 DISCOVERY_GENRES = (
     'Action', 'Adventure', 'Animation', 'Comedy', 'Crime', 'Documentary', 'Drama',
@@ -146,6 +147,33 @@ def health_ready(request):
         {'status': 'ready' if ready else 'degraded', 'database': 'ok', 'epg': epg},
         status=200 if ready else 503,
     )
+
+
+
+@login_required
+def operator_dashboard(request):
+    if not request.user.is_staff:
+        raise PermissionDenied
+
+    settings = get_system_settings(request)
+    region = settings.default_region if settings is not None else 'US'
+    epg_state, epg_health = epg_region_health(region)
+    settings_admin_url = (
+        reverse('admin:core_systemsettings_change', args=[settings.pk])
+        if settings is not None
+        else reverse('admin:core_systemsettings_add')
+    )
+
+    return render(request, 'operator/dashboard.html', {
+        'operator_site_name': settings.site_name if settings is not None else 'aitv',
+        'operator_default_region': region,
+        'operator_guest_account_links': (
+            settings.show_guest_account_links if settings is not None else True
+        ),
+        'operator_epg_state': epg_state,
+        'operator_epg_health': epg_health,
+        'operator_settings_admin_url': settings_admin_url,
+    })
 
 
 def register(request):

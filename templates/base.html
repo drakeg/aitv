@@ -19,6 +19,7 @@
                 <a href="{% url 'watchlist:list' %}" class="btn btn-sm btn-outline-light">My Watchlist</a>
                 <a href="{% url 'notifications:inbox' %}" class="btn btn-sm btn-outline-light">Notifications{% if unread_notification_count %} <span class="badge text-bg-warning">{{ unread_notification_count }}</span>{% endif %}</a>
                 <a href="{% url 'profile' %}" class="btn btn-sm btn-outline-light">Profile</a>
+                {% if user.is_staff %}<a href="{% url 'operator_dashboard' %}" class="btn btn-sm btn-outline-light">Operator</a>{% endif %}
                 <span>Hi, {{ user.username }}</span>
                 <form method="post" action="{% url 'logout' %}" class="m-0">{% csrf_token %}<button type="submit" class="btn btn-sm btn-outline-light">Logout</button></form>
             {% else %}
