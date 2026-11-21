@@ -24,6 +24,7 @@ The goal is fewer clicks to legitimate content. Direct network/service destinati
 - Optional Docker notification worker for recurring Favorite release checks
 - Tested `refresh_epg` management command plus optional Docker EPG worker for recurring normalized Live TV guide with per-channel source-date schedule browsing across the configured EPG horizon
 - Source-supplied episode title/season/number preserved per normalized airing and shown in Live TV guide/channel schedules without implying playback availability
+- Accessible current-program progress indicators derived only from normalized airing start/end times in the guide and channel schedule
 - Live-source-only home discovery: no seeded/sample catalog fallback
 - Configurable Docker host port and persistent SQLite data volume
 - Operator-configurable guest-facing site name and welcome message through Django admin
