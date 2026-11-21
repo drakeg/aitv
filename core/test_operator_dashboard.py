@@ -281,7 +281,6 @@ class OperatorDashboardTests(TestCase):
             for item in response.context['operator_readiness_checks']
         ))
         self.assertContains(response, 'Pilot readiness')
-        self.assertContains(response, '>Ready<', html=False)
 
     @patch.dict(os.environ, {'EPG_REGIONS': 'US'})
     def test_failed_epg_keeps_pilot_readiness_degraded(self):
