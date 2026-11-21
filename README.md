@@ -37,6 +37,7 @@ The goal is fewer clicks to legitimate content. Direct network/service destinati
 - Permission-aware operator dashboard actions that hide unavailable Admin links instead of presenting dead configuration/diagnostic controls
 - Permission-gated inline operator form for guest site name, welcome text, default region, and guest account prompts
 - Operator pilot-readiness checklist for saved guest settings, EPG-region coverage, and healthy guide data
+- Staff-only true guest preview mode that suppresses account personalization/controls while preserving the operator session for exit
 - Automated Django checks and tests in GitHub Actions
 
 ## Live-data and provider policy

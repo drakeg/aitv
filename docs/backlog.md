@@ -28,18 +28,19 @@ Sprint 134 completed the non-outreach preparation:
 
 The next commercial-validation action is conducting qualified operator conversations using those materials. External outreach remains pending explicit authorization; that dependency does not block continuous reliability, security, accessibility, documentation, dependency, or defect work.
 
-### Sprint 137 — Current-program progress indicators
+### Sprint 138 — True guest preview
 
-Make the Live TV guide easier to scan by showing how far the currently airing program has progressed using timing data aitv already trusts.
+Make the operator dashboard's Preview actions show the actual anonymous guest experience instead of the currently signed-in staff experience.
 
 Acceptance direction:
-- Compute progress only for an airing that is current at request time.
-- Derive the percentage solely from normalized `starts_at` / `ends_at` timestamps and clamp it to 0–100.
-- Render a semantic, accessible progress indicator in the compact guide and the current row of the channel schedule.
-- Keep the existing Ends in countdown alongside the progress indicator.
-- Do not render progress for future or aired rows.
-- Do not infer playback, source availability, ad breaks, or actual stream position from schedule progress.
-- Add guide and channel-schedule regression coverage.
+- Allow `guest_preview=1` only to change behavior when the session user is authenticated staff.
+- Treat an authorized preview request as anonymous for account personalization, Watchlist/Favorites, notifications, account navigation, and viewer-region preferences.
+- Keep the operator-configured guest region, branding, welcome message, and guest account-prompt setting active.
+- Preserve preview mode through discovery filters, Live TV filters, channel schedule navigation, and top-level guest navigation.
+- Show a clear preview banner with an Exit guest preview action that returns to the operator dashboard without logging the staff user out.
+- Keep real guest launch URLs unchanged; only the operator Preview actions should add the preview flag.
+- Ignore the preview flag for authenticated non-staff users.
+- Add dedicated regression coverage for staff/non-staff, region scoping, navigation persistence, and account-control suppression.
 
 ## Next product priorities
 

@@ -3,6 +3,7 @@ from datetime import date
 from urllib.parse import quote_plus
 
 from django.contrib.auth import login
+from django.contrib.auth.models import AnonymousUser
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import UserCreationForm
 from django.core.exceptions import PermissionDenied
@@ -119,6 +120,16 @@ def _airing_progress_percent(airing, now):
         return None
     elapsed_seconds = max(0, (now - airing.starts_at).total_seconds())
     return max(0, min(100, round((elapsed_seconds / duration_seconds) * 100)))
+
+
+def _enable_staff_guest_preview(request):
+    if request.GET.get('guest_preview') != '1':
+        return False
+    user = request.user
+    if not user.is_authenticated or not user.is_staff:
+        return False
+    request.user = AnonymousUser()
+    return True
 
 
 def health_live(request):
@@ -425,6 +436,7 @@ def _dashboard_sections(*, live_tv, trending_tv, on_the_air_tv, popular_tv, free
 
 
 def home(request):
+    guest_preview_mode = _enable_staff_guest_preview(request)
     preference = None
     if request.user.is_authenticated:
         preference, _ = DiscoveryPreference.objects.get_or_create(user=request.user)
@@ -479,12 +491,14 @@ def home(request):
         'browse_active': browse_active, 'browse_results': browse_results, 'browse_query': request.GET.get('q', '').strip(), 'browse_type': content_type,
         'preferences_customized': customized, 'discovery_region': discovery_region, 'preferred_providers': preferred_providers,
         'require_region_availability': require_region_availability, 'content_mix': content_mix,
+        'guest_preview_mode': guest_preview_mode,
     }
     return render(request, 'home.html', context)
 
 
 
 def live_tv_guide(request):
+    guest_preview_mode = _enable_staff_guest_preview(request)
     region = get_operator_region(request)
     favorite_channel_ids = set()
     show_favorites_only = False
@@ -678,11 +692,13 @@ def live_tv_guide(request):
         'show_ending_soon_only': show_ending_soon_only,
         'show_starts_soon_only': show_starts_soon_only,
         'guide_return_path': request.get_full_path(),
+        'guest_preview_mode': guest_preview_mode,
         **health_context,
     })
 
 
 def live_tv_channel_schedule(request, channel_id):
+    guest_preview_mode = _enable_staff_guest_preview(request)
     region = get_operator_region(request)
     preferred_providers = []
     if request.user.is_authenticated:
@@ -852,6 +868,7 @@ def live_tv_channel_schedule(request, channel_id):
         'schedule_current_progress_percent': current_progress_percent,
         'schedule_next_airing_id': next_airing.id if next_airing else None,
         'schedule_next_starts_in_minutes': next_starts_in_minutes,
+        'guest_preview_mode': guest_preview_mode,
         **health_context,
     })
 

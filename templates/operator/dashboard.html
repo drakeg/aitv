@@ -8,8 +8,8 @@
         <p class="text-muted mb-0">Guest configuration and sanitized guide health for this location.</p>
     </div>
     <div class="d-flex gap-2 flex-wrap">
-        <a class="btn btn-outline-light" href="{% url 'home' %}" target="_blank" rel="noopener">Preview guest home <span class="visually-hidden">(opens in a new tab)</span></a>
-        <a class="btn btn-outline-light" href="{% url 'live_tv_guide' %}" target="_blank" rel="noopener">Preview Live TV <span class="visually-hidden">(opens in a new tab)</span></a>
+        <a class="btn btn-outline-light" href="{% url 'home' %}?guest_preview=1" target="_blank" rel="noopener">Preview guest home <span class="visually-hidden">(opens in a new tab)</span></a>
+        <a class="btn btn-outline-light" href="{% url 'live_tv_guide' %}?guest_preview=1" target="_blank" rel="noopener">Preview Live TV <span class="visually-hidden">(opens in a new tab)</span></a>
     </div>
 </div>
 
