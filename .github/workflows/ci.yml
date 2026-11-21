@@ -63,8 +63,8 @@ jobs:
           DJANGO_SECRET_KEY: ci-only-secret
           DJANGO_ALLOWED_HOSTS: localhost
         run: |
-          DJANGO_DEBUG=true python -c "import os; os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'streamhub.settings'); from django.conf import settings; assert settings.STORAGES['staticfiles']['BACKEND'] == 'django.contrib.staticfiles.storage.StaticFilesStorage'"
-          DJANGO_DEBUG=false python -c "import os; os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'streamhub.settings'); from django.conf import settings; assert settings.STORAGES['staticfiles']['BACKEND'] == 'whitenoise.storage.CompressedManifestStaticFilesStorage'"
+          DJANGO_DEBUG=true python -c "import os; os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'streamhub.settings'); from django.conf import settings; assert settings.STORAGES['staticfiles']['BACKEND'] == 'django.contrib.staticfiles.storage.StaticFilesStorage'; assert 'whitenoise.middleware.WhiteNoiseMiddleware' not in settings.MIDDLEWARE"
+          DJANGO_DEBUG=false python -c "import os; os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'streamhub.settings'); from django.conf import settings; assert settings.STORAGES['staticfiles']['BACKEND'] == 'whitenoise.storage.CompressedManifestStaticFilesStorage'; assert settings.MIDDLEWARE[0] == 'django.middleware.security.SecurityMiddleware'; assert settings.MIDDLEWARE[1] == 'whitenoise.middleware.WhiteNoiseMiddleware'"
 
       - name: Check migration drift
         env:
