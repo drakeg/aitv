@@ -17,17 +17,17 @@ Acceptance direction:
 - Record objections and feature requests as evidence, not assumed demand.
 - Treat the pricing ideas in `docs/commercialization.md` as hypotheses until a customer agrees to pay.
 
-### Sprint 133 — Operator pilot readiness
+### Sprint 134 — Hospitality pilot demo/evidence package
 
-Turn the operator dashboard into an actionable location-readiness surface instead of leaving the operator to infer whether core pilot prerequisites are satisfied.
+Prepare the non-outreach portion of commercial validation so a future authorized operator conversation can be consistent, evidence-driven, and immediately usable.
 
 Acceptance direction:
-- Require saved guest-facing configuration.
-- Require the guest default region to be included in recurring EPG refresh configuration.
-- Require current healthy EPG state for that guest region.
-- Show a clear overall Ready / Needs attention state plus per-check detail.
-- Keep readiness based only on observable product/operations state; do not claim customer validation, revenue, or willingness to pay.
-- Preserve sanitized health behavior and add regression coverage for ready, missing, and failed states.
+- Document a repeatable 8–10 minute hospitality demo flow using the actual pilot MVP.
+- Define a pre-demo operational readiness checklist and live-source failure behavior.
+- Provide neutral discovery questions about current pain, frequency, workarounds, deployment constraints, and decision process.
+- Include an explicit paid-pilot ask using the current unvalidated $49/month hypothesis.
+- Provide a one-record-per-interview evidence template that separates observed pain, exact quotes, requests, objections, willingness to pay, and commitments.
+- Do not contact external prospects or claim validation as part of this sprint.
 
 ## Next product priorities
 
