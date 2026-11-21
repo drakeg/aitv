@@ -28,17 +28,17 @@ Sprint 134 completed the non-outreach preparation:
 
 The next commercial-validation action is conducting qualified operator conversations using those materials. External outreach remains pending explicit authorization; that dependency does not block continuous reliability, security, accessibility, documentation, dependency, or defect work.
 
-### Sprint 139 — Development staticfiles reliability
+### Sprint 140 — Debug WhiteNoise warning cleanup
 
-Fix a local/test deployment defect discovered while verifying Sprint 138: the manifest staticfiles backend is currently unconditional, so debug/test rendering can fail when `collectstatic` has not populated `STATIC_ROOT`.
+Finish the local/test staticfiles reliability cleanup discovered during Sprint 139 verification.
 
 Acceptance direction:
-- Use Django's ordinary staticfiles storage when `DJANGO_DEBUG=true`.
-- Keep WhiteNoise `CompressedManifestStaticFilesStorage` when `DJANGO_DEBUG=false`.
-- Preserve the hardened production `collectstatic` and deployment checks.
-- Add CI assertions for both debug and production storage modes.
-- Verify local Docker-rendered pages and focused tests no longer depend on a pre-existing static manifest.
-- Do not weaken production hashed-static behavior.
+- Do not install WhiteNoise middleware when `DJANGO_DEBUG=true`; Django's development staticfiles handling is sufficient there.
+- Keep WhiteNoise middleware immediately after SecurityMiddleware when `DJANGO_DEBUG=false`.
+- Keep the production compressed manifest backend and `collectstatic` workflow unchanged.
+- Extend CI mode assertions so debug mode excludes WhiteNoise and production mode includes it in the required position.
+- Re-run the focused guest-preview module locally and require warning-free output from the missing-`STATIC_ROOT` issue.
+- Preserve all production deployment/security checks.
 
 ## Next product priorities
 
