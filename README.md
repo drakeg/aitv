@@ -259,6 +259,8 @@ Repository-owned planning lives in:
 - `AGENTS.md`, `CONTRIBUTING.md`, `RELEASES.md`, and `SECURITY.md` — repository operating, contribution, release, and security rules.
 - `SPRINTS.md` and `BACKLOG.md` — standards-compatible root summaries that point to the detailed records above.
 - `docs/commercialization.md` — explicitly unvalidated SMB pilot, value, pricing, and customer-validation hypotheses.
+- `docs/pilot-demo.md` — structured hospitality demo flow, discovery questions, paid-pilot ask, and evidence rules.
+- `docs/pilot-interview-template.md` — one-record-per-conversation template for problem, objection, willingness-to-pay, and follow-up evidence.
 
 Planning docs are updated as work is completed, reprioritized, or newly discovered so development does not depend on chat history.
 
