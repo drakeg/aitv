@@ -2,6 +2,7 @@ import os
 from unittest.mock import patch
 
 from django.contrib.auth import get_user_model
+from django.contrib.auth.models import Permission
 from django.test import TestCase, override_settings
 from django.urls import reverse
 from django.utils import timezone
@@ -47,10 +48,16 @@ class OperatorDashboardTests(TestCase):
         self.assertContains(response, '>Shown<', html=False)
         self.assertContains(response, 'Preview guest home')
         self.assertContains(response, 'Preview Live TV')
-        self.assertContains(response, reverse('admin:core_systemsettings_add'))
+        self.assertNotContains(response, reverse('admin:core_systemsettings_add'))
+        self.assertContains(response, 'Guest settings are read-only for your account.')
+        self.assertContains(response, 'Detailed EPG diagnostics require additional operator permission.')
         self.assertContains(response, '>Operator<', html=False)
 
     def test_staff_dashboard_uses_configured_guest_settings_and_sanitized_health(self):
+        self.staff.user_permissions.add(
+            Permission.objects.get(codename='change_systemsettings'),
+            Permission.objects.get(codename='view_epgrefreshstate'),
+        )
         settings = SystemSettings.load()
         settings.site_name = 'Pine Ridge Guest TV'
         settings.default_region = 'CA'
@@ -132,3 +139,14 @@ class OperatorDashboardTests(TestCase):
             html=False,
         )
         self.assertNotContains(response, 'http://guest.example.test/')
+
+    def test_staff_with_add_permission_can_open_initial_settings_admin(self):
+        self.staff.user_permissions.add(
+            Permission.objects.get(codename='add_systemsettings'),
+        )
+        self.client.force_login(self.staff)
+
+        response = self.client.get(reverse('operator_dashboard'))
+
+        self.assertContains(response, reverse('admin:core_systemsettings_add'))
+        self.assertNotContains(response, 'Guest settings are read-only for your account.')
