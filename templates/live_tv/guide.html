@@ -132,7 +132,7 @@
     {% else %}
         <div class="empty-state">
             {% if guide_query and not guide_category and not show_live_now_only and not show_ending_soon_only and not show_playable_only and not show_starts_soon_only %}
-                <strong>No channels or visible Now / Next / Later programs match “{{ guide_query }}” for {{ guide_region }}.</strong>
+                <strong>No channels or visible Now / Next / Later programs or episodes match “{{ guide_query }}” for {{ guide_region }}.</strong>
                 <div class="text-muted mt-1">Search is limited to the channel name and the program or episode text currently visible in the compact guide.</div>
             {% elif guide_query or guide_category or show_live_now_only or show_ending_soon_only or show_playable_only or show_starts_soon_only %}
                 <strong>No channels match the active Live TV filters for {{ guide_region }}.</strong>
