@@ -240,3 +240,70 @@ class OperatorDashboardTests(TestCase):
         self.assertContains(response, 'Select a valid choice.')
         settings.refresh_from_db()
         self.assertEqual(settings.default_region, 'US')
+
+    @patch.dict(os.environ, {'EPG_REGIONS': 'US'})
+    def test_default_dashboard_is_not_pilot_ready_without_saved_settings_or_guide(self):
+        self.client.force_login(self.staff)
+
+        response = self.client.get(reverse('operator_dashboard'))
+
+        self.assertFalse(response.context['operator_pilot_ready'])
+        checks = {
+            item['label']: item['ready']
+            for item in response.context['operator_readiness_checks']
+        }
+        self.assertFalse(checks['Guest settings saved'])
+        self.assertTrue(checks['EPG region configured'])
+        self.assertFalse(checks['Guide data healthy'])
+        self.assertContains(response, 'Needs attention')
+        self.assertContains(response, 'Action needed')
+
+    @patch.dict(os.environ, {'EPG_REGIONS': 'US'})
+    def test_dashboard_is_pilot_ready_when_required_location_checks_pass(self):
+        SystemSettings.load()
+        now = timezone.now()
+        EpgRefreshState.objects.create(
+            source='tvmaze',
+            region='US',
+            refreshed_at=now,
+            airing_count=21,
+            attempted_at=now,
+            status=EpgRefreshState.Status.SUCCESS,
+            last_error='',
+        )
+        self.client.force_login(self.staff)
+
+        response = self.client.get(reverse('operator_dashboard'))
+
+        self.assertTrue(response.context['operator_pilot_ready'])
+        self.assertTrue(all(
+            item['ready']
+            for item in response.context['operator_readiness_checks']
+        ))
+        self.assertContains(response, 'Pilot readiness')
+
+    @patch.dict(os.environ, {'EPG_REGIONS': 'US'})
+    def test_failed_epg_keeps_pilot_readiness_degraded(self):
+        SystemSettings.load()
+        now = timezone.now()
+        EpgRefreshState.objects.create(
+            source='tvmaze',
+            region='US',
+            refreshed_at=now,
+            airing_count=21,
+            attempted_at=now,
+            status=EpgRefreshState.Status.FAILURE,
+            last_error='operator-only upstream detail',
+        )
+        self.client.force_login(self.staff)
+
+        response = self.client.get(reverse('operator_dashboard'))
+
+        self.assertFalse(response.context['operator_pilot_ready'])
+        checks = {
+            item['label']: item['ready']
+            for item in response.context['operator_readiness_checks']
+        }
+        self.assertFalse(checks['Guide data healthy'])
+        self.assertContains(response, 'Guide health is failed')
+        self.assertNotContains(response, 'operator-only upstream detail')

@@ -17,18 +17,17 @@ Acceptance direction:
 - Record objections and feature requests as evidence, not assumed demand.
 - Treat the pricing ideas in `docs/commercialization.md` as hypotheses until a customer agrees to pay.
 
-### Sprint 132 — Inline guest settings
+### Sprint 133 — Operator pilot readiness
 
-Let authorized pilot operators manage the basic guest-facing configuration directly from the productized operator dashboard.
+Turn the operator dashboard into an actionable location-readiness surface instead of leaving the operator to infer whether core pilot prerequisites are satisfied.
 
 Acceptance direction:
-- Use a focused form limited to site name, welcome message, default guest region, and Login/Register prompt visibility.
-- Require the existing Django add/change System Settings permission for every write.
-- Keep read-only staff unable to submit changes.
-- Keep advanced/system behavior configuration in Django Admin.
-- Validate supported regions and model field limits through the normal Django form layer.
-- Redirect after successful writes to avoid accidental resubmission.
-- Add permission, creation, update, and invalid-input regression coverage.
+- Require saved guest-facing configuration.
+- Require the guest default region to be included in recurring EPG refresh configuration.
+- Require current healthy EPG state for that guest region.
+- Show a clear overall Ready / Needs attention state plus per-check detail.
+- Keep readiness based only on observable product/operations state; do not claim customer validation, revenue, or willingness to pay.
+- Preserve sanitized health behavior and add regression coverage for ready, missing, and failed states.
 
 ## Next product priorities
 

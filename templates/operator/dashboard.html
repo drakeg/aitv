@@ -12,6 +12,33 @@
     </div>
 </div>
 
+<section class="card mb-3" aria-labelledby="operator-readiness-heading">
+    <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center gap-3 flex-wrap mb-3">
+            <div>
+                <h2 class="h5 mb-1" id="operator-readiness-heading">Pilot readiness</h2>
+                <p class="text-muted mb-0">Required location checks before relying on the guest experience.</p>
+            </div>
+            <span class="badge {% if operator_pilot_ready %}text-bg-success{% else %}text-bg-warning{% endif %}">
+                {% if operator_pilot_ready %}Ready{% else %}Needs attention{% endif %}
+            </span>
+        </div>
+        <ul class="list-group list-group-flush">
+            {% for check in operator_readiness_checks %}
+                <li class="list-group-item bg-transparent px-0 d-flex justify-content-between align-items-start gap-3">
+                    <div>
+                        <strong>{{ check.label }}</strong>
+                        <div class="text-muted small">{{ check.detail }}</div>
+                    </div>
+                    <span class="badge {% if check.ready %}text-bg-success{% else %}text-bg-secondary{% endif %}">
+                        {% if check.ready %}Ready{% else %}Action needed{% endif %}
+                    </span>
+                </li>
+            {% endfor %}
+        </ul>
+    </div>
+</section>
+
 <section class="card mb-3" aria-labelledby="operator-launch-heading">
     <div class="card-body">
         <h2 class="h5" id="operator-launch-heading">Guest launch links</h2>
