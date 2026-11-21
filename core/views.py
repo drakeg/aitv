@@ -26,7 +26,7 @@ from content.services import (
 )
 from watchlist.models import Watchlist
 
-from .epg_health import configured_epg_health, epg_health_context, epg_region_health
+from .epg_health import configured_epg_health, configured_epg_regions, epg_health_context, epg_region_health
 from .forms import AccountProfileForm
 from .regions import REGION_CHOICES, REGION_CODES
 from .system_settings import get_operator_region, get_system_settings
@@ -172,6 +172,7 @@ def operator_dashboard(request):
         ),
         'operator_epg_state': epg_state,
         'operator_epg_health': epg_health,
+        'operator_epg_region_configured': region in configured_epg_regions(),
         'operator_settings_admin_url': settings_admin_url,
     })
 

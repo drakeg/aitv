@@ -1,3 +1,6 @@
+import os
+from unittest.mock import patch
+
 from django.contrib.auth import get_user_model
 from django.test import TestCase
 from django.urls import reverse
@@ -80,3 +83,26 @@ class OperatorDashboardTests(TestCase):
             reverse('admin:content_epgrefreshstate_changelist'),
         )
         self.assertNotContains(response, 'sensitive upstream response body')
+
+    @patch.dict(os.environ, {'EPG_REGIONS': 'US'})
+    def test_dashboard_warns_when_guest_region_is_not_refreshed(self):
+        settings = SystemSettings.load()
+        settings.default_region = 'CA'
+        settings.save()
+        self.client.force_login(self.staff)
+
+        response = self.client.get(reverse('operator_dashboard'))
+
+        self.assertContains(response, 'Live TV refresh is not configured for CA.')
+        self.assertContains(response, 'EPG_REGIONS')
+
+    @patch.dict(os.environ, {'EPG_REGIONS': 'US,CA'})
+    def test_dashboard_does_not_warn_when_guest_region_is_configured(self):
+        settings = SystemSettings.load()
+        settings.default_region = 'CA'
+        settings.save()
+        self.client.force_login(self.staff)
+
+        response = self.client.get(reverse('operator_dashboard'))
+
+        self.assertNotContains(response, 'Live TV refresh is not configured for CA.')

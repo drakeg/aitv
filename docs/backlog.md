@@ -17,17 +17,16 @@ Acceptance direction:
 - Record objections and feature requests as evidence, not assumed demand.
 - Treat the pricing ideas in `docs/commercialization.md` as hypotheses until a customer agrees to pay.
 
-### Sprint 128 — Staff operator dashboard
+### Sprint 129 — Guest-region EPG readiness warning
 
-Give a pilot operator a productized status/configuration surface instead of requiring them to navigate raw Django admin pages.
+Prevent a location from silently choosing a guest region that the recurring EPG worker never refreshes.
 
 Acceptance direction:
-- Require authentication and staff status.
-- Summarize guest-facing site name, default region, and account-prompt state.
-- Show sanitized EPG health for the location's configured guest region without exposing stored upstream failure details.
-- Provide direct links to guest home/Live TV previews, System Settings, and EPG diagnostics.
-- Keep the dashboard read-only; configuration writes remain in the protected admin surface.
-- Add access-control and sanitization regression coverage.
+- Compare the operator default guest region with configured `EPG_REGIONS`.
+- Show a clear staff-only warning when the guest region is not included.
+- Keep the warning operational only; do not change or guess the configured refresh regions automatically.
+- Preserve sanitized health behavior and never expose stored upstream failure details.
+- Add regression coverage for matching and mismatched configurations.
 
 ## Next product priorities
 
