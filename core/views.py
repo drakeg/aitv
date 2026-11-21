@@ -158,11 +158,21 @@ def operator_dashboard(request):
     settings = get_system_settings(request)
     region = settings.default_region if settings is not None else 'US'
     epg_state, epg_health = epg_region_health(region)
-    settings_admin_url = (
-        reverse('admin:core_systemsettings_change', args=[settings.pk])
-        if settings is not None
-        else reverse('admin:core_systemsettings_add')
+    settings_permission = (
+        'core.change_systemsettings' if settings is not None
+        else 'core.add_systemsettings'
     )
+    settings_admin_url = ''
+    if request.user.has_perm(settings_permission):
+        settings_admin_url = (
+            reverse('admin:core_systemsettings_change', args=[settings.pk])
+            if settings is not None
+            else reverse('admin:core_systemsettings_add')
+        )
+
+    epg_diagnostics_url = ''
+    if request.user.has_perm('content.view_epgrefreshstate'):
+        epg_diagnostics_url = reverse('admin:content_epgrefreshstate_changelist')
 
     guest_home_url = request.build_absolute_uri(reverse('home'))
     guest_live_tv_url = request.build_absolute_uri(reverse('live_tv_guide'))
@@ -177,6 +187,7 @@ def operator_dashboard(request):
         'operator_epg_health': epg_health,
         'operator_epg_region_configured': region in configured_epg_regions(),
         'operator_settings_admin_url': settings_admin_url,
+        'operator_epg_diagnostics_url': epg_diagnostics_url,
         'operator_guest_home_url': guest_home_url,
         'operator_guest_live_tv_url': guest_live_tv_url,
     })

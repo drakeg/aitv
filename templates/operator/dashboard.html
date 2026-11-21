@@ -44,7 +44,11 @@
                     <dt class="col-sm-5">Guest account prompts</dt>
                     <dd class="col-sm-7">{% if operator_guest_account_links %}Shown{% else %}Hidden{% endif %}</dd>
                 </dl>
-                <a class="btn btn-primary" href="{{ operator_settings_admin_url }}">Edit guest settings</a>
+                {% if operator_settings_admin_url %}
+                    <a class="btn btn-primary" href="{{ operator_settings_admin_url }}">Edit guest settings</a>
+                {% else %}
+                    <p class="text-muted mb-0">Guest settings are read-only for your account.</p>
+                {% endif %}
             </div>
         </section>
     </div>
@@ -76,7 +80,11 @@
                 {% else %}
                     <p class="text-muted">No tracked EPG refresh has completed for this region yet.</p>
                 {% endif %}
-                <a class="btn btn-outline-light" href="{% url 'admin:content_epgrefreshstate_changelist' %}">Open EPG diagnostics</a>
+                {% if operator_epg_diagnostics_url %}
+                    <a class="btn btn-outline-light" href="{{ operator_epg_diagnostics_url }}">Open EPG diagnostics</a>
+                {% else %}
+                    <p class="text-muted mb-0">Detailed EPG diagnostics require additional operator permission.</p>
+                {% endif %}
             </div>
         </section>
     </div>
