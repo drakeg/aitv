@@ -25,6 +25,7 @@ The goal is fewer clicks to legitimate content. Direct network/service destinati
 - Tested `refresh_epg` management command plus optional Docker EPG worker for recurring normalized Live TV guide with per-channel source-date schedule browsing across the configured EPG horizon
 - Live-source-only home discovery: no seeded/sample catalog fallback
 - Configurable Docker host port and persistent SQLite data volume
+- Operator-configurable guest-facing site name and welcome message through Django admin
 - Automated Django checks and tests in GitHub Actions
 
 ## Live-data and provider policy

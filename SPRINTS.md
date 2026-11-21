@@ -11,7 +11,8 @@ The detailed historical sprint ledger and current numbered queue are maintained 
 - Sprint 121: merged — Live TV request/query efficiency audit.
 - Sprint 122: merged — Operator EPG/source diagnostics.
 - Sprint 123: merged — source evaluation completed with no eligible second adapter under current licensing/cost constraints.
-- Sprint 124: PR #161 — hardened single-host/pilot production deployment.
+- Sprint 124: merged — hardened single-host/pilot production deployment.
+- Sprint 125: active — operator-configurable guest branding for pilot/demo usability.
 - After Sprint 124, prioritize commercial pilot validation and defects/opportunities discovered from real testing rather than inventing another feature sprint.
 - Repository standards adoption is active maintenance work and does not renumber already planned product sprints.
 - Commercialization hypotheses and pilot milestones are tracked in docs/commercialization.md.

@@ -17,6 +17,17 @@ Acceptance direction:
 - Record objections and feature requests as evidence, not assumed demand.
 - Treat the pricing ideas in `docs/commercialization.md` as hypotheses until a customer agrees to pay.
 
+### Sprint 125 — Operator-configurable guest branding
+
+Make the guest-facing experience demo-ready for a hospitality pilot without introducing a full theming subsystem.
+
+Acceptance direction:
+- Let an operator set a guest-facing property/site name and optional welcome message.
+- Keep default behavior as `aitv` when no branding is configured.
+- Make branding visible to anonymous guests and editable through Django admin.
+- Escape operator-provided text and preserve the existing source/playback trust model.
+- Add migration and regression coverage.
+
 ## Next product priorities
 
 With the planned Sprint 119–124 sequence complete, product work is now evidence-driven:

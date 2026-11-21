@@ -59,7 +59,9 @@ class LiveTvQueryEfficiencyTests(TestCase):
         self.assertEqual(response.status_code, 200)
 
         self.assertEqual(len(many_channel_queries), len(one_channel_queries))
-        self.assertLessEqual(len(many_channel_queries), 5)
+        # Global operator branding contributes one fixed settings lookup; the
+        # equality assertion above still protects against channel-count N+1 growth.
+        self.assertLessEqual(len(many_channel_queries), 6)
 
     def test_schedule_day_counts_use_grouped_database_aggregation(self):
         today = timezone.localdate()
@@ -114,4 +116,6 @@ class LiveTvQueryEfficiencyTests(TestCase):
         ]
         self.assertEqual(len(aggregation_queries), 1)
         self.assertIn('GROUP BY', aggregation_queries[0].upper())
-        self.assertLessEqual(len(queries), 6)
+        # Global operator branding contributes one fixed settings lookup while
+        # schedule-day counts remain one grouped aggregation query.
+        self.assertLessEqual(len(queries), 7)
