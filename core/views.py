@@ -27,6 +27,8 @@ from watchlist.models import Watchlist
 
 from .epg_health import configured_epg_health, epg_health_context
 from .forms import AccountProfileForm
+from .regions import REGION_CHOICES, REGION_CODES
+from .system_settings import get_operator_region
 
 DISCOVERY_GENRES = (
     'Action', 'Adventure', 'Animation', 'Comedy', 'Crime', 'Documentary', 'Drama',
@@ -39,12 +41,6 @@ PROVIDER_CHOICES = (
     'Paramount Plus', 'Peacock Premium', 'Tubi TV', 'The Roku Channel', 'Pluto TV',
     'Plex', 'YouTube',
 )
-REGION_CHOICES = (
-    ('US', 'United States'), ('CA', 'Canada'), ('GB', 'United Kingdom'),
-    ('AU', 'Australia'), ('DE', 'Germany'), ('FR', 'France'), ('ES', 'Spain'),
-    ('IT', 'Italy'), ('JP', 'Japan'),
-)
-REGION_CODES = {code for code, _label in REGION_CHOICES}
 CATEGORY_ALIASES = {
     'soap': {'soap opera', 'soap operas'}, 'soap opera': {'soap'}, 'soap operas': {'soap'},
     'science fiction': {'science-fiction', 'sci-fi & fantasy'},
@@ -328,7 +324,7 @@ def home(request):
     customized = bool(preference and preference.customized)
     preferred_genres = preference.preferred_genres if customized else list(DISCOVERY_GENRES)
     preferred_providers = preference.preferred_providers if preference else []
-    discovery_region = preference.region if preference else 'US'
+    discovery_region = preference.region if preference else get_operator_region(request)
     require_region_availability = bool(preference and preference.require_region_availability)
     content_mix = preference.content_mix if preference else DiscoveryPreference.ContentMix.BALANCED
 
@@ -382,7 +378,7 @@ def home(request):
 
 
 def live_tv_guide(request):
-    region = 'US'
+    region = get_operator_region(request)
     favorite_channel_ids = set()
     show_favorites_only = False
     preferred_providers = []
@@ -578,7 +574,7 @@ def live_tv_guide(request):
 
 
 def live_tv_channel_schedule(request, channel_id):
-    region = 'US'
+    region = get_operator_region(request)
     preferred_providers = []
     if request.user.is_authenticated:
         preference, _ = DiscoveryPreference.objects.get_or_create(user=request.user)
