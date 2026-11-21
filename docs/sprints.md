@@ -106,6 +106,7 @@ This ledger is the durable project record for sprint-sized development. Git hist
 | 137 | #178 | Add accessible current-program progress indicators derived from normalized airing start/end times. |
 | 138 | #179 | Make staff operator Preview actions render the true anonymous guest experience while preserving the staff session for exit. |
 | 139 | #180 | Restore reliable debug/test static rendering while retaining WhiteNoise manifest storage in production. |
+| 140 | TBD | Remove debug/test WhiteNoise missing-STATIC_ROOT warnings while preserving production middleware/static behavior. |
 | 93 | #121 | Show an Ends in X min countdown for the current Live TV airing. |
 | 89 | #115 | Fix Live TV Favorite-toggle redirect encoding so preserved search/category filters cannot crash the request. |
 
