@@ -91,7 +91,7 @@ To use another host port, set for example:
 APP_PORT=8007
 ```
 
-The source tree is bind-mounted, so normal Python/template/static edits are picked up by Django's development reloader. Rebuild when dependencies or the Dockerfile change.
+The source tree is bind-mounted, so normal Python/template/static edits are picked up by Django's development reloader. Rebuild when dependencies or the Dockerfile change. Development/debug mode uses Django's non-manifest static storage so local template/static rendering does not require `collectstatic`; the production path keeps WhiteNoise compressed manifest storage and runs `collectstatic` during startup/validation.
 
 Useful commands:
 
