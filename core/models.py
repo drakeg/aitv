@@ -1,6 +1,8 @@
 
 from django.db import models
 
+from .regions import REGION_CHOICES
+
 class SystemSettings(models.Model):
     scheduler_type = models.CharField(max_length=10, default="cron")
     enable_notifications = models.BooleanField(default=True)
@@ -14,6 +16,12 @@ class SystemSettings(models.Model):
         blank=True,
         default="",
         help_text="Optional guest-facing welcome text shown on the discovery page.",
+    )
+    default_region = models.CharField(
+        max_length=2,
+        choices=REGION_CHOICES,
+        default="US",
+        help_text="Default discovery and Live TV region for guests who are not signed in.",
     )
 
     def save(self, *args, **kwargs):
