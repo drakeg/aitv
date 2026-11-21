@@ -101,7 +101,7 @@ This ledger is the durable project record for sprint-sized development. Git hist
 | 132 | #171 | Add a permission-gated inline guest-settings form to the staff operator dashboard. |
 | 133 | #172 | Add an operator pilot-readiness checklist for guest configuration, EPG-region coverage, and healthy guide data. |
 | 134 | #173 | Prepare a hospitality pilot demo guide and structured interview/evidence template for commercial validation. |
-| 135 | TBD | Add accessible one-click Copy controls for guest Home and Live TV launch URLs. |
+| 135 | #175 | Add accessible one-click Copy controls for guest Home and Live TV launch URLs. |
 | 93 | #121 | Show an Ends in X min countdown for the current Live TV airing. |
 | 89 | #115 | Fix Live TV Favorite-toggle redirect encoding so preserved search/category filters cannot crash the request. |
 
