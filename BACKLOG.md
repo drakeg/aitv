@@ -21,6 +21,7 @@ The detailed acceptance criteria and maintenance backlog live in docs/backlog.md
 | P1 | Inline guest settings on operator dashboard | Sprint 132 | Merged #171 |
 | P1 | Operator pilot-readiness checklist | Sprint 133 | Merged #172 |
 | P1 | Hospitality pilot demo/evidence package | Sprint 134 | Merged #173 |
+| P1 | One-click guest launch URL copy controls | Sprint 135 | Active |
 | P1 | Next legitimate EPG/source adapter if it meets provenance/trust contracts | Sprint 123 | Evaluated; no-go under current constraints |
 | P1 | Production-readiness hardening | Sprint 124 | Merged #161 |
 | P2 | Provider-supported account integrations | Future | Backlog |
