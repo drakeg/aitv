@@ -11,8 +11,9 @@ The detailed acceptance criteria and maintenance backlog live in docs/backlog.md
 | P1 | Live TV request/database efficiency audit | Sprint 121 | Merged #158 |
 | P1 | Operator EPG/source diagnostics | Sprint 122 | Merged #159 |
 | P1 | Validate SMB guest-entertainment pilot demand and willingness to pay | Commercial validation | Planned |
+| P1 | Operator-configurable guest branding for pilot demos | Sprint 125 | Active |
 | P1 | Next legitimate EPG/source adapter if it meets provenance/trust contracts | Sprint 123 | Evaluated; no-go under current constraints |
-| P1 | Production-readiness hardening | Sprint 124 | PR #161 |
+| P1 | Production-readiness hardening | Sprint 124 | Merged #161 |
 | P2 | Provider-supported account integrations | Future | Backlog |
 | P2 | User-owned tuner integration with explicit trustworthy source contract | Future | Backlog |
 
