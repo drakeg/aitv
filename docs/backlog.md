@@ -17,17 +17,18 @@ Acceptance direction:
 - Record objections and feature requests as evidence, not assumed demand.
 - Treat the pricing ideas in `docs/commercialization.md` as hypotheses until a customer agrees to pay.
 
-### Sprint 131 — Permission-aware operator actions
+### Sprint 132 — Inline guest settings
 
-Keep the staff operator dashboard useful for read-only staff without presenting Admin actions they cannot open.
+Let authorized pilot operators manage the basic guest-facing configuration directly from the productized operator dashboard.
 
 Acceptance direction:
-- Show the System Settings Admin action only when the current staff user has the required add/change permission for the current settings state.
-- Show the EPG diagnostics Admin action only when the current staff user has view permission for EPG refresh state.
-- Keep status, preview, launch-link, and sanitized health information available to ordinary staff.
-- Explain read-only state instead of rendering dead links.
-- Preserve Django's native permission model; do not grant permissions implicitly.
-- Add regression coverage for restricted and permitted staff users.
+- Use a focused form limited to site name, welcome message, default guest region, and Login/Register prompt visibility.
+- Require the existing Django add/change System Settings permission for every write.
+- Keep read-only staff unable to submit changes.
+- Keep advanced/system behavior configuration in Django Admin.
+- Validate supported regions and model field limits through the normal Django form layer.
+- Redirect after successful writes to avoid accidental resubmission.
+- Add permission, creation, update, and invalid-input regression coverage.
 
 ## Next product priorities
 

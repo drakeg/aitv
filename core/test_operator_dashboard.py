@@ -150,3 +150,93 @@ class OperatorDashboardTests(TestCase):
 
         self.assertContains(response, reverse('admin:core_systemsettings_add'))
         self.assertNotContains(response, 'Guest settings are read-only for your account.')
+
+    def test_staff_without_settings_permission_cannot_post_guest_settings(self):
+        self.client.force_login(self.staff)
+
+        response = self.client.post(
+            reverse('operator_dashboard'),
+            {
+                'action': 'guest_settings',
+                'site_name': 'Unauthorized Property',
+                'welcome_message': 'Should not save',
+                'default_region': 'CA',
+                'show_guest_account_links': 'on',
+            },
+        )
+
+        self.assertEqual(response.status_code, 403)
+        self.assertFalse(SystemSettings.objects.exists())
+
+    def test_staff_with_add_permission_can_create_guest_settings_inline(self):
+        self.staff.user_permissions.add(
+            Permission.objects.get(codename='add_systemsettings'),
+        )
+        self.client.force_login(self.staff)
+
+        response = self.client.post(
+            reverse('operator_dashboard'),
+            {
+                'action': 'guest_settings',
+                'site_name': 'Harbor Guest TV',
+                'welcome_message': 'Welcome to the harbor.',
+                'default_region': 'CA',
+            },
+        )
+
+        self.assertRedirects(response, reverse('operator_dashboard'))
+        settings = SystemSettings.objects.get(pk=1)
+        self.assertEqual(settings.site_name, 'Harbor Guest TV')
+        self.assertEqual(settings.welcome_message, 'Welcome to the harbor.')
+        self.assertEqual(settings.default_region, 'CA')
+        self.assertFalse(settings.show_guest_account_links)
+
+    def test_staff_with_change_permission_can_update_guest_settings_inline(self):
+        settings = SystemSettings.load()
+        settings.site_name = 'Old Property'
+        settings.save()
+        self.staff.user_permissions.add(
+            Permission.objects.get(codename='change_systemsettings'),
+        )
+        self.client.force_login(self.staff)
+
+        response = self.client.post(
+            reverse('operator_dashboard'),
+            {
+                'action': 'guest_settings',
+                'site_name': 'Updated Property TV',
+                'welcome_message': 'Updated welcome message.',
+                'default_region': 'US',
+                'show_guest_account_links': 'on',
+            },
+        )
+
+        self.assertRedirects(response, reverse('operator_dashboard'))
+        settings.refresh_from_db()
+        self.assertEqual(settings.site_name, 'Updated Property TV')
+        self.assertEqual(settings.welcome_message, 'Updated welcome message.')
+        self.assertEqual(settings.default_region, 'US')
+        self.assertTrue(settings.show_guest_account_links)
+
+    def test_inline_guest_settings_reject_invalid_region(self):
+        settings = SystemSettings.load()
+        self.staff.user_permissions.add(
+            Permission.objects.get(codename='change_systemsettings'),
+        )
+        self.client.force_login(self.staff)
+
+        response = self.client.post(
+            reverse('operator_dashboard'),
+            {
+                'action': 'guest_settings',
+                'site_name': 'Invalid Region Property',
+                'welcome_message': '',
+                'default_region': 'ZZ',
+                'show_guest_account_links': 'on',
+            },
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Select a valid choice.')
+        settings.refresh_from_db()
+        self.assertEqual(settings.default_region, 'US')

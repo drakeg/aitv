@@ -98,6 +98,7 @@ This ledger is the durable project record for sprint-sized development. Git hist
 | 129 | #168 | Warn staff when the operator guest region is not included in recurring EPG refresh configuration. |
 | 130 | #169 | Add staff-only absolute guest home and Live TV launch URLs for pilot distribution channels. |
 | 131 | #170 | Make operator dashboard Admin actions permission-aware while preserving a useful read-only staff view. |
+| 132 | #171 | Add a permission-gated inline guest-settings form to the staff operator dashboard. |
 | 93 | #121 | Show an Ends in X min countdown for the current Live TV airing. |
 | 89 | #115 | Fix Live TV Favorite-toggle redirect encoding so preserved search/category filters cannot crash the request. |
 
