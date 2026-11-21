@@ -106,3 +106,28 @@ class OperatorDashboardTests(TestCase):
         response = self.client.get(reverse('operator_dashboard'))
 
         self.assertNotContains(response, 'Live TV refresh is not configured for CA.')
+
+    def test_dashboard_builds_same_site_guest_launch_urls(self):
+        self.client.force_login(self.staff)
+
+        response = self.client.get(
+            reverse('operator_dashboard'),
+            secure=True,
+            HTTP_HOST='guest.example.test',
+        )
+
+        self.assertEqual(
+            response.context['operator_guest_home_url'],
+            'https://guest.example.test/',
+        )
+        self.assertEqual(
+            response.context['operator_guest_live_tv_url'],
+            'https://guest.example.test/live-tv/',
+        )
+        self.assertContains(response, 'value="https://guest.example.test/"', html=False)
+        self.assertContains(
+            response,
+            'value="https://guest.example.test/live-tv/"',
+            html=False,
+        )
+        self.assertNotContains(response, 'http://guest.example.test/')
