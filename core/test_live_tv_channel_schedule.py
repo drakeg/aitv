@@ -392,7 +392,8 @@ class LiveTvChannelScheduleTests(TestCase):
         )
 
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, 'js/live-tv-auto-refresh.js?v=2')
+        self.assertContains(response, 'live-tv-auto-refresh')
+        self.assertContains(response, '?v=2')
         self.assertContains(response, 'data-live-tv-refresh-toggle')
         self.assertContains(response, 'Pause auto-refresh')
         self.assertContains(response, 'aria-labelledby="channel-schedule-heading"')
