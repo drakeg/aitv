@@ -164,6 +164,9 @@ def operator_dashboard(request):
         else reverse('admin:core_systemsettings_add')
     )
 
+    guest_home_url = request.build_absolute_uri(reverse('home'))
+    guest_live_tv_url = request.build_absolute_uri(reverse('live_tv_guide'))
+
     return render(request, 'operator/dashboard.html', {
         'operator_site_name': settings.site_name if settings is not None else 'aitv',
         'operator_default_region': region,
@@ -174,6 +177,8 @@ def operator_dashboard(request):
         'operator_epg_health': epg_health,
         'operator_epg_region_configured': region in configured_epg_regions(),
         'operator_settings_admin_url': settings_admin_url,
+        'operator_guest_home_url': guest_home_url,
+        'operator_guest_live_tv_url': guest_live_tv_url,
     })
 
 

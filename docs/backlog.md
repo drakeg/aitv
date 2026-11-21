@@ -17,16 +17,17 @@ Acceptance direction:
 - Record objections and feature requests as evidence, not assumed demand.
 - Treat the pricing ideas in `docs/commercialization.md` as hypotheses until a customer agrees to pay.
 
-### Sprint 129 — Guest-region EPG readiness warning
+### Sprint 130 — Guest launch URLs
 
-Prevent a location from silently choosing a guest region that the recurring EPG worker never refreshes.
+Make it easy for an operator to distribute the guest experience without introducing an external QR/short-link dependency.
 
 Acceptance direction:
-- Compare the operator default guest region with configured `EPG_REGIONS`.
-- Show a clear staff-only warning when the guest region is not included.
-- Keep the warning operational only; do not change or guess the configured refresh regions automatically.
-- Preserve sanitized health behavior and never expose stored upstream failure details.
-- Add regression coverage for matching and mismatched configurations.
+- Show absolute guest home and Live TV URLs on the staff operator dashboard.
+- Build URLs from the current request origin and existing named routes.
+- Present URLs as readonly, copy-friendly fields with same-site open/preview actions.
+- Preserve HTTPS when the operator accesses the dashboard over HTTPS.
+- Do not add an external URL shortener, QR service, or tracking dependency.
+- Add regression coverage for host/scheme correctness.
 
 ## Next product priorities
 
