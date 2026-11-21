@@ -8,10 +8,11 @@
 {% endif %}
 <div class="browse-bar mb-3">
     <form method="get" class="d-flex gap-2 align-items-center flex-wrap">
+        {% if guest_preview_mode %}<input type="hidden" name="guest_preview" value="1">{% endif %}
         <input type="search" name="q" value="{{ browse_query }}" placeholder="Search live titles, genres, networks" aria-label="Search live discovery">
         <select name="type" aria-label="Content type"><option value="">All types</option><option value="movie" {% if browse_type == 'movie' %}selected{% endif %}>Movies</option><option value="tv" {% if browse_type == 'tv' %}selected{% endif %}>TV Shows</option></select>
         <button class="btn btn-primary" type="submit">Search</button>
-        {% if browse_active %}<a class="btn btn-secondary" href="{% url 'home' %}">Clear</a>{% endif %}
+        {% if browse_active %}<a class="btn btn-secondary" href="{% url 'home' %}{% if guest_preview_mode %}?guest_preview=1{% endif %}">Clear</a>{% endif %}
         <span class="small text-muted">Dashboard results come only from live upstream sources.</span>
     </form>
 </div>
