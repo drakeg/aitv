@@ -69,6 +69,34 @@ class EpgDomainModelTests(TestCase):
                 external_id='airing-invalid',
             )
 
+    def test_airing_episode_label_uses_available_source_metadata(self):
+        start = timezone.now()
+        airing = Airing.objects.create(
+            channel=self.channel,
+            program=self.program,
+            starts_at=start,
+            ends_at=start + timedelta(hours=1),
+            episode_title='A Source Episode',
+            season_number=2,
+            episode_number=5,
+            source='test-source',
+            external_id='episode-metadata-airing',
+        )
+
+        self.assertEqual(airing.episode_label, 'S2 E5 · A Source Episode')
+
+        airing.episode_title = ''
+        airing.episode_number = None
+        self.assertEqual(airing.episode_label, 'S2')
+
+        airing.season_number = None
+        airing.episode_number = 7
+        self.assertEqual(airing.episode_label, 'E7')
+
+        airing.episode_title = 'Title Only'
+        airing.episode_number = None
+        self.assertEqual(airing.episode_label, 'Title Only')
+
     def test_schedule_models_do_not_contain_playback_urls(self):
         self.assertNotIn('url', {field.name for field in Channel._meta.fields})
         self.assertNotIn('url', {field.name for field in Program._meta.fields})

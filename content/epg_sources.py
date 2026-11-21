@@ -7,6 +7,14 @@ class ScheduleNormalizationError(RuntimeError):
     """A non-empty source snapshot could not produce any valid normalized airings."""
 
 
+def _optional_nonnegative_int(value):
+    try:
+        parsed = int(value)
+    except (TypeError, ValueError):
+        return None
+    return parsed if parsed >= 0 else None
+
+
 class ScheduleSourceAdapter(Protocol):
     """Contract for a trusted schedule source normalized before persistence."""
 
@@ -103,6 +111,9 @@ class TvmazeScheduleAdapter:
                 'program_title': item.get('title') or 'Untitled',
                 'program_description': item.get('description') or '',
                 'program_type': item.get('show_type') or '',
+                'episode_title': str(item.get('episode_title') or '').strip(),
+                'season_number': _optional_nonnegative_int(item.get('season_number')),
+                'episode_number': _optional_nonnegative_int(item.get('episode_number')),
                 'starts_at': starts_at,
                 'ends_at': starts_at + timedelta(minutes=runtime_minutes),
                 'source_schedule_date': source_schedule_date,

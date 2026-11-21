@@ -13,6 +13,7 @@ class TvmazeScheduleCoverageTests(SimpleTestCase):
         response.json.return_value = [{
             'season': 2,
             'number': 4,
+            'name': 'The Source Episode',
             'airtime': '21:00',
             'runtime': 44,
             'show': {
@@ -38,6 +39,9 @@ class TvmazeScheduleCoverageTests(SimpleTestCase):
         self.assertEqual(item['title'], 'Network Drama')
         self.assertEqual(item['network'], 'Example Network')
         self.assertEqual(item['episode_label'], 'S2 E4')
+        self.assertEqual(item['episode_title'], 'The Source Episode')
+        self.assertEqual(item['season_number'], 2)
+        self.assertEqual(item['episode_number'], 4)
         self.assertEqual(item['runtime'], 44)
         self.assertEqual(item['airtime'], '21:00')
         self.assertFalse(item['has_direct_watch'])

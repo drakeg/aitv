@@ -1266,6 +1266,40 @@ class LiveTvGuideTests(TestCase):
         self.assertContains(response, 'Visible Search Network')
         self.assertContains(response, 'Later Mystery Match')
 
+    def test_guide_renders_and_searches_visible_episode_metadata(self):
+        channel = Channel.objects.create(
+            name='Episode Search Network',
+            slug='episode-search-network',
+            region='US',
+            source='tvmaze',
+            external_id='episode-search-network',
+        )
+        program = Program.objects.create(
+            title='Ordinary Program Title',
+            source='tvmaze',
+            external_id='ordinary-program-title',
+        )
+        airing = self._airing(
+            channel,
+            program,
+            timedelta(minutes=-5),
+            timedelta(minutes=25),
+            'episode-search-current',
+        )
+        airing.episode_title = 'Hidden Gem Episode'
+        airing.season_number = 4
+        airing.episode_number = 6
+        airing.save(update_fields=['episode_title', 'season_number', 'episode_number'])
+
+        response = self.client.get(
+            reverse('live_tv_guide'),
+            {'q': 'Hidden Gem'},
+        )
+
+        self.assertContains(response, 'Episode Search Network')
+        self.assertContains(response, 'Ordinary Program Title')
+        self.assertContains(response, 'S4 E6 · Hidden Gem Episode')
+
     def test_guide_search_does_not_match_hidden_future_program_beyond_later(self):
         channel = Channel.objects.create(
             name='Hidden Search Network', slug='hidden-search-network', region='US',
@@ -1304,12 +1338,12 @@ class LiveTvGuideTests(TestCase):
 
         self.assertNotContains(response, 'Hidden Search Network')
         self.assertNotContains(response, 'Hidden Mystery Match')
-        self.assertContains(response, 'No channels or visible Now / Next / Later programs match “Mystery” for US.')
+        self.assertContains(response, 'No channels or visible Now / Next / Later programs or episodes match “Mystery” for US.')
 
     def test_guide_search_empty_state_is_specific(self):
         response = self.client.get(reverse('live_tv_guide'), {'q': 'Nothing Here'})
 
-        self.assertContains(response, 'No channels or visible Now / Next / Later programs match “Nothing Here” for US.')
+        self.assertContains(response, 'No channels or visible Now / Next / Later programs or episodes match “Nothing Here” for US.')
 
     def test_preferred_provider_ranks_playable_channel_destination(self):
         channel = Channel.objects.create(

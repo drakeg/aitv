@@ -286,6 +286,9 @@ class Airing(models.Model):
     starts_at = models.DateTimeField()
     ends_at = models.DateTimeField()
     source_schedule_date = models.DateField(null=True, blank=True)
+    episode_title = models.CharField(max_length=255, blank=True)
+    season_number = models.PositiveIntegerField(null=True, blank=True)
+    episode_number = models.PositiveIntegerField(null=True, blank=True)
     source = models.CharField(max_length=50)
     external_id = models.CharField(max_length=100)
 
@@ -301,6 +304,20 @@ class Airing(models.Model):
             ),
         ]
         ordering = ['starts_at', 'channel__name']
+
+    @property
+    def episode_label(self):
+        position = ''
+        if self.season_number is not None and self.episode_number is not None:
+            position = f'S{self.season_number} E{self.episode_number}'
+        elif self.season_number is not None:
+            position = f'S{self.season_number}'
+        elif self.episode_number is not None:
+            position = f'E{self.episode_number}'
+
+        if position and self.episode_title:
+            return f'{position} · {self.episode_title}'
+        return position or self.episode_title
 
     def __str__(self):
         return f'{self.channel}: {self.program} @ {self.starts_at}'

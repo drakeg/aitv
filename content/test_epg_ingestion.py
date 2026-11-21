@@ -17,6 +17,9 @@ class TvmazeEpgIngestionTests(TestCase):
             'title': 'Example Show',
             'description': 'Episode metadata',
             'show_type': 'Scripted',
+            'episode_title': 'Pilot Episode',
+            'season_number': 1,
+            'episode_number': 2,
             'network': 'Example Network',
             'genres': ['Drama'],
             'airtime': '20:00',
@@ -43,6 +46,10 @@ class TvmazeEpgIngestionTests(TestCase):
         self.assertEqual(airing.channel, channel)
         self.assertEqual(airing.program, program)
         self.assertEqual(airing.source_schedule_date, timezone.localdate())
+        self.assertEqual(airing.episode_title, 'Pilot Episode')
+        self.assertEqual(airing.season_number, 1)
+        self.assertEqual(airing.episode_number, 2)
+        self.assertEqual(airing.episode_label, 'S1 E2 · Pilot Episode')
         self.assertGreater(airing.ends_at, airing.starts_at)
 
     @patch('content.services.fetch_live_tv_schedule')
@@ -123,7 +130,13 @@ class TvmazeEpgIngestionTests(TestCase):
     def test_refresh_is_idempotent_and_updates_existing_records(self, fetch_schedule):
         fetch_schedule.return_value = [self._item()]
         refresh_tvmaze_epg(country='US')
-        fetch_schedule.return_value = [self._item(title='Updated Show', runtime=30)]
+        fetch_schedule.return_value = [self._item(
+            title='Updated Show',
+            runtime=30,
+            episode_title='Updated Episode',
+            season_number=3,
+            episode_number=7,
+        )]
 
         refresh_tvmaze_epg(country='US')
 
@@ -132,6 +145,7 @@ class TvmazeEpgIngestionTests(TestCase):
         self.assertEqual(Airing.objects.count(), 1)
         self.assertEqual(Program.objects.get().title, 'Updated Show')
         airing = Airing.objects.get()
+        self.assertEqual(airing.episode_label, 'S3 E7 · Updated Episode')
         self.assertEqual(int((airing.ends_at - airing.starts_at).total_seconds() / 60), 30)
 
     @patch('content.services.fetch_live_tv_schedule')

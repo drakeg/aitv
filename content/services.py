@@ -289,6 +289,7 @@ def fetch_live_tv_schedule(limit=100, country='US', *, date=None, strict=False, 
             else:
                 action_label = f'Watch on {provider_name}'
         season, number = episode.get('season'), episode.get('number')
+        episode_title = str(episode.get('name') or '').strip()
         episode_label = f'S{season} E{number}' if season is not None and number is not None else ''
         genres = [str(value) for value in (show.get('genres') or [])]
         show_type = (show.get('type') or '').strip()
@@ -309,6 +310,9 @@ def fetch_live_tv_schedule(limit=100, country='US', *, date=None, strict=False, 
             'provider': provider_name, 'network': network, 'access_type': access_type,
             'action_label': action_label, 'watch_scope': 'episode' if episode_provider else ('show' if show_provider else ''),
             'episode_label': episode_label,
+            'episode_title': episode_title,
+            'season_number': season,
+            'episode_number': number,
             'airtime': episode.get('airtime') or '', 'airdate': episode.get('airdate') or '',
             'airstamp': episode.get('airstamp') or '', 'runtime': episode.get('runtime'),
             'show_type': show_type, 'is_news': is_news,
@@ -409,6 +413,9 @@ def refresh_epg_source(adapter, region='US', retention_hours=6):
                     'starts_at': starts_at,
                     'ends_at': ends_at,
                     'source_schedule_date': row.get('source_schedule_date'),
+                    'episode_title': row.get('episode_title') or '',
+                    'season_number': row.get('season_number'),
+                    'episode_number': row.get('episode_number'),
                 },
             )
             destination_url = str(row.get('destination_url') or '').strip()
