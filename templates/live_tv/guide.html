@@ -40,7 +40,7 @@
             <input type="checkbox" name="starts_soon" value="1"{% if show_starts_soon_only %} checked{% endif %}>
             <span>Starts soon only</span>
         </label>
-        <input type="search" name="q" value="{{ guide_query }}" placeholder="Search channels or programs" aria-label="Search Live TV channels or programs">
+        <input type="search" name="q" value="{{ guide_query }}" placeholder="Search channels, programs, or episodes" aria-label="Search Live TV channels, programs, or episodes">
         <select name="category" aria-label="Filter Live TV by category">
             <option value="">All categories</option>
             {% for category in guide_category_choices %}
@@ -92,6 +92,7 @@
                         <span class="guide-label">Now</span>
                         {% if row.current %}
                             <strong>{{ row.current.program.title }}</strong>
+                            {% if row.current.episode_label %}<span class="guide-episode">{{ row.current.episode_label }}</span>{% endif %}
                             <span><time datetime="{{ row.current.starts_at|date:'c' }}">{{ row.current.starts_at|date:"g:i A" }}</time>–<time datetime="{{ row.current.ends_at|date:'c' }}">{{ row.current.ends_at|date:"g:i A" }}</time></span>
                             <span class="badge text-bg-secondary align-self-start">Ends in {{ row.ends_in_minutes }} min</span>
                         {% elif row.upcoming_only %}
@@ -109,6 +110,7 @@
                         <span class="guide-label">Next</span>
                         {% if row.next %}
                             <strong>{{ row.next.program.title }}</strong>
+                            {% if row.next.episode_label %}<span class="guide-episode">{{ row.next.episode_label }}</span>{% endif %}
                             <span><time datetime="{{ row.next.starts_at|date:'c' }}">{{ row.next.starts_at|date:"g:i A" }}</time>–<time datetime="{{ row.next.ends_at|date:'c' }}">{{ row.next.ends_at|date:"g:i A" }}</time></span>
                         {% else %}
                             <span class="text-muted">No next program listed</span>
@@ -118,6 +120,7 @@
                         <span class="guide-label">Later</span>
                         {% if row.later %}
                             <strong>{{ row.later.program.title }}</strong>
+                            {% if row.later.episode_label %}<span class="guide-episode">{{ row.later.episode_label }}</span>{% endif %}
                             <span><time datetime="{{ row.later.starts_at|date:'c' }}">{{ row.later.starts_at|date:"g:i A" }}</time>–<time datetime="{{ row.later.ends_at|date:'c' }}">{{ row.later.ends_at|date:"g:i A" }}</time></span>
                         {% else %}
                             <span class="text-muted">No later program listed</span>
@@ -130,10 +133,10 @@
         <div class="empty-state">
             {% if guide_query and not guide_category and not show_live_now_only and not show_ending_soon_only and not show_playable_only and not show_starts_soon_only %}
                 <strong>No channels or visible Now / Next / Later programs match “{{ guide_query }}” for {{ guide_region }}.</strong>
-                <div class="text-muted mt-1">Search is limited to the channel name and the program slots currently visible in the compact guide.</div>
+                <div class="text-muted mt-1">Search is limited to the channel name and the program or episode text currently visible in the compact guide.</div>
             {% elif guide_query or guide_category or show_live_now_only or show_ending_soon_only or show_playable_only or show_starts_soon_only %}
                 <strong>No channels match the active Live TV filters for {{ guide_region }}.</strong>
-                <div class="text-muted mt-1">Search matches channel names and visible Now / Next / Later program titles; category filtering uses normalized channel categories; live-now-only requires a current airing; ending-soon-only requires a current airing with 30 minutes or less remaining; playable-only additionally requires an explicit trusted destination for that airing or channel; starts-soon-only requires no current airing and a next airing within one hour.</div>
+                <div class="text-muted mt-1">Search matches channel names and visible Now / Next / Later program or episode titles; category filtering uses normalized channel categories; live-now-only requires a current airing; ending-soon-only requires a current airing with 30 minutes or less remaining; playable-only additionally requires an explicit trusted destination for that airing or channel; starts-soon-only requires no current airing and a next airing within one hour.</div>
             {% elif show_favorites_only %}
                 <strong>No favorite channels currently have guide data for {{ guide_region }}.</strong>
                 <div class="text-muted mt-1">Favorite channels from other accounts are never included.</div>
