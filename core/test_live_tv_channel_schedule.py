@@ -19,6 +19,9 @@ class LiveTvChannelScheduleTests(TestCase):
         external_id,
         *,
         schedule_date=None,
+        episode_title='',
+        season_number=None,
+        episode_number=None,
     ):
         now = timezone.now()
         return Airing.objects.create(
@@ -27,6 +30,9 @@ class LiveTvChannelScheduleTests(TestCase):
             starts_at=now + start_delta,
             ends_at=now + end_delta,
             source_schedule_date=schedule_date or timezone.localdate(),
+            episode_title=episode_title,
+            season_number=season_number,
+            episode_number=episode_number,
             source='tvmaze',
             external_id=external_id,
         )
@@ -1055,6 +1061,37 @@ class LiveTvChannelScheduleTests(TestCase):
 
         self.assertContains(response, '<time datetime="', count=2, html=False)
         self.assertContains(response, 'Semantic Time Show')
+
+    def test_channel_schedule_renders_source_episode_metadata(self):
+        channel = Channel.objects.create(
+            name='Episode Detail Network',
+            slug='episode-detail-network',
+            region='US',
+            source='tvmaze',
+            external_id='episode-detail-network',
+        )
+        program = Program.objects.create(
+            title='Episode Detail Show',
+            source='tvmaze',
+            external_id='episode-detail-show',
+        )
+        self._airing(
+            channel,
+            program,
+            timedelta(minutes=30),
+            timedelta(minutes=60),
+            'episode-detail-airing',
+            episode_title='The Source Episode',
+            season_number=3,
+            episode_number=8,
+        )
+
+        response = self.client.get(
+            reverse('live_tv_channel_schedule', args=[channel.pk]),
+        )
+
+        self.assertContains(response, 'Episode Detail Show')
+        self.assertContains(response, 'S3 E8 · The Source Episode')
 
     def test_empty_schedule_day_links_to_nearest_later_populated_day(self):
         today = timezone.localdate()
