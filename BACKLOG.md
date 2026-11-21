@@ -10,7 +10,7 @@ The detailed acceptance criteria and maintenance backlog live in docs/backlog.md
 | P1 | Live TV accessibility flow audit | Sprint 120 | Merged #157 |
 | P1 | Live TV request/database efficiency audit | Sprint 121 | Merged #158 |
 | P1 | Operator EPG/source diagnostics | Sprint 122 | Merged #159 |
-| P1 | Validate SMB guest-entertainment pilot demand and willingness to pay | Commercial validation | Planned |
+| P1 | Validate SMB guest-entertainment pilot demand and willingness to pay | Commercial validation | In progress — demo/evidence package; external outreach not yet authorized |
 | P1 | Operator-configurable guest branding for pilot demos | Sprint 125 | Merged #164 |
 | P1 | Operator-configurable guest default region | Sprint 126 | Merged #165 |
 | P1 | Guest-first account prompt control for pilot deployments | Sprint 127 | Merged #166 |
@@ -19,7 +19,8 @@ The detailed acceptance criteria and maintenance backlog live in docs/backlog.md
 | P1 | Copyable guest launch URLs for pilot distribution | Sprint 130 | Merged #169 |
 | P1 | Permission-aware operator dashboard actions | Sprint 131 | Merged #170 |
 | P1 | Inline guest settings on operator dashboard | Sprint 132 | Merged #171 |
-| P1 | Operator pilot-readiness checklist | Sprint 133 | Active |
+| P1 | Operator pilot-readiness checklist | Sprint 133 | Merged #172 |
+| P1 | Hospitality pilot demo/evidence package | Sprint 134 | Active |
 | P1 | Next legitimate EPG/source adapter if it meets provenance/trust contracts | Sprint 123 | Evaluated; no-go under current constraints |
 | P1 | Production-readiness hardening | Sprint 124 | Merged #161 |
 | P2 | Provider-supported account integrations | Future | Backlog |

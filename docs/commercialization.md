@@ -49,7 +49,7 @@ Consumer products such as TV Guide, JustWatch, and streaming-platform guides alr
 
 Do not build large commercial-only features before evidence exists.
 
-1. Prepare a demo usable by a hospitality operator.
+1. Prepare a demo usable by a hospitality operator. **Sprint 134 prepares the demo guide and structured evidence template; no external validation is claimed by that preparation alone.**
 2. Interview at least 10 qualified operators about the problem and current workaround.
 3. Ask for a paid pilot rather than relying on positive feedback alone.
 4. Record objections and required features without inventing demand.

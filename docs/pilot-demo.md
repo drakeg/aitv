@@ -1,0 +1,135 @@
+# Hospitality pilot demo guide
+
+This guide prepares aitv for a structured demo with an independent hospitality operator. It is a demonstration and discovery tool, not evidence that demand, willingness to pay, or customer value has already been validated.
+
+## Target operator
+
+Primary candidates are independent RV resorts, campgrounds, boutique hotels, and professionally managed vacation-rental portfolios where staff may answer recurring guest questions about what is on and where legitimate viewing options are available.
+
+## Pre-demo readiness
+
+Before presenting the product:
+
+- Deploy the intended demo commit using the supported single-host/pilot path or a controlled local environment.
+- Confirm `/health/live/` returns HTTP 200.
+- Open `/operator/` and confirm **Pilot readiness = Ready**.
+- Confirm guest-facing site name and welcome message are appropriate for the demo location.
+- Confirm the guest default region is correct and included in `EPG_REGIONS`.
+- Confirm EPG health is current and healthy for that region.
+- Confirm Guest Home and Live TV launch URLs are usable from the device/network being demonstrated.
+- Decide whether Login/Register prompts should be visible for this demo.
+- Do not seed fabricated schedule/provider data if a live upstream source is unavailable.
+
+## Suggested 8–10 minute demo flow
+
+1. **Operator dashboard — 1 minute**
+   - Show the Pilot readiness checklist.
+   - Show guest branding, default region, launch links, and sanitized guide health.
+   - Explain that configuration writes remain permission-gated.
+
+2. **Guest home — 1–2 minutes**
+   - Open the guest launch URL.
+   - Show location branding and live-source discovery.
+   - Emphasize that missing upstream data stays missing rather than being invented.
+
+3. **Live TV guide — 2 minutes**
+   - Show Now / Next / Later programming.
+   - Demonstrate search/category/timing filters as useful.
+   - Explain source-date and regional behavior.
+
+4. **Channel schedule — 1 minute**
+   - Open a channel schedule.
+   - Show day navigation, airing counts, timing states, and empty-day navigation.
+
+5. **Trusted viewing destinations — 1–2 minutes**
+   - Explain that a schedule row does not automatically mean aitv has a playable destination.
+   - Show an explicit trusted Watch action when one is available.
+   - Explain episode/show/channel scope and that aitv does not guess deep links, bypass DRM, or rebroadcast channels.
+
+6. **Operator configuration — 1 minute**
+   - Show the inline guest settings form when the operator account has permission.
+   - Demonstrate branding, guest region, and account-prompt control.
+   - Show how launch URLs can be used in a Wi-Fi portal, welcome message, QR generator, or guest tablet.
+
+7. **Operational boundary — 30 seconds**
+   - Describe the current supported single-host/pilot production model.
+   - Do not claim high availability, multi-tenant SaaS architecture, or support for unverified sources.
+
+## Discovery questions
+
+Use the demo to learn, not to lead the operator toward a preferred answer.
+
+### Current problem and frequency
+
+- What entertainment or TV-related questions do guests ask today?
+- How often do staff answer “what is on?” or “where can I watch this?”
+- Are those questions seasonal, event-driven, or consistent throughout the year?
+- Which guest types or properties generate the most questions?
+- What happens when staff cannot answer quickly?
+
+### Current workaround
+
+- What does staff currently use: printed guides, provider apps, TV Guide, JustWatch, search engines, property binders, or something else?
+- Who maintains that information?
+- How much staff time does the workaround consume?
+- What is frustrating or unreliable about it?
+- What already works well enough that aitv should not try to replace it?
+
+### Product fit
+
+- Which part of the demo would guests actually use?
+- Which part would staff actually use?
+- What would make this inappropriate or too difficult to deploy?
+- Which capability is mandatory before you would try it?
+- Which capabilities are merely nice to have?
+- Would a guest-facing link in a Wi-Fi portal, welcome message, QR code, or tablet fit your workflow?
+- Who would approve installation and who would approve payment?
+
+### Pilot and price
+
+State the current pricing hypothesis as a test, not a fact:
+
+- Would you run a limited paid pilot at **$49/month for one location** if setup met your operational requirements?
+- If no, what specifically prevents a paid pilot?
+- If conditional, what must be true before you would pay?
+- If yes, identify the decision-maker, expected start window, and next concrete commitment.
+
+Do not record enthusiasm, compliments, or “interesting idea” as willingness to pay. Record a paid-pilot signal only when the operator explicitly agrees to a commercial next step or payment condition.
+
+## Evidence rules
+
+For every conversation, keep these categories separate:
+
+- **Observed pain:** a concrete workflow/problem the operator says happens today.
+- **Frequency/severity:** how often it occurs and what it costs in time, money, guest satisfaction, or risk.
+- **Current workaround:** what they actually do now.
+- **Exact quote:** verbatim wording useful for understanding the problem.
+- **Requested capability:** something the operator asks for; this is not automatically a roadmap commitment.
+- **Objection:** a reason they would not adopt/pay.
+- **Willingness to pay:** explicit yes/no/conditional response to a concrete paid pilot.
+- **Commitment:** a scheduled follow-up, introduction, pilot date, procurement step, or payment.
+- **Next action:** one concrete follow-up with owner/date.
+
+Never invent a customer, quote, meeting, payment, deployment, or result.
+
+## Live-source failure during a demo
+
+If a live source is unavailable:
+
+1. Say that the affected live source is unavailable.
+2. Show the health/readiness state if useful.
+3. Do not load fake catalog or schedule data.
+4. Continue with unaffected features or an already-populated normalized guide only when it is truthful to the source state.
+5. Record the failure as an operational/demo finding if it materially affected the conversation.
+
+## Demo outcome
+
+A successful demo is not defined by praise. The strongest outcomes are:
+
+- a clearly documented problem with meaningful frequency/severity;
+- a named decision-maker and deployment constraints;
+- an explicit paid-pilot yes/no/conditional response;
+- concrete objections and required capabilities;
+- a specific follow-up step.
+
+Use `docs/pilot-interview-template.md` immediately after each conversation so evidence remains structured and comparable.
