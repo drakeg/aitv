@@ -31,6 +31,7 @@ The goal is fewer clicks to legitimate content. Direct network/service destinati
 - Staff-only operator dashboard with guest configuration summary, sanitized EPG health, preview links, and direct settings/diagnostics access
 - Operator warning when the guest default region is missing from the configured EPG refresh regions
 - Staff-only absolute guest home and Live TV launch URLs for Wi-Fi portals, welcome messages, QR setup, and guest tablets
+- Accessible one-click Copy controls for guest launch URLs with manual-copy fallback
 - Permission-aware operator dashboard actions that hide unavailable Admin links instead of presenting dead configuration/diagnostic controls
 - Permission-gated inline operator form for guest site name, welcome text, default region, and guest account prompts
 - Operator pilot-readiness checklist for saved guest settings, EPG-region coverage, and healthy guide data
