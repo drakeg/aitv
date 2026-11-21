@@ -8,6 +8,8 @@ aitv uses Semantic Versioning for published releases.
 
 A merge does not automatically require a release.
 
+Documentation-only commercial-validation preparation, such as demo/interview guides, does not by itself require an application release because it does not change runtime behavior or compatibility.
+
 ## Current release posture
 
 Until the first intentional public release is published, main is the supported development line. Do not display a release badge or claim a current release until a GitHub release/tag actually exists.
