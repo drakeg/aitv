@@ -1,13 +1,8 @@
-from .models import SystemSettings
+from .system_settings import get_system_settings
 
 
 def operator_branding(request):
-    settings = (
-        SystemSettings.objects
-        .filter(pk=1)
-        .only('site_name', 'welcome_message')
-        .first()
-    )
+    settings = get_system_settings(request)
     if settings is None:
         return {
             'site_brand_name': 'aitv',
