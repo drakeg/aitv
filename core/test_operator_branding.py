@@ -46,3 +46,20 @@ class OperatorBrandingTests(TestCase):
             '&lt;script&gt;alert(&quot;guest&quot;)&lt;/script&gt;',
             html=False,
         )
+
+    def test_guest_account_links_remain_visible_by_default(self, *_mocks):
+        response = self.client.get(reverse('home'))
+
+        self.assertContains(response, '>Login<', html=False)
+        self.assertContains(response, '>Register<', html=False)
+
+    def test_operator_can_hide_guest_account_links(self, *_mocks):
+        settings = SystemSettings.load()
+        settings.show_guest_account_links = False
+        settings.save()
+
+        response = self.client.get(reverse('home'))
+
+        self.assertNotContains(response, '>Login<', html=False)
+        self.assertNotContains(response, '>Register<', html=False)
+        self.assertContains(response, '>Live TV<', html=False)
