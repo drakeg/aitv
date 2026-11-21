@@ -52,6 +52,12 @@ jobs:
           fi
           sh -n scripts/start-production.sh
 
+      - name: Validate static JavaScript syntax
+        run: |
+          for file in static/js/*.js; do
+            node --check "$file"
+          done
+
       - name: Check migration drift
         env:
           DJANGO_SECRET_KEY: ci-only-secret

@@ -11,6 +11,7 @@ Contributions from humans and coding agents are welcome. Keep changes focused, r
    - python manage.py check
    - python manage.py makemigrations --check --dry-run
    - python manage.py test
+   - node --check static/js/*.js
    - docker compose config --quiet
    - python3 scripts/audit.py --check
    - python3 scripts/badges.py --mode check
@@ -27,7 +28,7 @@ Work is ready when its user/business rationale, boundaries, acceptance criteria,
 
 - Acceptance criteria are met.
 - Regression coverage is meaningful.
-- Django checks, migration-drift checks, full tests, Compose validation, and repository standards checks pass.
+- Django checks, migration-drift checks, full tests, static JavaScript syntax checks, Compose validation, and repository standards checks pass.
 - User-visible, architectural, deployment, security, sprint/backlog, commercialization, and release-impact docs are updated when applicable.
 - No secrets, local databases, generated junk, or fabricated source/provider claims are committed.
 - The pull request is reviewable and the current head has green required checks.

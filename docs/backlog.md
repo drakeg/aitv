@@ -28,18 +28,6 @@ Sprint 134 completed the non-outreach preparation:
 
 The next commercial-validation action is conducting qualified operator conversations using those materials. External outreach remains pending explicit authorization; that dependency does not block continuous reliability, security, accessibility, documentation, dependency, or defect work.
 
-### Sprint 135 — Guest launch URL copy controls
-
-Reduce friction for hospitality operators distributing the guest experience.
-
-Acceptance direction:
-- Add one-click Copy actions beside guest Home and Live TV launch URLs.
-- Preserve the readonly URL fields and Open actions so the workflow remains usable without JavaScript.
-- Use the Clipboard API on secure contexts and a browser-native fallback where practical.
-- Announce success/failure to assistive technology without visual-only feedback.
-- Keep URLs same-site and unchanged; copying must never rewrite, shorten, or track them.
-- Add regression coverage for the rendered controls/script.
-
 ## Next product priorities
 
 With the planned Sprint 119–124 sequence complete, product work is now evidence-driven:

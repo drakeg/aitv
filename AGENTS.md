@@ -59,6 +59,7 @@ Before a PR is ready, run the applicable checks:
 - python manage.py check
 - python manage.py makemigrations --check --dry-run
 - full Django tests
+- node --check static/js/*.js
 - docker compose config --quiet
 - repository standards audit/badge validation
 - focused workflow tests for changed behavior
