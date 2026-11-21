@@ -18,11 +18,12 @@
                     <a class="btn btn-outline-warning" href="{% url 'live_tv_guide' %}?favorites=1{% if guide_query %}&amp;q={{ guide_query|urlencode }}{% endif %}{% if guide_category %}&amp;category={{ guide_category|urlencode }}{% endif %}{% if show_live_now_only %}&amp;live_now=1{% endif %}{% if show_ending_soon_only %}&amp;ending_soon=1{% endif %}{% if show_playable_only %}&amp;playable=1{% endif %}{% if show_starts_soon_only %}&amp;starts_soon=1{% endif %}">★ Favorites only</a>
                 {% endif %}
             {% endif %}
-            <a class="btn btn-outline-light" href="{% url 'home' %}">Back to discovery</a>
+            <a class="btn btn-outline-light" href="{% url 'home' %}{% if guest_preview_mode %}?guest_preview=1{% endif %}">Back to discovery</a>
         </div>
     </div>
 
     <form class="browse-bar guide-search mb-3 d-flex gap-2 flex-wrap" method="get" action="{% url 'live_tv_guide' %}" role="search" aria-label="Live TV guide filters">
+        {% if guest_preview_mode %}<input type="hidden" name="guest_preview" value="1">{% endif %}
         {% if show_favorites_only %}<input type="hidden" name="favorites" value="1">{% endif %}
         <label class="d-flex align-items-center gap-2 px-2">
             <input type="checkbox" name="live_now" value="1"{% if show_live_now_only %} checked{% endif %}>
@@ -49,7 +50,7 @@
         </select>
         <button class="btn btn-primary" type="submit">Filter guide</button>
         {% if guide_query or guide_category or show_live_now_only or show_ending_soon_only or show_playable_only or show_starts_soon_only %}
-            <a class="btn btn-outline-light" href="{% url 'live_tv_guide' %}{% if show_favorites_only %}?favorites=1{% endif %}">Clear filters</a>
+            <a class="btn btn-outline-light" href="{% url 'live_tv_guide' %}?{% if guest_preview_mode %}guest_preview=1{% if show_favorites_only %}&amp;{% endif %}{% endif %}{% if show_favorites_only %}favorites=1{% endif %}">Clear filters</a>
         {% endif %}
     </form>
 
@@ -59,7 +60,7 @@
                 <article class="guide-row" aria-labelledby="channel-name-{{ row.channel.id }}">
                     <div class="guide-channel">
                         <div class="guide-channel-heading">
-                            <strong><a id="channel-name-{{ row.channel.id }}" class="text-reset text-decoration-none" href="{% url 'live_tv_channel_schedule' row.channel.id %}?return_to={{ guide_return_path|urlencode }}">{{ row.channel.name }}</a></strong>
+                            <strong><a id="channel-name-{{ row.channel.id }}" class="text-reset text-decoration-none" href="{% url 'live_tv_channel_schedule' row.channel.id %}?{% if guest_preview_mode %}guest_preview=1&amp;{% endif %}return_to={{ guide_return_path|urlencode }}">{{ row.channel.name }}</a></strong>
                             {% if user.is_authenticated %}
                                 <form method="post" action="{% url 'toggle_channel_favorite' row.channel.id %}">
                                     {% csrf_token %}
