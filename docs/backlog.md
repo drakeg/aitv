@@ -28,6 +28,18 @@ Sprint 134 completed the non-outreach preparation:
 
 The next commercial-validation action is conducting qualified operator conversations using those materials. External outreach remains pending explicit authorization; that dependency does not block continuous reliability, security, accessibility, documentation, dependency, or defect work.
 
+### Sprint 136 — Source episode metadata
+
+Preserve useful authoritative episode detail already supplied by TVmaze instead of discarding it during normalized EPG persistence.
+
+Acceptance direction:
+- Persist optional episode title, season number, and episode number on the specific Airing, not the reusable show-level Program.
+- Keep stable identity/timing validation fail-closed while treating optional episode detail as best-effort metadata.
+- Show episode detail in the compact Live TV guide and channel schedule when present.
+- Let guide search match a source episode title only when that airing is already visible in Now / Next / Later.
+- Keep playback destination ranking/trust completely unchanged; descriptive episode metadata must never imply watchability.
+- Expose source episode metadata read-only in Airing admin and add source, normalization, persistence, display, and search regression coverage.
+
 ## Next product priorities
 
 With the planned Sprint 119–124 sequence complete, product work is now evidence-driven:
