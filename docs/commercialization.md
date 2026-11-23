@@ -12,13 +12,15 @@ Guests often face fragmented TV schedules, streaming apps, regional provider ava
 
 ## Value proposition hypothesis
 
+**Guest arrival path:** Sprints 146–148 connect operator distribution to the anonymous experience: printable QR materials and copyable digital handoff text land on a branded guest Home with a prominent Live TV action and a direct jump into movie/show discovery. This is product capability, not evidence that operators or guests value it yet.
+
 aitv could provide a branded, region-aware guest entertainment guide that:
 
 - shows current/next programming from legitimate schedule sources;
 - points only to trusted provider/source-supplied destinations;
 - avoids rebroadcasting content or bypassing provider authentication;
 - reduces staff support questions;
-- gives operators a lightweight amenity they can link from Wi-Fi portals, QR codes, welcome messages, or guest tablets. **Sprint 130 exposes same-site guest home and Live TV launch URLs on the operator dashboard, and Sprint 146 adds a self-contained printable launch sheet with internally generated QR codes so an operator does not need an external QR service., while Sprint 147 adds a branded ready-to-copy message for welcome emails/texts, Wi-Fi portals, and digital guest guides.**
+- gives operators a lightweight amenity they can link from Wi-Fi portals, QR codes, welcome messages, or guest tablets. **Sprint 130 exposes same-site guest home and Live TV launch URLs on the operator dashboard, and Sprint 146 adds a self-contained printable launch sheet with internally generated QR codes so an operator does not need an external QR service, while Sprint 147 adds a branded ready-to-copy message for welcome emails/texts, Wi-Fi portals, and digital guest guides.**
 
 ## Pilot MVP
 
