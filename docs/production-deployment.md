@@ -130,20 +130,54 @@ Django's `check --deploy --fail-level WARNING` is run in CI against the producti
 
 WhiteNoise serves the collected Django static tree from the Gunicorn application. The startup command runs `collectstatic` before Gunicorn starts, using compressed manifest storage so missing/incorrect static references fail visibly instead of silently producing production-only broken assets.
 
-## Backup
+## Backup and restore
 
-With the standard project name, application data is stored in `aitv-production_aitv_data`. Stop application writers before copying SQLite:
+AITV includes `scripts/sqlite_backup.py`, which uses SQLite's backup API to create a consistent snapshot while the web service is running and verifies the resulting database with `PRAGMA integrity_check`.
+
+Create an off-volume backup:
+
+```bash
+mkdir -p backups
+timestamp="$(date -u +%Y%m%dT%H%M%SZ)"
+docker compose --env-file .env.production -p aitv-production -f compose.production.yml exec -T web \
+  python /app/scripts/sqlite_backup.py backup \
+  --source /data/db.sqlite3 \
+  --output /tmp/aitv-production-db.sqlite3
+docker compose --env-file .env.production -p aitv-production -f compose.production.yml exec -T web \
+  python /app/scripts/sqlite_backup.py verify \
+  --input /tmp/aitv-production-db.sqlite3
+docker compose --env-file .env.production -p aitv-production -f compose.production.yml cp \
+  web:/tmp/aitv-production-db.sqlite3 \
+  "./backups/aitv-production-$timestamp.sqlite3"
+```
+
+Keep important backups outside the Docker host/volume as well.
+
+A restore replaces the active application database and therefore requires an offline maintenance window. Stop every writer first:
 
 ```bash
 docker compose --env-file .env.production -p aitv-production -f compose.production.yml stop web epg notifications
-docker run --rm \
-  -v aitv-production_aitv_data:/data:ro \
-  -v "$PWD":/backup \
-  alpine sh -c 'cp /data/db.sqlite3 /backup/aitv-production-db.sqlite3'
-docker compose --env-file .env.production -p aitv-production -f compose.production.yml start web
 ```
 
-Restart only the worker profiles that were enabled before the backup. Keep an external/off-host copy for important deployments.
+Then run the guarded restore from a one-off container. The script verifies the supplied backup, creates a verified pre-restore safety snapshot when a current database exists, removes stale SQLite sidecars only after explicit offline confirmation, atomically replaces the target, and verifies the restored database:
+
+```bash
+backup_file="aitv-production-YYYYMMDDTHHMMSSZ.sqlite3"
+docker compose --env-file .env.production -p aitv-production -f compose.production.yml run --rm --no-deps \
+  -v "$PWD/backups:/backup:ro" \
+  web python /app/scripts/sqlite_backup.py restore \
+  --input "/backup/$backup_file" \
+  --target /data/db.sqlite3 \
+  --confirm-offline
+```
+
+Start the web service and only the optional worker profiles that were enabled before maintenance:
+
+```bash
+docker compose --env-file .env.production -p aitv-production -f compose.production.yml up -d web caddy
+```
+
+Verify `/health/live/` and `/health/ready/` after restoration. Do not delete the pre-restore safety snapshot until the restored deployment has been verified and the snapshot is no longer needed.
 
 ## Upgrade
 

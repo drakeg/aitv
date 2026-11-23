@@ -28,17 +28,18 @@ Sprint 134 completed the non-outreach preparation:
 
 The next commercial-validation action is conducting qualified operator conversations using those materials. External outreach remains pending explicit authorization; that dependency does not block continuous reliability, security, accessibility, documentation, dependency, or defect work.
 
-### Sprint 140 — Debug WhiteNoise warning cleanup
+### Sprint 141 — Tested SQLite backup and restore verification
 
-Finish the local/test staticfiles reliability cleanup discovered during Sprint 139 verification.
+Turn the documented single-host SQLite data-protection procedure into tested, reusable operational tooling for SMB pilot deployments.
 
 Acceptance direction:
-- Do not install WhiteNoise middleware when `DJANGO_DEBUG=true`; Django's development staticfiles handling is sufficient there.
-- Keep WhiteNoise middleware immediately after SecurityMiddleware when `DJANGO_DEBUG=false`.
-- Keep the production compressed manifest backend and `collectstatic` workflow unchanged.
-- Extend CI mode assertions so debug mode excludes WhiteNoise and production mode includes it in the required position.
-- Re-run the focused guest-preview module locally and require warning-free output from the missing-`STATIC_ROOT` issue.
-- Preserve all production deployment/security checks.
+- Create a consistent SQLite backup using SQLite's backup API rather than copying a potentially active database file.
+- Verify every produced or supplied backup with SQLite integrity checks before it is trusted.
+- Require an explicit offline confirmation before replacing the active database during restore.
+- Preserve a verified pre-restore safety snapshot when a target database already exists.
+- Exercise backup, verification, guarded restore, and data round-trip behavior in automated tests.
+- Update development and production Docker runbooks to use the tested tooling without weakening volume-persistence safeguards.
+- Preserve current production topology, migrations, and application behavior; this sprint is operational reliability, not a database-engine migration.
 
 ## Next product priorities
 
