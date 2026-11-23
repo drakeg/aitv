@@ -29,7 +29,7 @@ After Sprint 124, the repository has a supported single-host/pilot production ru
 ## Release checklist
 
 - Required pull requests reviewed and merged.
-- CI, migration-drift, Docker/health, and standards checks green.
+- CI, migration-drift, Docker/health, production backup/guarded-restore rehearsal, and standards checks green.
 - No exposed secrets or fabricated provider/source claims.
 - README.md, SPRINTS.md, BACKLOG.md, focused docs, and commercialization notes current.
 - Migration, deployment, rollback, and backup implications documented.
