@@ -80,7 +80,7 @@ class ScheduledBackupTests(SimpleTestCase):
             source = root / "source.sqlite3"
             backups = root / "backups"
             self._database(source, "cli-data")
-            script = Path(__file__).resolve().parents[1] / "scripts" / "backup_worker.py"
+            root_dir = Path(__file__).resolve().parents[1]
             env = {
                 **os.environ,
                 "SQLITE_DB_PATH": str(source),
@@ -89,12 +89,12 @@ class ScheduledBackupTests(SimpleTestCase):
             }
 
             result = subprocess.run(
-                [sys.executable, str(script), "--once"],
+                [sys.executable, "-m", "scripts.backup_worker", "--once"],
                 check=False,
                 capture_output=True,
                 text=True,
                 env=env,
-                cwd=Path(__file__).resolve().parents[1],
+                cwd=root_dir,
             )
 
             self.assertEqual(result.returncode, 0, result.stderr)
@@ -106,7 +106,7 @@ class ScheduledBackupTests(SimpleTestCase):
     def test_once_cli_fails_when_database_is_missing(self):
         with TemporaryDirectory() as directory:
             root = Path(directory)
-            script = Path(__file__).resolve().parents[1] / "scripts" / "backup_worker.py"
+            root_dir = Path(__file__).resolve().parents[1]
             env = {
                 **os.environ,
                 "SQLITE_DB_PATH": str(root / "missing.sqlite3"),
