@@ -108,6 +108,8 @@ The `backups` profile defaults to one verified backup every 86,400 seconds (24 h
 
 Docker also health-checks the backup worker by verifying the newest worker-owned backup is a valid SQLite database and is recent enough. By default, the maximum healthy age is the configured backup interval plus a 3,600-second grace period. `BACKUP_MAX_AGE_SECONDS` can override that threshold when an operator deliberately needs a wider window. A running but repeatedly failing or stale backup worker therefore becomes `unhealthy` in `docker compose ps` instead of looking healthy merely because its loop is still running.
 
+CI also exercises the actual production `backups` Compose profile against a disposable SQLite volume: it creates known data, runs one verified backup, checks backup health, re-opens the artifact to confirm the data survived, and removes all disposable Docker/host resources afterward.
+
 Multiple optional profiles can be enabled together by supplying each `--profile` flag.
 
 ## Local production smoke test
