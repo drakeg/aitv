@@ -114,12 +114,12 @@ class ScheduledBackupTests(SimpleTestCase):
             }
 
             result = subprocess.run(
-                [sys.executable, str(script), "--once"],
+                [sys.executable, "-m", "scripts.backup_worker", "--once"],
                 check=False,
                 capture_output=True,
                 text=True,
                 env=env,
-                cwd=Path(__file__).resolve().parents[1],
+                cwd=root_dir,
             )
 
             self.assertEqual(result.returncode, 2)
