@@ -182,6 +182,19 @@ def _operator_guest_launch_urls(request):
     }
 
 
+def _operator_guest_handoff_message(settings, launch_urls):
+    site_name = settings.site_name if settings is not None else 'aitv'
+    welcome_message = settings.welcome_message.strip() if settings is not None else ''
+    lines = [site_name]
+    if welcome_message:
+        lines.append(welcome_message)
+    lines.extend([
+        f"Guest guide: {launch_urls['home']}",
+        f"Live TV: {launch_urls['live-tv']}",
+    ])
+    return '\n'.join(lines)
+
+
 @login_required
 def operator_guest_launch_sheet(request):
     if not request.user.is_staff:
@@ -321,6 +334,10 @@ def operator_dashboard(request):
         'operator_epg_diagnostics_url': epg_diagnostics_url,
         'operator_guest_home_url': guest_home_url,
         'operator_guest_live_tv_url': guest_live_tv_url,
+        'operator_guest_handoff_message': _operator_guest_handoff_message(
+            settings,
+            launch_urls,
+        ),
         'operator_readiness_checks': operator_readiness_checks,
         'operator_pilot_ready': operator_pilot_ready,
     })
