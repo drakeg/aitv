@@ -28,20 +28,19 @@ Sprint 134 completed the non-outreach preparation:
 
 The next commercial-validation action is conducting qualified operator conversations using those materials. External outreach remains pending explicit authorization; that dependency does not block continuous reliability, security, accessibility, documentation, dependency, or defect work.
 
-### Sprint 144 — Production backup profile smoke test
+### Sprint 145 — Guarded restore disaster-recovery rehearsal
 
-Verify the actual production backup Compose path end-to-end in CI so unit tests cannot drift away from the deployed volume/profile contract.
+Exercise the documented offline restore path end-to-end against the same disposable production-style data volume used for backup smoke testing.
 
 Acceptance direction:
-- Build the real production `backups` service through Compose.
-- Create an isolated disposable SQLite data volume with known test data.
-- Run the backup worker through the real production profile in one-shot mode.
-- Require exactly one worker-owned backup artifact in the configured host backup directory.
-- Run the real backup-health probe against the produced artifact.
-- Re-open the produced SQLite backup and verify the known test row survived the container/volume path.
-- Clean up disposable Docker volumes, containers, networks, and host backup files even on failure.
-- Add the smoke test to CI after the production application image smoke and before the full test suite.
-- Keep the test completely isolated from developer/local persistent data.
+- Keep the verified production-profile backup creation and health checks from Sprint 144.
+- Mutate the live test database after the backup so restore success is observable rather than assumed.
+- Prove the restore helper refuses to replace the database without explicit offline confirmation.
+- Execute the documented guarded restore through the production web service with the backup directory mounted read-only.
+- Verify the active database returns to the backed-up value after restore.
+- Verify exactly one pre-restore safety snapshot is created and preserves the deliberately mutated pre-restore value.
+- Keep all test data isolated in disposable Docker resources and remove it on success or failure.
+- Rename the CI harness to reflect that it now verifies the broader data-protection workflow, not only backup creation.
 
 ## Next product priorities
 
