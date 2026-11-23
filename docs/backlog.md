@@ -28,19 +28,17 @@ Sprint 134 completed the non-outreach preparation:
 
 The next commercial-validation action is conducting qualified operator conversations using those materials. External outreach remains pending explicit authorization; that dependency does not block continuous reliability, security, accessibility, documentation, dependency, or defect work.
 
-### Sprint 146 — Printable guest launch sheet with same-site QR codes
+### Sprint 147 — Branded copyable guest handoff message
 
-Reduce operator setup friction when distributing the guest guide through printed welcome materials, front-desk cards, binders, and guest tablets.
+Reduce operator friction for digital distribution through welcome emails/texts, Wi-Fi portals, digital guest guides, and messaging tools.
 
 Acceptance direction:
-- Add a staff-only printable launch sheet from the existing operator dashboard.
-- Reuse the configured site name and welcome message instead of introducing parallel branding state.
-- Include separate Guest Home and Live TV launch targets with human-readable same-site URLs.
-- Generate QR codes inside AITV; do not depend on a third-party QR service or expose guest usage/tracking data.
-- Restrict QR generation to fixed internal launch targets so the endpoint cannot become an arbitrary URL-to-QR service.
-- Keep launch-sheet and QR endpoints staff-only while the encoded destinations remain the existing public guest routes.
-- Make the sheet useful on screen and printer-friendly, with accessible labels and a direct print control.
-- Add regression coverage for permissions, branding, URL generation, QR response headers/content, and unknown-target rejection.
+- Build the handoff text from the existing configured site name, welcome message, Guest Home URL, and Live TV URL.
+- Keep the generated text server-side and deterministic so branding/URL rules remain consistent with the operator dashboard and launch sheet.
+- Omit the optional welcome line cleanly when no welcome message is configured.
+- Expose the handoff in a readonly operator-dashboard field with the existing accessible clipboard/status behavior.
+- Preserve same-site absolute URL generation and never add tracking, shorteners, analytics parameters, or external services.
+- Add regression coverage for configured branding/welcome text, default behavior, copy-control wiring, and secure-host URL generation.
 
 ## Next product priorities
 

@@ -33,7 +33,8 @@ The detailed historical sprint ledger and current numbered queue are maintained 
 - Sprint 143: merged — make scheduled-backup integrity/freshness visible through Docker health.
 - Sprint 144: merged — exercise the actual production backup profile end-to-end in CI.
 - Sprint 145: merged — rehearse the guarded production restore path end-to-end in CI.
-- Sprint 146: active — add self-contained printable guest launch materials with same-site QR codes.
+- Sprint 146: merged — add self-contained printable guest launch materials with same-site QR codes.
+- Sprint 147: active — add a branded ready-to-copy guest handoff message for welcome channels.
 - Commercial validation is now prepared for operator interviews; external outreach and paid-pilot asks remain unperformed and require explicit authorization.
 - After Sprint 124, prioritize commercial pilot validation and defects/opportunities discovered from real testing rather than inventing another feature sprint.
 - Repository standards adoption is active maintenance work and does not renumber already planned product sprints.
