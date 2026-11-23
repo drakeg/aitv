@@ -28,19 +28,19 @@ Sprint 134 completed the non-outreach preparation:
 
 The next commercial-validation action is conducting qualified operator conversations using those materials. External outreach remains pending explicit authorization; that dependency does not block continuous reliability, security, accessibility, documentation, dependency, or defect work.
 
-### Sprint 145 — Guarded restore disaster-recovery rehearsal
+### Sprint 146 — Printable guest launch sheet with same-site QR codes
 
-Exercise the documented offline restore path end-to-end against the same disposable production-style data volume used for backup smoke testing.
+Reduce operator setup friction when distributing the guest guide through printed welcome materials, front-desk cards, binders, and guest tablets.
 
 Acceptance direction:
-- Keep the verified production-profile backup creation and health checks from Sprint 144.
-- Mutate the live test database after the backup so restore success is observable rather than assumed.
-- Prove the restore helper refuses to replace the database without explicit offline confirmation.
-- Execute the documented guarded restore through the production web service with the backup directory mounted read-only.
-- Verify the active database returns to the backed-up value after restore.
-- Verify exactly one pre-restore safety snapshot is created and preserves the deliberately mutated pre-restore value.
-- Keep all test data isolated in disposable Docker resources and remove it on success or failure.
-- Rename the CI harness to reflect that it now verifies the broader data-protection workflow, not only backup creation.
+- Add a staff-only printable launch sheet from the existing operator dashboard.
+- Reuse the configured site name and welcome message instead of introducing parallel branding state.
+- Include separate Guest Home and Live TV launch targets with human-readable same-site URLs.
+- Generate QR codes inside AITV; do not depend on a third-party QR service or expose guest usage/tracking data.
+- Restrict QR generation to fixed internal launch targets so the endpoint cannot become an arbitrary URL-to-QR service.
+- Keep launch-sheet and QR endpoints staff-only while the encoded destinations remain the existing public guest routes.
+- Make the sheet useful on screen and printer-friendly, with accessible labels and a direct print control.
+- Add regression coverage for permissions, branding, URL generation, QR response headers/content, and unknown-target rejection.
 
 ## Next product priorities
 
