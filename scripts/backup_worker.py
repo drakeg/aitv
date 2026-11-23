@@ -10,7 +10,10 @@ import time
 from datetime import datetime, timezone
 from pathlib import Path
 
-from scripts.sqlite_backup import BackupError, create_backup
+try:
+    from scripts.sqlite_backup import BackupError, create_backup
+except ModuleNotFoundError:  # Allow direct execution from scripts/.
+    from sqlite_backup import BackupError, create_backup
 
 
 DEFAULT_INTERVAL_SECONDS = 86400
@@ -19,10 +22,13 @@ BACKUP_PREFIX = "aitv-production"
 
 
 def positive_int(value: str | None, default: int, name: str) -> int:
+    if value is None:
+        return default
     try:
-        parsed = int(value) if value is not None else default
+        parsed = int(value)
     except (TypeError, ValueError):
-        parsed = default
+        print(f"{name} must be a positive integer; using {default}.", file=sys.stderr)
+        return default
     if parsed <= 0:
         print(f"{name} must be a positive integer; using {default}.", file=sys.stderr)
         return default
