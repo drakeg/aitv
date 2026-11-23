@@ -28,19 +28,19 @@ Sprint 134 completed the non-outreach preparation:
 
 The next commercial-validation action is conducting qualified operator conversations using those materials. External outreach remains pending explicit authorization; that dependency does not block continuous reliability, security, accessibility, documentation, dependency, or defect work.
 
-### Sprint 142 — Scheduled verified pilot backups
+### Sprint 143 — Scheduled backup health visibility
 
-Reduce operator risk in single-host SMB pilots by making recurring verified SQLite backups an opt-in production profile instead of a manual-only procedure.
+Make silent scheduled-backup failure visible to a single-host SMB operator.
 
 Acceptance direction:
-- Add an opt-in production `backups` profile; ordinary production startup must not enable it implicitly.
-- Store backup artifacts in a separately mounted host directory, not inside the application data volume.
-- Use the verified SQLite backup helper from Sprint 141 for every scheduled snapshot.
-- Default to a conservative daily interval and bounded retention, both configurable with validated positive integers.
-- Give the backup worker read-only access to application data and write access only to the backup directory.
-- Prune only worker-owned backup files and leave unrelated files untouched.
-- Provide a one-shot mode for deterministic tests and operator verification.
-- Document enablement, retention, backup location, restore relationship, and the need for an additional off-host copy for important deployments.
+- Add a deterministic backup-health probe that examines only worker-owned backup artifacts.
+- Require the newest scheduled backup to pass SQLite integrity verification.
+- Require the newest scheduled backup to be fresh relative to the configured backup interval plus a conservative grace period.
+- Allow an explicit maximum-age override for unusual operating schedules without weakening the default.
+- Reject missing backups, corrupt backups, stale backups, and future-dated backup timestamps.
+- Wire the probe into the opt-in production backup service's Docker healthcheck so a running loop with failed backups becomes visibly unhealthy.
+- Keep the health probe self-contained in the backup container; do not expose the backup directory to the web application.
+- Document how operators inspect the backup container's health and how the freshness threshold is derived.
 
 ## Next product priorities
 
