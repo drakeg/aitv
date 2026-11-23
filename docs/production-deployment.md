@@ -8,7 +8,7 @@ The production stack uses:
 - WhiteNoise for collected static assets;
 - Caddy as a version-pinned reverse proxy with automatic HTTPS;
 - the persistent SQLite volume for application data;
-- the same optional EPG and notification workers used by development, without source-code bind mounts.
+- the same optional EPG and notification workers used by development, without source-code bind mounts;\n- an optional scheduled backup worker that writes verified SQLite snapshots to a separate host-mounted directory.
 
 ## Scale boundary
 
@@ -96,7 +96,16 @@ Enable recurring release notifications:
 docker compose --env-file .env.production -p aitv-production -f compose.production.yml --profile notifications up -d --build
 ```
 
-Enable both by supplying both profiles.
+Enable recurring verified SQLite backups:
+
+```bash
+mkdir -p backups
+docker compose --env-file .env.production -p aitv-production -f compose.production.yml --profile backups up -d --build
+```
+
+The `backups` profile defaults to one verified backup every 86,400 seconds (24 hours), keeps the newest 7 worker-owned backups, mounts the application data volume read-only, and writes to `BACKUP_DIR` (default `./backups`). Configure `BACKUP_INTERVAL_SECONDS` and `BACKUP_RETENTION_COUNT` in `.env.production` with positive integers.
+
+Multiple optional profiles can be enabled together by supplying each `--profile` flag.
 
 ## Local production smoke test
 
@@ -152,6 +161,8 @@ docker compose --env-file .env.production -p aitv-production -f compose.producti
 ```
 
 Keep important backups outside the Docker host/volume as well.
+
+When the `backups` profile is enabled, it writes the same verified backup format directly to the configured host backup directory and prunes only its own `aitv-production-*.sqlite3` files beyond the configured retention count. Scheduled local retention is not a substitute for an off-host copy.
 
 A restore replaces the active application database and therefore requires an offline maintenance window. Stop every writer first:
 
