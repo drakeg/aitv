@@ -147,6 +147,48 @@ class OperatorDashboardTests(TestCase):
         )
         self.assertNotContains(response, 'http://guest.example.test/')
 
+    @override_settings(ALLOWED_HOSTS=['guest.example.test'])
+    def test_dashboard_builds_copyable_branded_guest_handoff_message(self):
+        settings = SystemSettings.load()
+        settings.site_name = 'Pine Ridge Guest TV'
+        settings.welcome_message = 'Welcome! See what is on during your stay.'
+        settings.save()
+        self.client.force_login(self.staff)
+
+        response = self.client.get(
+            reverse('operator_dashboard'),
+            secure=True,
+            HTTP_HOST='guest.example.test',
+        )
+
+        self.assertEqual(
+            response.context['operator_guest_handoff_message'],
+            (
+                'Pine Ridge Guest TV\n'
+                'Welcome! See what is on during your stay.\n'
+                'Guest guide: https://guest.example.test/\n'
+                'Live TV: https://guest.example.test/live-tv/'
+            ),
+        )
+        self.assertContains(response, 'id="guest-handoff-message"', html=False)
+        self.assertContains(
+            response,
+            'data-copy-target="guest-handoff-message"',
+            html=False,
+        )
+        self.assertContains(response, 'Copy message')
+        self.assertContains(response, 'Wi-Fi portal')
+
+    def test_default_guest_handoff_message_omits_blank_welcome_line(self):
+        self.client.force_login(self.staff)
+
+        response = self.client.get(reverse('operator_dashboard'))
+
+        self.assertEqual(
+            response.context['operator_guest_handoff_message'],
+            'aitv\nGuest guide: http://testserver/\nLive TV: http://testserver/live-tv/',
+        )
+
     def test_staff_with_add_permission_can_open_initial_settings_admin(self):
         self.staff.user_permissions.add(
             Permission.objects.get(codename='add_systemsettings'),
