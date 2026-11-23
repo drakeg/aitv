@@ -23,8 +23,8 @@ docker compose --env-file "$env_file" -p "$project_name" -f "$compose_file" \
   --profile backups build backups
 
 image_id="$(docker compose --env-file "$env_file" -p "$project_name" -f "$compose_file" \
-  --profile backups images -q backups)"
-if [ -z "$image_id" ]; then
+  --profile backups config --images | awk '/-backups$/ { print; exit }')"
+if [ -z "$image_id" ] || ! docker image inspect "$image_id" >/dev/null 2>&1; then
   echo "Unable to determine the production backup image." >&2
   exit 1
 fi
