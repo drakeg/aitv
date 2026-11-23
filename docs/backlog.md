@@ -28,19 +28,20 @@ Sprint 134 completed the non-outreach preparation:
 
 The next commercial-validation action is conducting qualified operator conversations using those materials. External outreach remains pending explicit authorization; that dependency does not block continuous reliability, security, accessibility, documentation, dependency, or defect work.
 
-### Sprint 143 — Scheduled backup health visibility
+### Sprint 144 — Production backup profile smoke test
 
-Make silent scheduled-backup failure visible to a single-host SMB operator.
+Verify the actual production backup Compose path end-to-end in CI so unit tests cannot drift away from the deployed volume/profile contract.
 
 Acceptance direction:
-- Add a deterministic backup-health probe that examines only worker-owned backup artifacts.
-- Require the newest scheduled backup to pass SQLite integrity verification.
-- Require the newest scheduled backup to be fresh relative to the configured backup interval plus a conservative grace period.
-- Allow an explicit maximum-age override for unusual operating schedules without weakening the default.
-- Reject missing backups, corrupt backups, stale backups, and future-dated backup timestamps.
-- Wire the probe into the opt-in production backup service's Docker healthcheck so a running loop with failed backups becomes visibly unhealthy.
-- Keep the health probe self-contained in the backup container; do not expose the backup directory to the web application.
-- Document how operators inspect the backup container's health and how the freshness threshold is derived.
+- Build the real production `backups` service through Compose.
+- Create an isolated disposable SQLite data volume with known test data.
+- Run the backup worker through the real production profile in one-shot mode.
+- Require exactly one worker-owned backup artifact in the configured host backup directory.
+- Run the real backup-health probe against the produced artifact.
+- Re-open the produced SQLite backup and verify the known test row survived the container/volume path.
+- Clean up disposable Docker volumes, containers, networks, and host backup files even on failure.
+- Add the smoke test to CI after the production application image smoke and before the full test suite.
+- Keep the test completely isolated from developer/local persistent data.
 
 ## Next product priorities
 
