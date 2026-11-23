@@ -31,7 +31,8 @@ The detailed historical sprint ledger and current numbered queue are maintained 
 - Sprint 141: merged — add tested SQLite backup, verification, and guarded restore tooling for single-host pilot operations.
 - Sprint 142: merged — add an opt-in scheduled verified-backup profile with bounded retention for single-host pilot deployments.
 - Sprint 143: merged — make scheduled-backup integrity/freshness visible through Docker health.
-- Sprint 144: active — exercise the actual production backup profile end-to-end in CI.
+- Sprint 144: merged — exercise the actual production backup profile end-to-end in CI.
+- Sprint 145: active — rehearse the guarded production restore path end-to-end in CI.
 - Commercial validation is now prepared for operator interviews; external outreach and paid-pilot asks remain unperformed and require explicit authorization.
 - After Sprint 124, prioritize commercial pilot validation and defects/opportunities discovered from real testing rather than inventing another feature sprint.
 - Repository standards adoption is active maintenance work and does not renumber already planned product sprints.
