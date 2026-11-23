@@ -93,6 +93,28 @@ services:
     volumes:
       - aitv_data:/data
 
+
+  backups:
+    profiles:
+      - backups
+    build:
+      context: .
+    env_file:
+      - .env.production
+    depends_on:
+      web:
+        condition: service_healthy
+    restart: unless-stopped
+    command: ["python", "-m", "scripts.backup_worker"]
+    environment:
+      SQLITE_DB_PATH: "${SQLITE_DB_PATH:-/data/db.sqlite3}"
+      BACKUP_INTERVAL_SECONDS: "${BACKUP_INTERVAL_SECONDS:-86400}"
+      BACKUP_RETENTION_COUNT: "${BACKUP_RETENTION_COUNT:-7}"
+      BACKUP_DIRECTORY: "/backups"
+    volumes:
+      - aitv_data:/data:ro
+      - "${BACKUP_DIR:-./backups}:/backups"
+
 volumes:
   aitv_data:
   caddy_data:

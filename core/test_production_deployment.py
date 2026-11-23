@@ -10,6 +10,7 @@ class ProductionDeploymentContractTests(SimpleTestCase):
         root = Path(__file__).resolve().parents[1]
         cls.compose = (root / 'compose.production.yml').read_text()
         cls.startup = (root / 'scripts' / 'start-production.sh').read_text()
+        cls.backup_worker = (root / 'scripts' / 'backup_worker.py').read_text()
         cls.caddyfile = (root / 'Caddyfile').read_text()
         cls.prod_env = (root / '.env.production.example').read_text()
         cls.settings = (root / 'streamhub' / 'settings.py').read_text()
@@ -63,3 +64,22 @@ class ProductionDeploymentContractTests(SimpleTestCase):
         self.assertIn("env_bool('DJANGO_TRUST_PROXY_HEADERS', False)", self.settings)
         self.assertIn("SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')", self.settings)
         self.assertIn("CSRF_TRUSTED_ORIGINS = [", self.settings)
+
+
+    def test_production_backup_profile_is_opt_in_and_separate_from_data_volume(self):
+        self.assertIn('backups:', self.compose)
+        self.assertIn('- backups', self.compose)
+        self.assertIn('command: ["python", "-m", "scripts.backup_worker"]', self.compose)
+        self.assertIn('- aitv_data:/data:ro', self.compose)
+        self.assertIn('${BACKUP_DIR:-./backups}:/backups', self.compose)
+        self.assertIn('BACKUP_INTERVAL_SECONDS: "${BACKUP_INTERVAL_SECONDS:-86400}"', self.compose)
+        self.assertIn('BACKUP_RETENTION_COUNT: "${BACKUP_RETENTION_COUNT:-7}"', self.compose)
+        self.assertIn('BACKUP_DIR=./backups', self.prod_env)
+        self.assertIn('BACKUP_INTERVAL_SECONDS=86400', self.prod_env)
+        self.assertIn('BACKUP_RETENTION_COUNT=7', self.prod_env)
+
+    def test_backup_worker_uses_verified_backup_helper_and_bounded_retention(self):
+        self.assertIn('create_backup(source, destination)', self.backup_worker)
+        self.assertIn('BACKUP_PREFIX = "aitv-production"', self.backup_worker)
+        self.assertIn('prune_backups(backup_dir, keep)', self.backup_worker)
+        self.assertIn('if args.once:', self.backup_worker)

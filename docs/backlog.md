@@ -28,18 +28,19 @@ Sprint 134 completed the non-outreach preparation:
 
 The next commercial-validation action is conducting qualified operator conversations using those materials. External outreach remains pending explicit authorization; that dependency does not block continuous reliability, security, accessibility, documentation, dependency, or defect work.
 
-### Sprint 141 — Tested SQLite backup and restore verification
+### Sprint 142 — Scheduled verified pilot backups
 
-Turn the documented single-host SQLite data-protection procedure into tested, reusable operational tooling for SMB pilot deployments.
+Reduce operator risk in single-host SMB pilots by making recurring verified SQLite backups an opt-in production profile instead of a manual-only procedure.
 
 Acceptance direction:
-- Create a consistent SQLite backup using SQLite's backup API rather than copying a potentially active database file.
-- Verify every produced or supplied backup with SQLite integrity checks before it is trusted.
-- Require an explicit offline confirmation before replacing the active database during restore.
-- Preserve a verified pre-restore safety snapshot when a target database already exists.
-- Exercise backup, verification, guarded restore, and data round-trip behavior in automated tests.
-- Update development and production Docker runbooks to use the tested tooling without weakening volume-persistence safeguards.
-- Preserve current production topology, migrations, and application behavior; this sprint is operational reliability, not a database-engine migration.
+- Add an opt-in production `backups` profile; ordinary production startup must not enable it implicitly.
+- Store backup artifacts in a separately mounted host directory, not inside the application data volume.
+- Use the verified SQLite backup helper from Sprint 141 for every scheduled snapshot.
+- Default to a conservative daily interval and bounded retention, both configurable with validated positive integers.
+- Give the backup worker read-only access to application data and write access only to the backup directory.
+- Prune only worker-owned backup files and leave unrelated files untouched.
+- Provide a one-shot mode for deterministic tests and operator verification.
+- Document enablement, retention, backup location, restore relationship, and the need for an additional off-host copy for important deployments.
 
 ## Next product priorities
 
