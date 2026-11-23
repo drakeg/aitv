@@ -29,7 +29,8 @@ The detailed acceptance criteria and maintenance backlog live in docs/backlog.md
 | P0 | Remove debug/test WhiteNoise STATIC_ROOT warning | Sprint 140 | Merged #181 |
 | P0 | Tested SQLite backup/verification and guarded restore tooling | Sprint 141 | Merged #182 |
 | P0 | Opt-in scheduled verified backups with bounded retention | Sprint 142 | Merged #184 |
-| P0 | Surface scheduled-backup integrity/freshness through Docker health | Sprint 143 | Active |
+| P0 | Surface scheduled-backup integrity/freshness through Docker health | Sprint 143 | Merged #185 |
+| P0 | End-to-end CI smoke test for production backup profile | Sprint 144 | Active |
 | P1 | Next legitimate EPG/source adapter if it meets provenance/trust contracts | Sprint 123 | Evaluated; no-go under current constraints |
 | P1 | Production-readiness hardening | Sprint 124 | Merged #161 |
 | P2 | Provider-supported account integrations | Future | Backlog |
