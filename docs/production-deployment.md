@@ -8,7 +8,8 @@ The production stack uses:
 - WhiteNoise for collected static assets;
 - Caddy as a version-pinned reverse proxy with automatic HTTPS;
 - the persistent SQLite volume for application data;
-- the same optional EPG and notification workers used by development, without source-code bind mounts;\n- an optional scheduled backup worker that writes verified SQLite snapshots to a separate host-mounted directory.
+- the same optional EPG and notification workers used by development, without source-code bind mounts;
+- an optional scheduled backup worker that writes verified SQLite snapshots to a separate host-mounted directory.
 
 ## Scale boundary
 
@@ -104,6 +105,8 @@ docker compose --env-file .env.production -p aitv-production -f compose.producti
 ```
 
 The `backups` profile defaults to one verified backup every 86,400 seconds (24 hours), keeps the newest 7 worker-owned backups, mounts the application data volume read-only, and writes to `BACKUP_DIR` (default `./backups`). Configure `BACKUP_INTERVAL_SECONDS` and `BACKUP_RETENTION_COUNT` in `.env.production` with positive integers.
+
+Docker also health-checks the backup worker by verifying the newest worker-owned backup is a valid SQLite database and is recent enough. By default, the maximum healthy age is the configured backup interval plus a 3,600-second grace period. `BACKUP_MAX_AGE_SECONDS` can override that threshold when an operator deliberately needs a wider window. A running but repeatedly failing or stale backup worker therefore becomes `unhealthy` in `docker compose ps` instead of looking healthy merely because its loop is still running.
 
 Multiple optional profiles can be enabled together by supplying each `--profile` flag.
 
