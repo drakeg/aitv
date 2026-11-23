@@ -1,4 +1,6 @@
 import sqlite3
+import subprocess
+import sys
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
@@ -96,3 +98,64 @@ class SQLiteBackupTests(SimpleTestCase):
                     database,
                     confirm_offline=True,
                 )
+
+    def test_cli_backup_verify_and_restore_round_trip(self):
+        with TemporaryDirectory() as directory:
+            root = Path(directory)
+            source = root / "source.sqlite3"
+            backup = root / "backup.sqlite3"
+            target = root / "target.sqlite3"
+            self._database(source, "cli-backup")
+            self._database(target, "old-target")
+            script = Path(__file__).resolve().parents[1] / "scripts" / "sqlite_backup.py"
+
+            backup_result = subprocess.run(
+                [
+                    sys.executable,
+                    str(script),
+                    "backup",
+                    "--source",
+                    str(source),
+                    "--output",
+                    str(backup),
+                ],
+                check=False,
+                capture_output=True,
+                text=True,
+            )
+            self.assertEqual(backup_result.returncode, 0, backup_result.stderr)
+            self.assertIn("Backup verified:", backup_result.stdout)
+
+            verify_result = subprocess.run(
+                [
+                    sys.executable,
+                    str(script),
+                    "verify",
+                    "--input",
+                    str(backup),
+                ],
+                check=False,
+                capture_output=True,
+                text=True,
+            )
+            self.assertEqual(verify_result.returncode, 0, verify_result.stderr)
+
+            restore_result = subprocess.run(
+                [
+                    sys.executable,
+                    str(script),
+                    "restore",
+                    "--input",
+                    str(backup),
+                    "--target",
+                    str(target),
+                    "--confirm-offline",
+                ],
+                check=False,
+                capture_output=True,
+                text=True,
+            )
+            self.assertEqual(restore_result.returncode, 0, restore_result.stderr)
+            self.assertIn("Restore verified:", restore_result.stdout)
+            self.assertIn("Pre-restore safety backup:", restore_result.stdout)
+            self.assertEqual(self._value(target), "cli-backup")
