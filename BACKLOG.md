@@ -33,7 +33,8 @@ The detailed acceptance criteria and maintenance backlog live in docs/backlog.md
 | P0 | End-to-end CI smoke test for production backup profile | Sprint 144 | Merged #186 |
 | P0 | End-to-end guarded restore/disaster-recovery rehearsal in CI | Sprint 145 | Merged #187 |
 | P1 | Printable guest launch sheet with self-contained same-site QR codes | Sprint 146 | Merged #188 |
-| P1 | Branded copyable guest handoff message for welcome/Wi-Fi channels | Sprint 147 | Active |
+| P1 | Branded copyable guest handoff message for welcome/Wi-Fi channels | Sprint 147 | Merged #189 |
+| P1 | Guest-first branded home welcome panel with primary Live TV CTA | Sprint 148 | Active |
 | P1 | Next legitimate EPG/source adapter if it meets provenance/trust contracts | Sprint 123 | Evaluated; no-go under current constraints |
 | P1 | Production-readiness hardening | Sprint 124 | Merged #161 |
 | P2 | Provider-supported account integrations | Future | Backlog |
