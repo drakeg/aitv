@@ -1,3 +1,4 @@
+import io
 import os
 from datetime import date
 from urllib.parse import quote_plus
@@ -9,12 +10,15 @@ from django.contrib.auth.forms import UserCreationForm
 from django.core.exceptions import PermissionDenied
 from django.db import DatabaseError, connection
 from django.db.models import Count, Q
-from django.http import JsonResponse
+from django.http import Http404, HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.views.decorators.http import require_POST
+
+import qrcode
+from qrcode.image.svg import SvgPathImage
 
 from content.models import Airing, AiringDestination, Channel, ChannelDestination, ChannelFavorite, DiscoveryPreference
 from content.services import (
@@ -171,6 +175,61 @@ def health_ready(request):
 
 
 
+def _operator_guest_launch_urls(request):
+    return {
+        'home': request.build_absolute_uri(reverse('home')),
+        'live-tv': request.build_absolute_uri(reverse('live_tv_guide')),
+    }
+
+
+@login_required
+def operator_guest_launch_sheet(request):
+    if not request.user.is_staff:
+        raise PermissionDenied
+
+    settings = get_system_settings(request)
+    launch_urls = _operator_guest_launch_urls(request)
+    return render(request, 'operator/guest_launch_sheet.html', {
+        'operator_site_name': settings.site_name if settings is not None else 'aitv',
+        'operator_welcome_message': (
+            settings.welcome_message if settings is not None else ''
+        ),
+        'operator_guest_home_url': launch_urls['home'],
+        'operator_guest_live_tv_url': launch_urls['live-tv'],
+    })
+
+
+@login_required
+def operator_guest_qr(request, target):
+    if not request.user.is_staff:
+        raise PermissionDenied
+
+    launch_urls = _operator_guest_launch_urls(request)
+    try:
+        destination = launch_urls[target]
+    except KeyError as exc:
+        raise Http404('Unknown guest launch target.') from exc
+
+    code = qrcode.QRCode(
+        error_correction=qrcode.constants.ERROR_CORRECT_M,
+        box_size=8,
+        border=4,
+    )
+    code.add_data(destination)
+    code.make(fit=True)
+    image = code.make_image(image_factory=SvgPathImage)
+    output = io.BytesIO()
+    image.save(output)
+
+    response = HttpResponse(
+        output.getvalue(),
+        content_type='image/svg+xml; charset=utf-8',
+    )
+    response['Cache-Control'] = 'private, no-store'
+    response['X-Content-Type-Options'] = 'nosniff'
+    return response
+
+
 @login_required
 def operator_dashboard(request):
     if not request.user.is_staff:
@@ -210,8 +269,9 @@ def operator_dashboard(request):
     if request.user.has_perm('content.view_epgrefreshstate'):
         epg_diagnostics_url = reverse('admin:content_epgrefreshstate_changelist')
 
-    guest_home_url = request.build_absolute_uri(reverse('home'))
-    guest_live_tv_url = request.build_absolute_uri(reverse('live_tv_guide'))
+    launch_urls = _operator_guest_launch_urls(request)
+    guest_home_url = launch_urls['home']
+    guest_live_tv_url = launch_urls['live-tv']
 
     epg_region_configured = region in configured_epg_regions()
     operator_readiness_checks = [
