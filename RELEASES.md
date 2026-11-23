@@ -17,7 +17,7 @@ Until the first intentional public release is published, main is the supported d
 A first stable v1.0.0 should require:
 - a clearly defined supported deployment model;
 - green CI and repository standards checks;
-- tested migration/backup/restore procedures;
+- tested migration/backup/restore procedures, including integrity verification and guarded restore rehearsal;
 - documented security and source-trust boundaries;
 - a coherent user workflow suitable for demonstration/pilot;
 - maintainer approval of the public compatibility contract.
