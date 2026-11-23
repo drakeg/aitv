@@ -111,6 +111,12 @@ services:
       BACKUP_INTERVAL_SECONDS: "${BACKUP_INTERVAL_SECONDS:-86400}"
       BACKUP_RETENTION_COUNT: "${BACKUP_RETENTION_COUNT:-7}"
       BACKUP_DIRECTORY: "/backups"
+    healthcheck:
+      test: ["CMD", "python", "-m", "scripts.backup_health"]
+      interval: 15m
+      timeout: 30s
+      retries: 2
+      start_period: 2m
     volumes:
       - aitv_data:/data:ro
       - "${BACKUP_DIR:-./backups}:/backups"

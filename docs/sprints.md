@@ -109,6 +109,7 @@ This ledger is the durable project record for sprint-sized development. Git hist
 | 140 | #181 | Remove debug/test WhiteNoise missing-STATIC_ROOT warnings while preserving production middleware/static behavior. |
 | 141 | #182 | Add tested SQLite backup/verification and guarded restore tooling for single-host pilot operations. |
 | 142 | #184 | Add an opt-in scheduled verified-backup profile with bounded retention for single-host pilot deployments. |
+| 143 | #185 | Surface scheduled-backup integrity and freshness through Docker health. |
 | 93 | #121 | Show an Ends in X min countdown for the current Live TV airing. |
 | 89 | #115 | Fix Live TV Favorite-toggle redirect encoding so preserved search/category filters cannot crash the request. |
 

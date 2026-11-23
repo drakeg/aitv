@@ -11,6 +11,7 @@ class ProductionDeploymentContractTests(SimpleTestCase):
         cls.compose = (root / 'compose.production.yml').read_text()
         cls.startup = (root / 'scripts' / 'start-production.sh').read_text()
         cls.backup_worker = (root / 'scripts' / 'backup_worker.py').read_text()
+        cls.backup_health = (root / 'scripts' / 'backup_health.py').read_text()
         cls.caddyfile = (root / 'Caddyfile').read_text()
         cls.prod_env = (root / '.env.production.example').read_text()
         cls.settings = (root / 'streamhub' / 'settings.py').read_text()
@@ -74,6 +75,11 @@ class ProductionDeploymentContractTests(SimpleTestCase):
         self.assertIn('${BACKUP_DIR:-./backups}:/backups', self.compose)
         self.assertIn('BACKUP_INTERVAL_SECONDS: "${BACKUP_INTERVAL_SECONDS:-86400}"', self.compose)
         self.assertIn('BACKUP_RETENTION_COUNT: "${BACKUP_RETENTION_COUNT:-7}"', self.compose)
+        self.assertIn('test: ["CMD", "python", "-m", "scripts.backup_health"]', self.compose)
+        self.assertIn('interval: 15m', self.compose)
+        self.assertIn('timeout: 30s', self.compose)
+        self.assertIn('retries: 2', self.compose)
+        self.assertIn('start_period: 2m', self.compose)
         self.assertIn('BACKUP_DIR=./backups', self.prod_env)
         self.assertIn('BACKUP_INTERVAL_SECONDS=86400', self.prod_env)
         self.assertIn('BACKUP_RETENTION_COUNT=7', self.prod_env)
@@ -83,3 +89,10 @@ class ProductionDeploymentContractTests(SimpleTestCase):
         self.assertIn('BACKUP_PREFIX = "aitv-production"', self.backup_worker)
         self.assertIn('prune_backups(backup_dir, keep)', self.backup_worker)
         self.assertIn('if args.once:', self.backup_worker)
+
+
+    def test_backup_health_probe_checks_verified_fresh_worker_backup(self):
+        self.assertIn('verify_database(backup)', self.backup_health)
+        self.assertIn('BACKUP_PREFIX', self.backup_health)
+        self.assertIn('BACKUP_MAX_AGE_SECONDS', self.backup_health)
+        self.assertIn('DEFAULT_HEALTH_GRACE_SECONDS = 3600', self.backup_health)
