@@ -146,3 +146,35 @@ input::placeholder { color: #aaa; }
         break-inside: avoid;
     }
 }
+
+
+/* =========================
+   GUEST HOME WELCOME
+========================= */
+.guest-welcome-panel {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+    padding: 1.5rem;
+    border: 1px solid #39485c;
+    border-radius: 12px;
+    background: #18212e;
+}
+.guest-welcome-panel > div:first-child {
+    flex: 1 1 420px;
+}
+.guest-welcome-panel h1 {
+    color: #fff;
+}
+.guest-welcome-eyebrow {
+    color: #b9c9dc;
+    font-size: .8rem;
+    font-weight: 700;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+}
+.guest-welcome-actions {
+    flex: 0 1 auto;
+}
