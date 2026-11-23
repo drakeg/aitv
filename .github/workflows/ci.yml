@@ -51,7 +51,7 @@ jobs:
             exit 1
           fi
           sh -n scripts/start-production.sh
-          sh -n scripts/smoke-backup-profile.sh
+          sh -n scripts/smoke-data-protection.sh
 
       - name: Validate static JavaScript syntax
         run: |
@@ -118,8 +118,8 @@ jobs:
           done
           exit 1
 
-      - name: Smoke-test production backup profile
-        run: sh scripts/smoke-backup-profile.sh
+      - name: Smoke-test production backup and guarded restore
+        run: sh scripts/smoke-data-protection.sh
 
       - name: Django production deployment checks
         env:
