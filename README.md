@@ -23,6 +23,7 @@ The goal is fewer clicks to legitimate content. Direct network/service destinati
 - Paginated in-app Favorite release notifications plus optional SMTP email delivery
 - Optional Docker notification worker for recurring Favorite release checks
 - Optional production backup worker for recurring verified SQLite snapshots with bounded retention in a separate host-mounted directory and Docker health based on backup integrity/freshness
+- Staff-only printable guest launch sheet with internally generated same-site Guest Home and Live TV QR codes for hospitality pilot distribution
 - Tested `refresh_epg` management command plus optional Docker EPG worker for recurring normalized Live TV guide with per-channel source-date schedule browsing across the configured EPG horizon
 - Source-supplied episode title/season/number preserved per normalized airing and shown in Live TV guide/channel schedules without implying playback availability
 - Accessible current-program progress indicators derived only from normalized airing start/end times in the guide and channel schedule
