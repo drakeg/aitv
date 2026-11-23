@@ -80,3 +80,69 @@ input::placeholder { color: #aaa; }
     .guide-row { grid-template-columns: 1fr; }
     .guide-program { border-left: 0; border-top: 1px solid #333; }
 }
+
+
+/* =========================
+   OPERATOR GUEST LAUNCH SHEET
+========================= */
+.operator-launch-sheet { max-width: 1000px; margin: 0 auto; }
+.operator-launch-sheet-panel {
+    background: #fff;
+    color: #111;
+    border-radius: 12px;
+    padding: 2rem;
+}
+.operator-launch-site-name { color: #111; font-size: clamp(2rem, 6vw, 3.5rem); }
+.operator-launch-welcome { color: #333; font-size: 1.1rem; }
+.operator-launch-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1.5rem;
+}
+.operator-launch-card {
+    border: 2px solid #222;
+    border-radius: 12px;
+    padding: 1.5rem;
+    text-align: center;
+}
+.operator-launch-card h3 { color: #111; }
+.operator-launch-qr {
+    display: block;
+    width: min(240px, 100%);
+    height: auto;
+    margin: 1rem auto;
+    background: #fff;
+}
+.operator-launch-url {
+    color: #111;
+    overflow-wrap: anywhere;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-size: .8rem;
+}
+.operator-launch-footnote { color: #555 !important; }
+
+@media (max-width: 760px) {
+    .operator-launch-grid { grid-template-columns: 1fr; }
+}
+
+@media print {
+    body {
+        background: #fff !important;
+        color: #111 !important;
+    }
+    .navbar,
+    .operator-launch-sheet-actions {
+        display: none !important;
+    }
+    .operator-launch-sheet {
+        max-width: none;
+        margin: 0;
+    }
+    .operator-launch-sheet-panel {
+        padding: 0;
+        border-radius: 0;
+    }
+    .operator-launch-card {
+        break-inside: avoid;
+    }
+}
