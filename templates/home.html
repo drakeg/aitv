@@ -2,10 +2,23 @@
 
 {% block content %}
 
-<div data-discovery-settings data-region="{{ discovery_region|default:'US' }}" data-require-region="{% if require_region_availability %}1{% else %}0{% endif %}" data-authenticated="{% if user.is_authenticated %}1{% else %}0{% endif %}" data-import-url="{% url 'content:import_external' %}" data-preferred-providers="{{ preferred_providers|join:'|' }}">
-{% if site_welcome_message %}
+{% if not user.is_authenticated %}
+<section class="guest-welcome-panel mb-3" aria-labelledby="guest-welcome-heading">
+    <div>
+        <p class="guest-welcome-eyebrow mb-1">Guest entertainment guide</p>
+        <h1 class="h2 mb-2" id="guest-welcome-heading">Welcome to {{ site_brand_name|default:'aitv' }}</h1>
+        <p class="mb-0">{% if site_welcome_message %}{{ site_welcome_message }}{% else %}Find what is on now and where it can legitimately be watched.{% endif %}</p>
+    </div>
+    <div class="guest-welcome-actions d-flex gap-2 flex-wrap">
+        <a class="btn btn-primary" href="{% url 'live_tv_guide' %}{% if guest_preview_mode %}?guest_preview=1{% endif %}">See what is on Live TV</a>
+        <a class="btn btn-outline-light" href="#guest-discovery">Browse movies &amp; shows</a>
+    </div>
+</section>
+{% elif site_welcome_message %}
 <div class="alert alert-secondary py-2 px-3 mb-3" role="status">{{ site_welcome_message }}</div>
 {% endif %}
+
+<div id="guest-discovery" data-discovery-settings data-region="{{ discovery_region|default:'US' }}" data-require-region="{% if require_region_availability %}1{% else %}0{% endif %}" data-authenticated="{% if user.is_authenticated %}1{% else %}0{% endif %}" data-import-url="{% url 'content:import_external' %}" data-preferred-providers="{{ preferred_providers|join:'|' }}">
 <div class="browse-bar mb-3">
     <form method="get" class="d-flex gap-2 align-items-center flex-wrap">
         {% if guest_preview_mode %}<input type="hidden" name="guest_preview" value="1">{% endif %}

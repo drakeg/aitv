@@ -28,17 +28,19 @@ Sprint 134 completed the non-outreach preparation:
 
 The next commercial-validation action is conducting qualified operator conversations using those materials. External outreach remains pending explicit authorization; that dependency does not block continuous reliability, security, accessibility, documentation, dependency, or defect work.
 
-### Sprint 147 — Branded copyable guest handoff message
+### Sprint 148 — Guest-first branded home welcome panel
 
-Reduce operator friction for digital distribution through welcome emails/texts, Wi-Fi portals, digital guest guides, and messaging tools.
+Make the anonymous hospitality experience immediately understandable after a guest follows a printed QR code or digital handoff link.
 
 Acceptance direction:
-- Build the handoff text from the existing configured site name, welcome message, Guest Home URL, and Live TV URL.
-- Keep the generated text server-side and deterministic so branding/URL rules remain consistent with the operator dashboard and launch sheet.
-- Omit the optional welcome line cleanly when no welcome message is configured.
-- Expose the handoff in a readonly operator-dashboard field with the existing accessible clipboard/status behavior.
-- Preserve same-site absolute URL generation and never add tracking, shorteners, analytics parameters, or external services.
-- Add regression coverage for configured branding/welcome text, default behavior, copy-control wiring, and secure-host URL generation.
+- Give anonymous guests a prominent branded welcome panel at the top of Home.
+- Reuse the existing configured site name and optional welcome text; do not introduce duplicate branding state.
+- Make Live TV the primary guest action and provide a secondary in-page jump to movie/show discovery.
+- Keep the generic trust-focused fallback copy when no custom welcome message is configured.
+- Preserve guest-preview mode in the Live TV CTA so staff can inspect the exact anonymous experience without ending their session.
+- Keep signed-in account users on the existing personalized home layout rather than showing the guest hero.
+- Preserve HTML escaping for operator-configured welcome text.
+- Add regression coverage for default branding, configured branding, signed-in behavior, discovery anchor, and guest-preview navigation.
 
 ## Next product priorities
 

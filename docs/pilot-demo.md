@@ -8,6 +8,8 @@ From the staff operator dashboard, open **Print guest launch sheet** to produce 
 
 For digital channels, use **Copy message** on the operator dashboard to copy the configured property name/welcome text plus Guest Home and Live TV URLs as one ready-to-paste handoff for a welcome email, text, Wi-Fi portal, or digital guest guide. No tracking or URL shortener is added.
 
+During the demo, follow one of the generated guest links or scan the printed QR code and show the anonymous branded Home. Call out the prominent **See what is on Live TV** action and the **Browse movies & shows** jump so the operator can evaluate the first-screen guest experience rather than only the staff tooling.
+
 ## Target operator
 
 Primary candidates are independent RV resorts, campgrounds, boutique hotels, and professionally managed vacation-rental portfolios where staff may answer recurring guest questions about what is on and where legitimate viewing options are available.
