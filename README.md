@@ -73,6 +73,8 @@ The development/testing Docker guide is maintained in `docs/docker-deployment.md
 
 The production path deliberately retains SQLite and defaults to one Gunicorn worker. It is intended for a small SMB pilot, not horizontal scaling or high availability.
 
+Both Docker runbooks use the repository's tested `scripts/sqlite_backup.py` helper for consistent SQLite backups, integrity verification, and explicitly guarded offline restores.
+
 ## Quick local testing with Docker
 
 ```bash
