@@ -50,6 +50,13 @@ class StaffGuestPreviewTests(TestCase):
         self.assertFalse(response.context['user'].is_authenticated)
         mock_live.assert_called_once_with(limit=100, country='US')
         self.assertContains(response, 'Guest preview:')
+        self.assertContains(response, 'Guest entertainment guide')
+        self.assertContains(
+            response,
+            'href="/live-tv/?guest_preview=1"',
+            html=False,
+        )
+        self.assertContains(response, 'href="#guest-discovery"', html=False)
         self.assertContains(response, 'name="guest_preview" value="1"', html=False)
         self.assertNotContains(response, 'My Watchlist')
         self.assertNotContains(response, '>Operator<', html=False)
