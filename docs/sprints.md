@@ -114,6 +114,7 @@ This ledger is the durable project record for sprint-sized development. Git hist
 | 145 | #187 | Rehearse the guarded production restore path end-to-end in CI. |
 | 146 | #188 | Add printable operator guest-launch materials with self-contained same-site QR codes. |
 | 147 | #189 | Add a branded ready-to-copy guest handoff message for digital welcome channels. |
+| 148 | TBD | Add a guest-first branded home welcome panel with prominent Live TV and discovery actions. |
 | 93 | #121 | Show an Ends in X min countdown for the current Live TV airing. |
 | 89 | #115 | Fix Live TV Favorite-toggle redirect encoding so preserved search/category filters cannot crash the request. |
 
