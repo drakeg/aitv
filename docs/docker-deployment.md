@@ -246,39 +246,43 @@ Because migrations run automatically in the web startup command, a normal update
 
 ## Backup and restore
 
-The persistent SQLite database should be backed up before risky upgrades or manual data operations.
+AITV includes `scripts/sqlite_backup.py` for consistent SQLite backup, integrity verification, and guarded offline restore. The helper uses SQLite's backup API rather than copying a live database file.
 
-For the current single-host development model, the safest basic procedure is:
-
-1. Stop application services so the SQLite file is quiescent.
-2. Copy the database out of the named volume.
-3. Restart the services.
-
-Example backup:
+Create and verify a backup inside the web container, then copy it to the host:
 
 ```bash
-docker compose stop
-docker run --rm \
-  -v aitv_aitv_data:/data:ro \
-  -v "$PWD":/backup \
-  alpine sh -c 'cp /data/db.sqlite3 /backup/aitv-db.sqlite3'
-docker compose start
+mkdir -p backups
+timestamp="$(date -u +%Y%m%dT%H%M%SZ)"
+docker compose exec -T web python /app/scripts/sqlite_backup.py backup \
+  --source /data/db.sqlite3 \
+  --output /tmp/aitv-db.sqlite3
+docker compose exec -T web python /app/scripts/sqlite_backup.py verify \
+  --input /tmp/aitv-db.sqlite3
+docker compose cp web:/tmp/aitv-db.sqlite3 "./backups/aitv-$timestamp.sqlite3"
 ```
 
-Restore only when you intend to replace the active database:
+For important deployments, keep an additional copy outside the Docker host.
+
+Restore only when you intentionally want to replace the active database. Stop application writers first:
 
 ```bash
-docker compose down
-docker run --rm \
-  -v aitv_aitv_data:/data \
-  -v "$PWD":/backup:ro \
-  alpine sh -c 'cp /backup/aitv-db.sqlite3 /data/db.sqlite3'
+docker compose stop web epg notifications
+```
+
+Then use a one-off container with the backup directory mounted read-only:
+
+```bash
+backup_file="aitv-YYYYMMDDTHHMMSSZ.sqlite3"
+docker compose run --rm --no-deps \
+  -v "$PWD/backups:/backup:ro" \
+  web python /app/scripts/sqlite_backup.py restore \
+  --input "/backup/$backup_file" \
+  --target /data/db.sqlite3 \
+  --confirm-offline
 docker compose up -d
 ```
 
-If the Compose project name is customized, adjust the volume name accordingly.
-
-For important deployments, also keep an external copy of backups and test restore procedures periodically.
+The restore command refuses to proceed without `--confirm-offline`, verifies the supplied backup, preserves a verified pre-restore safety snapshot when a database already exists, replaces the target atomically, and verifies the restored database.
 
 ## Rollback
 
