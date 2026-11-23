@@ -1,5 +1,6 @@
 from unittest.mock import patch
 
+from django.contrib.auth import get_user_model
 from django.test import TestCase
 from django.urls import reverse
 
@@ -16,7 +17,11 @@ class OperatorBrandingTests(TestCase):
 
         self.assertContains(response, '<title>aitv</title>', html=True)
         self.assertContains(response, '🎬 aitv')
-        self.assertNotContains(response, 'Welcome to')
+        self.assertContains(response, 'Welcome to aitv')
+        self.assertContains(response, 'Guest entertainment guide')
+        self.assertContains(response, 'See what is on Live TV')
+        self.assertContains(response, 'Browse movies &amp; shows', html=False)
+        self.assertContains(response, 'id="guest-discovery"', html=False)
 
     def test_operator_brand_and_welcome_message_are_guest_facing(self, *_mocks):
         settings = SystemSettings.load()
@@ -46,6 +51,22 @@ class OperatorBrandingTests(TestCase):
             '&lt;script&gt;alert(&quot;guest&quot;)&lt;/script&gt;',
             html=False,
         )
+
+    def test_signed_in_user_keeps_standard_home_layout(self, *_mocks):
+        user = get_user_model().objects.create_user(
+            username='signed-in-branding-user',
+            password='test-password',
+        )
+        settings = SystemSettings.load()
+        settings.welcome_message = 'Signed-in welcome message.'
+        settings.save()
+        self.client.force_login(user)
+
+        response = self.client.get(reverse('home'))
+
+        self.assertNotContains(response, 'Guest entertainment guide')
+        self.assertNotContains(response, 'See what is on Live TV')
+        self.assertContains(response, 'Signed-in welcome message.')
 
     def test_guest_account_links_remain_visible_by_default(self, *_mocks):
         response = self.client.get(reverse('home'))
