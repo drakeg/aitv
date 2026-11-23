@@ -27,7 +27,7 @@ The detailed historical sprint ledger and current numbered queue are maintained 
 - Sprint 137: merged — accessible current-program progress indicators from normalized airing timing.
 - Sprint 138: merged — true anonymous guest preview for staff operators without ending the operator session.
 - Sprint 139: merged — restore reliable development/test static rendering while retaining production manifest storage.
-- Sprint 140: active — remove debug/test WhiteNoise STATIC_ROOT warnings while preserving production middleware/static behavior.
+- Sprint 140: merged — remove debug/test WhiteNoise STATIC_ROOT warnings while preserving production middleware/static behavior.\n- Sprint 141: active — add tested SQLite backup, verification, and guarded restore tooling for single-host pilot operations.
 - Commercial validation is now prepared for operator interviews; external outreach and paid-pilot asks remain unperformed and require explicit authorization.
 - After Sprint 124, prioritize commercial pilot validation and defects/opportunities discovered from real testing rather than inventing another feature sprint.
 - Repository standards adoption is active maintenance work and does not renumber already planned product sprints.
