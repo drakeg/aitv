@@ -42,8 +42,15 @@
 
 <section class="card mb-3" aria-labelledby="operator-launch-heading">
     <div class="card-body">
-        <h2 class="h5" id="operator-launch-heading">Guest launch links</h2>
-        <p class="text-muted">Use these same-site URLs in welcome messages, Wi-Fi portals, QR generators, or guest tablets.</p>
+        <div class="d-flex justify-content-between align-items-start gap-3 flex-wrap">
+            <div>
+                <h2 class="h5" id="operator-launch-heading">Guest launch links</h2>
+                <p class="text-muted">Use these same-site URLs in welcome messages, Wi-Fi portals, printed materials, or guest tablets.</p>
+            </div>
+            <a class="btn btn-outline-light" href="{% url 'operator_guest_launch_sheet' %}" target="_blank" rel="noopener">
+                Print guest launch sheet <span class="visually-hidden">(opens in a new tab)</span>
+            </a>
+        </div>
 
         <label class="form-label" for="guest-home-url">Guest home</label>
         <div class="input-group mb-3">
