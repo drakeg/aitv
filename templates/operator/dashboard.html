@@ -65,6 +65,12 @@
             <button class="btn btn-outline-light" type="button" data-copy-target="guest-live-tv-url" data-copy-label="Live TV URL">Copy</button>
             <a class="btn btn-outline-light" href="{{ operator_guest_live_tv_url }}" target="_blank" rel="noopener">Open <span class="visually-hidden">Live TV in a new tab</span></a>
         </div>
+        <label class="form-label mt-3" for="guest-handoff-message">Guest welcome message</label>
+        <div class="input-group">
+            <textarea id="guest-handoff-message" class="form-control" rows="4" readonly>{{ operator_guest_handoff_message }}</textarea>
+            <button class="btn btn-outline-light" type="button" data-copy-target="guest-handoff-message" data-copy-label="Guest welcome message">Copy message</button>
+        </div>
+        <p class="text-muted small mt-2 mb-0">Paste this into a welcome email, text message, Wi-Fi portal, or digital guest guide.</p>
         <div class="visually-hidden" data-copy-status role="status" aria-live="polite"></div>
     </div>
 </section>
