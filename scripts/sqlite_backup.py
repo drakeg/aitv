@@ -10,6 +10,7 @@ from __future__ import annotations
 import argparse
 import os
 import sqlite3
+import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -93,7 +94,7 @@ def restore_backup(
 
     pre_restore: Path | None = None
     if target_path.exists():
-        timestamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+        timestamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S%fZ")
         pre_restore = target_path.with_name(
             f"{target_path.stem}.pre-restore-{timestamp}{target_path.suffix}"
         )
@@ -164,7 +165,7 @@ def main() -> int:
             if pre_restore:
                 print(f"Pre-restore safety backup: {pre_restore}")
     except BackupError as exc:
-        print(f"ERROR: {exc}", file=os.sys.stderr)
+        print(f"ERROR: {exc}", file=sys.stderr)
         return 2
     return 0
 
