@@ -12,7 +12,7 @@ class ProductionDeploymentContractTests(SimpleTestCase):
         cls.startup = (root / 'scripts' / 'start-production.sh').read_text()
         cls.backup_worker = (root / 'scripts' / 'backup_worker.py').read_text()
         cls.backup_health = (root / 'scripts' / 'backup_health.py').read_text()
-        cls.backup_smoke = (root / 'scripts' / 'smoke-backup-profile.sh').read_text()
+        cls.data_smoke = (root / 'scripts' / 'smoke-data-protection.sh').read_text()
         cls.ci_workflow = (root / '.github' / 'workflows' / 'ci.yml').read_text()
         cls.caddyfile = (root / 'Caddyfile').read_text()
         cls.prod_env = (root / '.env.production.example').read_text()
@@ -100,11 +100,15 @@ class ProductionDeploymentContractTests(SimpleTestCase):
         self.assertIn('DEFAULT_HEALTH_GRACE_SECONDS = 3600', self.backup_health)
 
 
-    def test_ci_smoke_tests_the_real_production_backup_profile(self):
-        self.assertIn('Smoke-test production backup profile', self.ci_workflow)
-        self.assertIn('sh scripts/smoke-backup-profile.sh', self.ci_workflow)
-        self.assertIn('--profile backups build backups', self.backup_smoke)
-        self.assertIn('python -m scripts.backup_worker --once', self.backup_smoke)
-        self.assertIn('python -m scripts.backup_health', self.backup_smoke)
-        self.assertIn('aitv-production-*.sqlite3', self.backup_smoke)
-        self.assertIn('Production backup profile smoke test passed.', self.backup_smoke)
+    def test_ci_smoke_tests_production_backup_and_guarded_restore(self):
+        self.assertIn('Smoke-test production backup and guarded restore', self.ci_workflow)
+        self.assertIn('sh scripts/smoke-data-protection.sh', self.ci_workflow)
+        self.assertIn('--profile backups build web backups', self.data_smoke)
+        self.assertIn('python -m scripts.backup_worker --once', self.data_smoke)
+        self.assertIn('python -m scripts.backup_health', self.data_smoke)
+        self.assertIn('aitv-production-*.sqlite3', self.data_smoke)
+        self.assertIn('mutated-after-backup', self.data_smoke)
+        self.assertIn('Restore unexpectedly succeeded without --confirm-offline.', self.data_smoke)
+        self.assertIn('--confirm-offline', self.data_smoke)
+        self.assertIn('db.pre-restore-*.sqlite3', self.data_smoke)
+        self.assertIn('Production backup and guarded restore smoke test passed.', self.data_smoke)
