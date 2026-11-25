@@ -1,5 +1,8 @@
 # aitv
 
+[![License](https://img.shields.io/github/license/drakeg/aitv)](https://github.com/drakeg/aitv/blob/main/LICENSE)
+
+
 <!-- madmallard-badges:start -->
 [![Django 6.1.3](https://img.shields.io/badge/Django%206.1.3-092E20?logo=django&logoColor=white)](https://www.djangoproject.com/) [![Docker](https://img.shields.io/badge/Docker-2496ED?logo=docker&logoColor=white)](https://www.docker.com/) [![Docker Compose](https://img.shields.io/badge/Docker%20Compose-2496ED?logo=docker&logoColor=white)](https://docs.docker.com/compose/) [![Python 3.15](https://img.shields.io/badge/Python%203.15-3776AB?logo=python&logoColor=white)](https://www.python.org/) [![SQLite](https://img.shields.io/badge/SQLite-003B57?logo=sqlite&logoColor=white)](https://www.sqlite.org/)
 
